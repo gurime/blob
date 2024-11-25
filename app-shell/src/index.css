@@ -12,7 +12,6 @@ body, html {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
     background-color: #e01818;
   }
   
@@ -26,7 +25,6 @@ body, html {
   
   .navlinks {
     text-decoration: none;
-    padding: 0.5rem 1rem;
     border-radius: 0.25rem;
     color: #333;
     transition: all 0.3s ease;
@@ -132,3 +130,98 @@ body, html {
         padding: 0.5rem;
     }
   
+    /*footer css*/
+.footer{
+  grid-area: footer;
+  padding: 3px;
+  background: #bd1a1a;
+  text-align: center;}
+  
+  
+
+  
+  
+  .flex-footer{
+  display: flex;
+  place-content: center;
+  }
+  
+  .footer-tablebox {
+    width: 100%;
+    border-right: 1px solid #fff;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    }
+  
+  
+  .footer-headline {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 5px 0;
+    border-bottom: 1px solid #fff;
+    }
+    .footer-navlink {
+      margin: auto;
+      padding: 0;
+      }
+  .footer-navlink li{
+  list-style-type: none;
+  }
+  .footer-navlink a{
+  text-decoration: none;
+  color: #fff;
+line-height: 2.5;
+  cursor: pointer;
+  }
+  
+ 
+  
+  .footer-logo-box{
+  margin: auto;
+  
+  }
+
+  .footer-logo-box img{
+    height:36px;
+    cursor: pointer;
+    margin: auto;
+    }
+  
+  .logo-footer{
+    display: flex;
+  }
+
+  .logo-footer a{
+    text-decoration: none;
+  }
+  .logo-footer img{
+  height:36px;
+  cursor: pointer;
+  margin: auto;
+  }
+
+ 
+
+
+  @media (max-width:768px){
+  .flex-footer {
+  display: flex;
+  place-content: center;
+  flex-direction: column;
+  }
+  .footer-tablebox {
+    border-right: none;
+    border-left: none!important;
+    }
+
+    .logo-footer{
+      flex-wrap: wrap;
+  padding: 0 1rem;
+    }
+
+    .logo-footer img{
+      padding-bottom: 1rem;
+    }
+  }

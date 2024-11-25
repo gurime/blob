@@ -5,8 +5,7 @@ export default function Navbar() {
     const activeStyle = ({ isActive }) => ({
         backgroundColor: isActive ? 'blue' : '',
         color: isActive ? 'white' : '',
-        padding: '0.5rem 1rem',
-        borderRadius: '0.25rem',
+        padding: '1rem',
         textDecoration: 'none'
       })
   return (
