@@ -1,7 +1,7 @@
-import React from 'react'
+import { useNavigate } from 'react-router-dom';
 import navlogo from '../img/Logo.png'
 export default function Footer() {
-  
+   const navigate = useNavigate();
     
       const scrollTo = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -87,7 +87,7 @@ return (
 <hr style={{color:'#fff',border:'solid 1px'}}/>
 
 <div  className="nav logo-footer">
-<img  title='Home Page' style={{marginRight:'auto '}} onClick={() => router.push('/')} src={navlogo}  alt='...'  />
+<img  title='Home Page' style={{marginRight:'auto '}} onClick={() => navigate.push('/')} src={navlogo}  alt='...'  />
 
 
 
@@ -95,7 +95,7 @@ return (
 
 
 <div className="navlinks sm-navlink" style={{flexWrap:'nowrap'}}>
-<a to='/contact' >Contact iTruth News</a>
+<a to='/contact' >Contact text</a>
 
 <a  to='/terms' >terms of Use</a>
 
@@ -112,7 +112,7 @@ color:'#fff',
 padding:'1rem 0',
 textAlign:'center'
 }}>
-   &#169;2030 iTruth News, LLC All Rights Reserved <br />
+   &#169;2030 text, LLC All Rights Reserved <br />
 
 </div>
 <hr />
