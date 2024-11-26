@@ -12,7 +12,7 @@ body, html {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #e01818;
+    background-color: #7318e0;
   }
   
   .navlinks {
@@ -65,10 +65,11 @@ body, html {
     .burger a{
       color: #fff;
       text-decoration: none;
+      font-size: 2rem;
       }
       
       .sidenav {
-          background-color: #b00b0b;
+          background-color: #7318e0;
           position: fixed;
           right: 0;
           top: 0;
@@ -99,7 +100,7 @@ body, html {
       }
       
       .closebtn {
-          font-size: 24px;
+          font-size:2rem;
           text-align: center;
           cursor: pointer;
       }
@@ -131,11 +132,61 @@ body, html {
     @media(max-width:800px){
         .navlinks{display: none;}
     }
+
+    /* nopage css starts here */
+    .no-page-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-color: #f4f4f4;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .no-page-content {
+      background-color: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+    
+    .no-page-title {
+      color: #dc2626;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    
+    .no-page-description {
+      color: #4b5563;
+      font-size: 1.25rem;
+      margin-bottom: 30px;
+    }
+    
+    .no-page-button {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    .no-page-button:hover {
+      background-color: #2563eb;
+    }
+    /* nopage css starts here */
     /*footer css*/
 .footer{
-  grid-area: footer;
   padding: 3px;
-  background: #bd1a1a;
+  background: #7318e0;
   text-align: center;}
   
   
