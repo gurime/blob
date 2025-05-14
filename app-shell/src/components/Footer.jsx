@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import navlogo from '../img/Logo.png'
+import navlogo from '../img/gulime.png'
 export default function Footer() {
    const navigate = useNavigate();
 
