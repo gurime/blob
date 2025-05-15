@@ -21,7 +21,7 @@ export default function Navbar() {
       };
   return (
     <>
-     <nav className="navbar">
+     <nav className="navbar" id="top-navbar">
         <div className="logo">
           <NavLink to="/">
             <img src={navlogo} alt="Logo" />
@@ -31,11 +31,26 @@ export default function Navbar() {
           <NavLink to="/" style={activeStyle}>
             Home
           </NavLink>
-          <NavLink to="/about" style={activeStyle}>
-            About
+          <NavLink to="/technology" style={activeStyle}>
+            Technology
           </NavLink>
-          <NavLink to="/contact" style={activeStyle}>
-            Contact
+          <NavLink to="/sports" style={activeStyle}>
+            Sports
+          </NavLink>
+          <NavLink to="/music" style={activeStyle}>
+            Music
+          </NavLink>
+          <NavLink to="/fashion" style={activeStyle}>
+            Fashion
+          </NavLink>
+          <NavLink to="/movies" style={activeStyle}>
+            Movies
+          </NavLink>
+          <NavLink to="/lifestyle" style={activeStyle}>
+            Lifestyle
+          </NavLink>
+          <NavLink to="/travel" style={activeStyle}>
+            Travel
           </NavLink>
         </ul>
         <div className="burger">
@@ -60,16 +75,39 @@ export default function Navbar() {
               Home
             </NavLink>
           </li>
+    <NavLink className="sidenav-seperator" to="/technology" onClick={closeSidenav}>
+            Technology
+          </NavLink>
           <li className="sidenav-seperator">
-            <NavLink to="/about" onClick={closeSidenav}>
-              About Us
+            <NavLink to="/sports" onClick={closeSidenav}>
+              Sports
             </NavLink>
           </li>
           <li className="sidenav-seperator">
-            <NavLink to="/contact" onClick={closeSidenav}>
-              Contact
+            <NavLink to="/music" onClick={closeSidenav}>
+              Music
             </NavLink>
           </li>
+          <li className="sidenav-seperator">
+            <NavLink to="/fashion" onClick={closeSidenav}>
+              Fashion
+            </NavLink>
+          </li>
+          <li className="sidenav-seperator">
+            <NavLink to="/movies" onClick={closeSidenav}>
+              Movies
+            </NavLink>
+          </li>     
+          <li className="sidenav-seperator">
+            <NavLink to="/lifestyle" onClick={closeSidenav}>
+              Lifestyle
+            </NavLink>
+          </li>     
+          <li className="sidenav-seperator">
+            <NavLink to="/travel" onClick={closeSidenav}>
+              Travel
+            </NavLink>
+          </li>     
         </ul>
       </div>
     </>

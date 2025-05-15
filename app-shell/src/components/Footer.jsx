@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-import navlogo from '../img/gulime.png'
+import navlogo from '../img/gulime.png';
+import navlogos from '../img/gulime_g.png'
 export default function Footer() {
    const navigate = useNavigate();
 
-      const scrollTo = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      };
+ const scrollToTopNav = () => {
+  const nav = document.getElementById('top-navbar');
+  if (nav) nav.scrollIntoView({ behavior: 'smooth' });
+};
     
 return (
 <>
@@ -70,14 +72,14 @@ return (
 
 
 
-<div className="navlinks sm-navlink" style={{flexWrap:'nowrap'}}>
-<a to='/contact' >Contact text</a>
+<div className="navlinks sm-navlink" >
+<a to='/contact' > Contact | </a>
+<a to='/about' >About Us | </a>
+<a  to='/terms' > Terms of Use | </a>
 
-<a  to='/terms' >terms of Use</a>
+<a  to='/privacy' >Privacy Policies |</a>
 
-<a  to='/privacy' >Privacy Policies </a>
-
-<a style={{border:'none'}}  to='/cookie'>Cookie Policies</a>
+<a style={{border:'none'}}  to='/cookie'> Cookie Policies</a>
 
 
 </div>
@@ -105,7 +107,7 @@ textAlign:'center'
 
 <div className="footer-logo-box">
 
-<img title='To Top'  onClick={scrollTo}  src={navlogo} alt="..." />
+<img title='To Top'  onClick={scrollToTopNav}  src={navlogos} alt="..."     />
 
 </div>
 </footer>

@@ -12,7 +12,7 @@ body, html {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #7318e0;
+    background-color: #2563eb;
   }
   
   .navlinks {
@@ -44,9 +44,9 @@ body, html {
     color: white;
   }
     
-    .logo{
+    /* .logo{
     margin: auto;
-    }
+    } */
     
     .logo a{
     margin: auto;
@@ -97,6 +97,8 @@ body, html {
           color: #fff;
           transition: 0.3s;
           display: block;
+          padding-left: 10px;
+
       }
       
       .closebtn {
@@ -119,7 +121,7 @@ body, html {
       
       .sidenav-headline img {
        
-      width: 5rem;
+      width: 50%;
       }
       
       .sidenav-category {
@@ -131,6 +133,7 @@ body, html {
     }
     @media(max-width:800px){
         .navlinks{display: none;}
+        .sm-navlink{display: block;line-height: 2;}
     }
 
     /* nopage css starts here */
@@ -199,7 +202,7 @@ body, html {
 /*footer css*/
 .footer{
 padding: 3px;
-background: #184ae0;
+background: #2563eb;
 text-align: center;}
   
 .flex-footer{
@@ -231,31 +234,18 @@ padding: 0;
 .footer-navlink li{
 list-style-type: none;
 }
-.footer-navlink li:hover{
-background: #fff;
-border-radius: 5px;
-}
-.footer-navlink li:hover a{
-color: #184ae0;
-}
-.footer-navlink li:hover .footer-headline{
-color: #184ae0;
-border-bottom: 1px solid #184ae0;
-}
+
 
 .footer-navlink a{
 text-decoration: none;
 color: #fff;
 line-height: 2.5;
-  cursor: pointer;
-  }
+cursor: pointer;
+}
   
- 
-  
-  .footer-logo-box{
-  margin: auto;
-  
-  }
+.footer-logo-box{
+margin: auto;
+}
 
   .footer-logo-box img{
     height:36px;
