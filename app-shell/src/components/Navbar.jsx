@@ -56,7 +56,8 @@ Home
 </NavLink>
 </li>
 
-<li className="sidenav-seperator">  <NavLink to="/technology" onClick={closeSidenav}>
+<li className="sidenav-seperator">  
+<NavLink to="/technology" onClick={closeSidenav}>
 Technology
 </NavLink>
 </li>
