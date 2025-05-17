@@ -7,24 +7,44 @@ dotenv.config();
 
 const app = express();
 
+// Important: Configure middleware BEFORE defining routes
 // Enable CORS for all origins (for development)
-// app.use(cors());
+// Make sure cors is properly configured
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173'); // Replace with your frontend URL
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
-// OR restrict it to Vite only
-app.use(cors({ origin: 'http://localhost:5173' }));
+
+// Parse JSON request bodies
+app.use(express.json());
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
+// Test route to verify CORS is working
+app.get('/test', (req, res) => {
+  res.json({ message: 'CORS is working!' });
+});
+
 app.get('/products', async (req, res) => {
   try {
-    const result = await pool.query('SELECT product_name FROM your_table_name');
+    // Make sure your table name is correct
+    const result = await pool.query('SELECT * FROM products');
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Database error');
+    console.error('Database error:', err);
+    res.status(500).json({ error: 'Database error', details: err.message });
   }
 });
 
