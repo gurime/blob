@@ -4,43 +4,44 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
 const app = express();
 
-// Important: Configure middleware BEFORE defining routes
-// Enable CORS for all origins (for development)
-// Make sure cors is properly configured
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173'); // Replace with your frontend URL
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// CORS middleware configuration
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+};
 
+// Apply CORS middleware
+app.use(cors(corsOptions));
 
 // Parse JSON request bodies
 app.use(express.json());
 
+// Database configuration
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Test route to verify CORS is working
-app.get('/test', (req, res) => {
+// Health check route
+app.get('/', (_, res) => {
+  res.json({ status: 'Server is running' });
+});
+
+// Test route to verify CORS
+app.get('/test', (_, res) => {
   res.json({ message: 'CORS is working!' });
 });
 
-app.get('/products', async (req, res) => {
+// Products route
+app.get('/products', async (_, res) => {
+  console.log('Products route hit');
   try {
-    // Make sure your table name is correct
     const result = await pool.query('SELECT * FROM products');
+    console.log(`Query executed, returned ${result.rows.length} products`);
     res.json(result.rows);
   } catch (err) {
     console.error('Database error:', err);
@@ -48,5 +49,14 @@ app.get('/products', async (req, res) => {
   }
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something broke!' });
+});
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`CORS enabled for origin: ${corsOptions.origin}`);
+});
