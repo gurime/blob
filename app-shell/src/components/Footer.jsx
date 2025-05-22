@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import navlogo from '../img/gulime.png';
 import navlogos from '../img/gulime_g.png'
 export default function Footer() {
@@ -9,6 +9,11 @@ const nav = document.getElementById('top-navbar');
 if (nav) nav.scrollIntoView({ behavior: 'smooth' });
 };
 
+const activeStyle = ({ isActive }) => ({
+backgroundColor: isActive ? 'blue' : '',
+color: isActive ? 'white' : '',
+textDecoration: 'none'
+})
 return (
 <>
 <footer className="footer">
@@ -49,7 +54,7 @@ return (
 </div>
 {/*third tablebox stops here*/}
 <div className="footer-tablebox" style={{borderRight:'none' ,borderBottom:'none'}}> 
-<div className="footer-headline">Travel</div>
+<div className="footer-headline">text</div>
 <ul className="footer-navlink">
 <li><Link to="#!">text</Link></li>
 <li><Link to="#!">text</Link></li>
@@ -73,13 +78,14 @@ return (
 
 
 <div className="navlinks sm-navlink" >
-<a to='/contact' > Contact Us | </a>
-<a to='/about' >About Us | </a>
-<a  to='/terms' > Terms of Use | </a>
+<NavLink to='/contact' style={activeStyle} > Contact Us</NavLink>
+<NavLink to='/about' style={activeStyle}>About Us</NavLink>
+<NavLink to='/help' style={activeStyle}>Help</NavLink>
+<NavLink to='/faq' style={activeStyle}>FAQ</NavLink> 
+<NavLink  to='/terms' style={activeStyle}> Terms of Use</NavLink> 
+<NavLink  to='/privacy' style={activeStyle}>Privacy Policies</NavLink>
 
-<a  to='/privacy' >Privacy Policies |</a>
-
-<a style={{border:'none'}}  to='/cookie'> Cookie Policies</a>
+<NavLink style={activeStyle}  to='/cookie'>Cookie Policies</NavLink>
 
 
 </div>

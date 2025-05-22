@@ -23,7 +23,11 @@ return (
 <div className="logo">
 <NavLink to="/"><img src={navlogo} alt="Logo" /></NavLink>
 </div>
+
+<form className='nav-search-form' action="">
 <input className='nav-search' placeholder='Search Gulime' type="text" />
+<input className='nav-search-btn' type="submit" value="Search" />
+</form>
 
 <ul className="navlinks">
 <NavLink to="/" style={activeStyle}>Home</NavLink>
