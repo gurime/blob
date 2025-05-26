@@ -1,37 +1,29 @@
-// models/Product.js
 import mongoose from 'mongoose';
 
-// Define the Product schema
-const FeaturedproductSchema = new mongoose.Schema({
-  product_name: {
-    type: String,
-    required: [true, 'Product name is required'],
-    trim: true,
-    maxlength: [100, 'Product name cannot be more than 100 characters']
+// Define the Featured schema
+const featuredSchema = new mongoose.Schema({
+  product_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product', // Reference by string name instead of model import
+    required: true,
+    index: true // Add index for better query performance
   },
-  price: {
+  priority: {
     type: Number,
-    required: [true, 'Price is required'],
-    min: [0, 'Price must be positive']
-  },
-  category: {
-    type: String,
-    required: [true, 'Category is required'],
-    trim: true
-  },
-  img_url: {
-    type: String,
-    required: false,
-    default: ''
+    default: 0,
+    index: true // Add index for sorting
   },
   created_at: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true // Add index for sorting
   }
 });
 
-// Create and export the Product model
-const FeaturedProduct = mongoose.model('Product', FeaturedproductSchema);
+// Add compound index for efficient querying
+featuredSchema.index({ priority: -1, created_at: -1 });
 
-// Use ES Modules export syntax instead of CommonJS
-export default FeaturedProduct;
+// Check if the model exists before compiling
+const Featured = mongoose.models.Featured || mongoose.model('Featured', featuredSchema);
+
+export default Featured;

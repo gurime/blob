@@ -30,8 +30,7 @@ const productSchema = new mongoose.Schema({
   }
 });
 
-// Create and export the Product model
-const Product = mongoose.model('Product', productSchema);
+// Check if the model exists before compiling
+const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
 
-// Use ES Modules export syntax instead of CommonJS
 export default Product;
