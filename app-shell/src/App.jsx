@@ -8,6 +8,7 @@ import Help from "./components/Help"
 import Terms from "./components/Terms"
 import Privacy from "./components/Privacy"
 import Cookie from "./components/Cookie"
+import Details from "./components/Details"
 
 
 function App() {
@@ -16,6 +17,8 @@ function App() {
 <>
 <Routes>
 <Route path="/" element={<Home />} />
+<Route path="/product/:id" element={<Details />} />
+<Route path="/product/:collection/:id" element={<Details />} />
 <Route path="/about" element={<About />} />
 <Route path="/contact" element={<Contact />} />
 <Route path="/faq" element={<Faq />} /> 
