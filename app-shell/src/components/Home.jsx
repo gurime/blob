@@ -38,7 +38,6 @@ await getDocs(collection(db, 'products'));
     const querySnapshot = await getDocs(collection(db, 'products'));
     const productsList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     setProducts(productsList);
-    // console.log(productsList);
   } catch (error) {
     setError(error.message);
   }
@@ -98,8 +97,8 @@ return (
   <p>{product.description}</p>
   <p>${product.price}</p>
     <img src={`/assets/images/${product.imgUrl}`} alt={product.product_name} />
-    <Link to={`/product/${product.collection}/${product._id}`}>
-    View Details
+<Link to={`/product/${encodeURIComponent(product.product_name)}`}>
+  View Details
 </Link>
     </div>
     
