@@ -75,34 +75,44 @@ return (
 <>
 <Navbar />
   
-        {/* Featured Products Section */}
-        <section className="featured-products">
-          <h2>Featured Products</h2>
-          <div className="products-grid">
-            {featuredProducts.map(product => (
-              <div key={product._id} className="product-card">
-                    <img src={`/assets/images/${product.imgUrl}`} alt={product.product_name} />
+ <div className="container">
+      {/* Featured Products Section */}
+      <section className="featured-products">
+        <h2>Featured Products</h2>
+        <div className="products-grid">
+          {featuredProducts.map(product => (
+            <div key={product._id} className="product-card">
+              <img src={`/assets/images/${product.imgUrl}`} alt={product.product_name} />
+              <div className="product-info">
                 <h3>{product.product_name}</h3>
-                <p>${product.price}</p>
-                <p>{product.category}</p>
+                <p className="product-price">${product.price}</p>
+                <p className="product-category">{product.category}</p>
               </div>
-            ))}
-          </div>
-        </section>
-{products.map(product => (
-<div key={product.id} className="products-card">
-  <h2>{product.product_name}</h2>
-    <h3>{product.category}</h3>
+            </div>
+          ))}
+        </div>
+      </section>
 
-  <p>{product.description}</p>
-  <p>${product.price}</p>
-    <img src={`/assets/images/${product.imgUrl}`} alt={product.product_name} />
-<Link to={`/product/${encodeURIComponent(product.product_name)}`}>
-  View Details
-</Link>
+      {/* All Products Section */}
+      <section >
+        <h2>All Products</h2>
+        <div className="products-grid">
+          {products.map(product => (
+            <div key={product.id} className="products-card">
+              <h2>{product.product_name}</h2>
+              <h3>{product.category}</h3>
+              <p>{product.description}</p>
+              <p className="product-price">${product.price}</p>
+              <img src={`/assets/images/${product.imgUrl}`} alt={product.product_name} />
+              <Link to={`/product/${encodeURIComponent(product.product_name)}`} className="view-details">
+                View Details
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
-    
-))}
+
 
 <Footer />
 </>

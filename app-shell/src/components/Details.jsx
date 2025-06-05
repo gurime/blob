@@ -3,12 +3,11 @@ import { useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import ClipLoader from "react-spinners/ClipLoader";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../db/firebase";
 
 export default function Details() {   
   const params = useParams();
-  console.log('All params:', params);
   
   let { id } = useParams();
   const [product, setProduct] = useState(null);
@@ -122,11 +121,11 @@ export default function Details() {
     <>
       <Navbar />
       <div className="product-details" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-        <h1>{product.product_name || product.name || 'Product Name'}</h1>
+        <h1>{product.product_name || 'Product Name'}</h1>
         {product.imgUrl && (
           <img 
             src={`/assets/images/${product.imgUrl}`} 
-            alt={product.product_name || product.name || 'Product'} 
+            alt={product.product_name || 'Product'} 
             style={{ maxWidth: '100%', height: 'auto' }}
             onError={(e) => {
               e.target.onerror = null;
