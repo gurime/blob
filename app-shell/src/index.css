@@ -325,6 +325,417 @@ padding: 0.8rem 0;
 
 /* home css */
 
+/* details css starts here */
+ .product-container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 14px 18px;
+  font-family: 'Amazon Ember', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #0F1111;
+  background-color: #FFFFFF;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: #565959;
+  margin-bottom: 8px;
+}
+
+.breadcrumb a {
+  color: #007185;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: #C7511F;
+  text-decoration: underline;
+}
+
+.product-details {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 30px;
+  margin-top: 16px;
+}
+
+.left-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.image-section {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+.main-image-container {
+  border: 1px solid #D5D9D9;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  background: #FFFFFF;
+  margin-bottom: 16px;
+}
+
+.main-image {
+  max-width: 100%;
+  max-height: 500px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.thumbnail-images {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.thumbnail {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #D5D9D9;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.thumbnail:hover {
+  border-color: #007185;
+}
+
+.thumbnail.active {
+  border-color: #007185;
+  border-width: 2px;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.product-info {
+  padding-right: 20px;
+}
+
+.product-title {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: #0F1111;
+  margin-bottom: 8px;
+}
+
+.brand-link {
+  color: #007185;
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+.brand-link:hover {
+  color: #C7511F;
+  text-decoration: underline;
+}
+
+.rating-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.stars {
+  color: #FF9900;
+  font-size: 16px;
+}
+
+.rating-text {
+  color: #007185;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.rating-text:hover {
+  color: #C7511F;
+  text-decoration: underline;
+}
+
+.price-section {
+  margin-bottom: 20px;
+}
+
+.price-label {
+  font-size: 14px;
+  color: #565959;
+  margin-bottom: 4px;
+}
+
+.current-price {
+  font-size: 28px;
+  color: #B12704;
+  font-weight: 400;
+}
+
+.price-currency {
+  font-size: 18px;
+  vertical-align: top;
+}
+
+.original-price {
+  font-size: 14px;
+  color: #565959;
+  text-decoration: line-through;
+  margin-left: 8px;
+}
+
+.savings {
+  color: #CC0C39;
+  font-size: 14px;
+  margin-left: 8px;
+}
+
+.prime-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  margin-top: 8px;
+}
+
+.prime-logo {
+height: 16px;
+
+}
+
+.product-description {
+  margin-top: 24px;
+  line-height: 1.5;
+}
+
+.description-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #0F1111;
+}
+
+.description-text {
+  color: #0F1111;
+  line-height: 1.5;
+}
+
+.purchase-section {
+  background: #FFFFFF;
+  border: 1px solid #D5D9D9;
+  border-radius: 8px;
+  padding: 20px;
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+.buy-box-price {
+  font-size: 28px;
+  color: #B12704;
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+
+.delivery-info {
+  font-size: 14px;
+  color: #0F1111;
+  margin-bottom: 16px;
+}
+
+.delivery-info .highlight {
+  color: #007185;
+  font-weight: 700;
+}
+
+.stock-info {
+  color: #007600;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.quantity-selector {
+  margin-bottom: 16px;
+}
+
+.quantity-label {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.quantity-dropdown {
+  width: 80px;
+  padding: 8px;
+  border: 1px solid #888C8C;
+  border-radius: 8px;
+  background: #F7FAFA;
+  font-size: 14px;
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  background: linear-gradient(to bottom, #04a9ce, #0036f7);
+  border: 1px solid #FCD200;
+  border-radius: 20px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #ffffff;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+
+.add-to-cart-btn:hover {
+  background: linear-gradient(to bottom, #00f73a, #049e1d);
+}
+
+.buy-now-btn {
+  width: 100%;
+  background: linear-gradient(to bottom, #5d00ff, #b611e4);
+  border: 1px solid #E47911;
+  border-radius: 20px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #FFFFFF;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: background 0.2s;
+}
+
+.buy-now-btn:hover {
+  background: linear-gradient(to bottom, #E47911, #D86F00);
+}
+
+.secure-transaction {
+  font-size: 12px;
+  color: #565959;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.secure-transaction a {
+  color: #007185;
+  text-decoration: none;
+}
+
+.sold-by {
+  font-size: 14px;
+  color: #0F1111;
+  border-top: 1px solid #E6E6E6;
+  padding-top: 16px;
+}
+
+.sold-by a {
+  color: #007185;
+  text-decoration: none;
+}
+
+.sold-by a:hover {
+  color: #C7511F;
+  text-decoration: underline;
+}
+
+.additional-options {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #E6E6E6;
+}
+
+.option-link {
+  display: block;
+  color: #007185;
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.option-link:hover {
+  color: #C7511F;
+  text-decoration: underline;
+}
+
+/* Loading and Error States */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+}
+
+.error-message {
+  text-align: center;
+  padding: 2rem;
+  color: #B12704;
+  font-size: 18px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .product-details {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .left-column {
+    grid-template-columns: 1fr;
+  }
+
+  .purchase-section {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-container {
+    padding: 8px 12px;
+  }
+
+  .product-title {
+    font-size: 20px;
+  }
+
+  .current-price {
+    font-size: 24px;
+  }
+
+  .buy-box-price {
+    font-size: 24px;
+  }
+
+  .left-column {
+    gap: 20px;
+  }
+
+  .image-section {
+    position: static;
+  }
+
+  .purchase-section {
+    position: static;
+    margin-top: 20px;
+  }
+}
+/* details css ends here */
+
 /* loading */
 .loading{
 display: flex;

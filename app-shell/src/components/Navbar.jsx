@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import navlogo from '../img/gulime.png'
 import { useState } from 'react';
+import { BsCart } from 'react-icons/bs';
 
 export default function Navbar() {
 
@@ -36,6 +37,7 @@ return (
 <NavLink to="/music" style={activeStyle}>Music</NavLink>
 <NavLink to="/fashion" style={activeStyle}>Fashion</NavLink>
 <NavLink to="/movies" style={activeStyle}>Movies</NavLink>
+<BsCart color='rgb(255, 191, 0)' size={35}/>
 </ul>
 
 <div className="burger">
@@ -53,6 +55,10 @@ return (
 <NavLink to="/" className="sidenav-headline" onClick={closeSidenav}>
 <img src={navlogo} alt="logo" />
 </NavLink>
+
+
+  <BsCart className='sidenav-seperator' color='rgb(255, 191, 0)' size={35}/>
+
 
 <ul>
 <li className="sidenav-seperator">
