@@ -5,9 +5,7 @@ import Footer from "./Footer";
 import ClipLoader from "react-spinners/ClipLoader";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../db/firebase";
-import gulimepremium from "/assets/images/gulimepremium.png";
 export default function Details() {   
-  const params = useParams();
   
   let { id } = useParams();
   const [product, setProduct] = useState(null);
@@ -17,7 +15,6 @@ export default function Details() {
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    // Scroll to top when component mounts
     
     const fetchProduct = async () => {
       try {
