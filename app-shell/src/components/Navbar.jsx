@@ -37,7 +37,7 @@ return (
 <NavLink to="/music" style={activeStyle}>Music</NavLink>
 <NavLink to="/fashion" style={activeStyle}>Fashion</NavLink>
 <NavLink to="/movies" style={activeStyle}>Movies</NavLink>
-<BsCart color='rgb(255, 191, 0)' size={35}/>
+<BsCart color='#fff' size={30}/>
 </ul>
 
 <div className="burger">

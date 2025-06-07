@@ -13,7 +13,7 @@ export default function Details() {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-
+const [showMore, setShowMore] = useState(false);
   useEffect(() => {
     
     const fetchProduct = async () => {
@@ -143,12 +143,18 @@ export default function Details() {
   }
 
   // Mock multiple images for demo - you can replace with actual product images
-  const productImages = [
+  const rawImages = [
     product?.imgUrl || 'placeholder.png',
-    product?.imgUrl || 'placeholder.png',
-    product?.imgUrl || 'placeholder.png',
-    product?.imgUrl || 'placeholder.png'
+    product?.imgUrl1 || 'placeholder.png',
+    product?.imgUrl2 || 'placeholder.png',
+    product?.imgUrl3 || 'placeholder.png',
+    product?.imgUrl4 || 'placeholder.png',
+    product?.imgUrl5 || 'placeholder.png',
+    product?.imgUrl6 || 'placeholder.png',
+    product?.imgUrl7 || 'placeholder.png',
   ];
+
+  const productImages = rawImages.filter((img) => img && img !== 'placeholder.png');
 
   const formattedPrice = formatPrice(product.price);
   const originalPrice = generateOriginalPrice(product.price);
@@ -224,14 +230,226 @@ export default function Details() {
                 </div>
               </div>
 
-              <div className="product-description">
-                <h3 className="description-title">About this item</h3>
-                <div className="description-text">
-                  {product.description || 'Product description not available.'}
-                </div>
-              </div>
-            </div>
+
+
+  {/* Main Description */}
+<div className="product-description">
+  <h3 className="description-title">About this item</h3>
+  
+  {/* Key Features - Bullet Points */}
+  <ul className="feature-list">
+    {/* Dynamic features based on product data */}
+    {product.model && (
+      <li>
+        <strong>Model:</strong> {product.model}
+      </li>
+    )}
+    
+    {product.brand && (
+      <li>
+        <strong>Brand:</strong> {product.brand} 
+      </li>
+    )}
+    
+    {product.category && (
+      <li>
+        <strong>Category:</strong> {product.category}
+      </li>
+    )}
+    
+    {/* Add more dynamic features based on available fields */}
+    {product.color && (
+      <li>
+        <strong>Color:</strong> Available in {product.color} finish
+      </li>
+    )}
+    
+    {product.storage && (
+      <li>
+        <strong>Storage:</strong> {product.storage} of high-speed storage capacity
+      </li>
+    )}
+    
+    {product.warranty && (
+      <li>
+        <strong>Warranty:</strong> {product.warranty} manufacturer warranty included
+      </li>
+    )}
+    
+    {/* Default features if specific data isn't available */}
+    <li>
+      <strong>Premium Quality:</strong> Built with high-grade materials for durability and performance
+    </li>
+    
+    <li>
+      <strong>Fast Shipping:</strong> Ships quickly with secure packaging and tracking
+    </li>
+    
+    <li>
+      <strong>Customer Support:</strong> Backed by excellent customer service and technical support
+    </li>
+  </ul>
+
+  {/* Main Description */}
+  <div className="detailed-description">
+    {/* Primary Description */}
+    <div className="description-text">
+      <p>
+        {product.description}
+      </p>
+      
+      {/* Additional Description Fields */}
+      {product.description1 && (
+        <p>{product.description1}</p>
+      )}
+      
+      {product.description2 && (
+        <p>{product.description2}</p>
+      )}
+    </div>
+
+    {/* Expandable "Show More" Section */}
+    <div className="expandable-description">
+      <div className={`additional-content ${showMore ? 'expanded' : 'collapsed'}`}>
+        {/* Extended Product Information */}
+        <div className="extended-info">
+          <h5>Product Features & Benefits</h5>
+          <p>
+            {product.description3}
+          </p>
+          
+          {product.description4 && <p>{product.description4}</p>}
+          
+          <h5>Advanced Technology</h5>
+          <p>
+            {product.description5}
+          </p>
+          
+          {product.description6 && <p>{product.description6}</p>}
+          
+          <h5>Perfect For</h5>
+          <ul className="use-cases">
+            <li>{product.useCase1}</li>
+            <li>{product.useCase2}</li>
+            <li>{product.useCase3}</li>
+            <li>{product.useCase4}</li>
+            <li>{product.useCase5}</li>
+          </ul>
+          
+          <h5>What's in the Box</h5>
+          <ul className="box-contents">
+            <li>{product.boxItem1}</li>
+            <li>{product.boxItem2}</li>
+            <li>{product.boxItem3}</li>
+            <li>{product.boxItem4}</li>
+          </ul>
+          
+          {/* Additional detailed specs */}
+          <h5>Detailed Specifications</h5>
+          <div className="detailed-specs">
+            <p><strong>Chip:</strong> {product.chipDetails}</p>
+            <p><strong>Display:</strong> {product.displayDetails}</p>
+            <p><strong>Storage:</strong> {product.storageDetails}</p>
+            <p><strong>Connectivity:</strong> {product.connectivityDetails}</p>
+            <p><strong>Camera:</strong> {product.cameraDetails}</p>
           </div>
+        </div>
+      </div>
+      
+      <button 
+        className="show-more-btn"
+        onClick={() => setShowMore(!showMore)}
+      >
+        {showMore ? 'Show less' : 'Show more'}
+        <span className={`arrow ${showMore ? 'up' : 'down'}`}>▼</span>
+      </button>
+    </div>
+    
+    {/* Additional product details section */}
+    <div className="product-highlights">
+      <h4>Product Highlights</h4>
+      <div className="highlights-grid">
+        <div className="highlight-item">
+          <span className="highlight-icon">⚡</span>
+          <div>
+            <strong>High Performance</strong>
+            <p>Optimized for speed and efficiency in demanding tasks</p>
+          </div>
+        </div>
+        
+        <div className="highlight-item">
+          <span className="highlight-icon">🛡️</span>
+          <div>
+            <strong>Reliable & Secure</strong>
+            <p>Built-in security features and robust construction</p>
+          </div>
+        </div>
+        
+        <div className="highlight-item">
+          <span className="highlight-icon">🎯</span>
+          <div>
+            <strong>User-Friendly</strong>
+            <p>Intuitive design that's easy to set up and use</p>
+          </div>
+        </div>
+        
+        <div className="highlight-item">
+          <span className="highlight-icon">📞</span>
+          <div>
+            <strong>Support Included</strong>
+            <p>Comprehensive customer support and documentation</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Technical Specifications Table */}
+  <div className="tech-specs">
+    <h4>Technical Details</h4>
+    <table className="specs-table">
+      <tbody>
+        {product.brand && (
+          <tr>
+            <td className="spec-label">Brand</td>
+            <td className="spec-value">{product.brand}</td>
+          </tr>
+        )}
+        {product.model && (
+          <tr>
+            <td className="spec-label">Model</td>
+            <td className="spec-value">{product.model}</td>
+          </tr>
+        )}
+        {product.category && (
+          <tr>
+            <td className="spec-label">Product Category</td>
+            <td className="spec-value">{product.category}</td>
+          </tr>
+        )}
+        <tr>
+          <td className="spec-label">Item Weight</td>
+          <td className="spec-value">{product.weight || '1.2 lbs'}</td>
+        </tr>
+        <tr>
+          <td className="spec-label">Product Dimensions</td>
+          <td className="spec-value">{product.dimensions || '10 x 7 x 0.3 inches'}</td>
+        </tr>
+        <tr>
+          <td className="spec-label">Manufacturer</td>
+          <td className="spec-value">{product.brand || 'Official Store'}</td>
+        </tr>
+        <tr>
+          <td className="spec-label">Country of Origin</td>
+          <td className="spec-value">{product.origin || 'USA'}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+</div>
+
 
           {/* Purchase Section */}
           <div className="purchase-section">
