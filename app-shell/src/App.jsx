@@ -9,6 +9,7 @@ import Terms from "./components/Terms"
 import Privacy from "./components/Privacy"
 import Cookie from "./components/Cookie"
 import Details from "./components/Details"
+import CategoryPage from "./components/CategoryPage"
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
 <Routes>
 <Route path="/" element={<Home />} />
 <Route path="/product/:id" element={<Details />} />
+<Route path="/category/:categoryName" element={<CategoryPage />} />
 <Route path="/about" element={<About />} />
 <Route path="/contact" element={<Contact />} />
 <Route path="/faq" element={<Faq />} /> 
