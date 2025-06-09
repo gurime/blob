@@ -1,12 +1,19 @@
 import { NavLink } from 'react-router-dom'
 import navlogo from '../img/gulime.png'
-import { useState } from 'react';
-import { BsCart } from 'react-icons/bs';
-
+import { useEffect, useRef, useState } from 'react';
+import { HiOutlineShoppingCart } from 'react-icons/hi';
 export default function Navbar() {
 
 const [isOpen, setIsOpen] = useState(false);
 
+const navRef = useRef(null);
+
+useEffect(() => {
+// Focus on mount
+if (navRef.current) {
+navRef.current.focus();
+}
+}, []);
 
 const activeStyle = ({ isActive }) => ({
 backgroundColor: isActive ? 'blue' : '',
@@ -20,7 +27,7 @@ const closeSidenav = () => {setIsOpen(false);};
 return (
 <>
 {/* navbar starts here */}
-<nav className="navbar" id="top-navbar">
+<nav ref={navRef} tabIndex={-1} className="navbar" id="top-navbar">
 <div className="logo">
 <NavLink to="/"><img src={navlogo} alt="Logo" /></NavLink>
 </div>
@@ -32,12 +39,12 @@ return (
 
 <ul className="navlinks">
 <NavLink to="/" style={activeStyle}>Home</NavLink>
-<NavLink to="/technology" style={activeStyle}>Technology</NavLink>
+<NavLink to="/technology" style={activeStyle}>Electronics</NavLink>
 <NavLink to="/sports" style={activeStyle}>Sports</NavLink>
 <NavLink to="/music" style={activeStyle}>Music</NavLink>
 <NavLink to="/fashion" style={activeStyle}>Fashion</NavLink>
 <NavLink to="/movies" style={activeStyle}>Movies</NavLink>
-<BsCart color='#fff' size={30}/>
+<HiOutlineShoppingCart color='#fff' size={30}/> 
 </ul>
 
 <div className="burger">
@@ -57,7 +64,7 @@ return (
 </NavLink>
 
 
-  <BsCart className='sidenav-seperator' color='rgb(255, 191, 0)' size={35}/>
+<HiOutlineShoppingCart className='sidenav-seperator' color='#fff' size={30}/> 
 
 
 <ul>
@@ -69,7 +76,7 @@ Home
 
 <li className="sidenav-seperator">  
 <NavLink to="/technology" onClick={closeSidenav}>
-Technology
+Electronics
 </NavLink>
 </li>
           

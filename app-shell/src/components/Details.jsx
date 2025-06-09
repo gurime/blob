@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -25,7 +25,7 @@ export default function Details() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const collections = ['products', 'featuredProducts', 'Technology', 'featuredTechnology'];
+        const collections = ['products', 'featuredProducts'];
         let productData = null;
         let foundCollection = null;
 
@@ -56,36 +56,56 @@ export default function Details() {
     };
 
     // Function to search in a specific collection
-    const searchInCollection = async (collectionName, searchTerm) => {
-      try {
-        const collectionRef = collection(db, collectionName);
+const searchInCollection = async (collectionName, searchTerm) => {
+  try {
+    const collectionRef = collection(db, collectionName);
+    
+    // Get all documents and search through them
+    const querySnapshot = await getDocs(collectionRef);
+    
+    for (const doc of querySnapshot.docs) {
+      const data = doc.data();
+      
+      // Normalize search term and data for comparison
+      const normalizedSearchTerm = searchTerm.toLowerCase().trim();
+      
+      // Check if any field matches the search term
+      const productName = (data.product_name || '').toLowerCase().trim();
+      const name = (data.name || '').toLowerCase().trim();
+      const title = (data.title || '').toLowerCase().trim();
+      const docId = doc.id.toLowerCase().trim();
+      
+      if (
+        productName === normalizedSearchTerm ||
+        name === normalizedSearchTerm ||
+        title === normalizedSearchTerm ||
+        docId === normalizedSearchTerm ||
+        // Also try exact matches without normalization in case of special characters
+        data.product_name === searchTerm ||
+        data.name === searchTerm ||
+        data.title === searchTerm ||
+        doc.id === searchTerm
+      ) {
+        console.log(`Found product in ${collectionName}:`, {
+          docId: doc.id,
+          productName: data.product_name,
+          searchTerm: searchTerm
+        });
         
-        // Get all documents and search through them
-        const querySnapshot = await getDocs(collectionRef);
-        
-        for (const doc of querySnapshot.docs) {
-          const data = doc.data();
-          
-          // Check if any field matches the search term
-          if (
-            data.product_name === searchTerm ||
-            data.name === searchTerm ||
-            data.title === searchTerm ||
-            // Check if document ID matches (for backwards compatibility)
-            doc.id === searchTerm
-          ) {
-            return {
-              id: doc.id, // This will be the actual Firestore document ID
-              ...data
-            };
-          }
-        }
-        
-        return null;
-      } catch (error) {
-        return null;
+        return {
+          id: doc.id, // This will be the actual Firestore document ID
+          ...data
+        };
       }
-    };
+    }
+    
+    console.log(`No product found in ${collectionName} for search term: "${searchTerm}"`);
+    return null;
+  } catch (error) {
+    console.error(`Error searching in ${collectionName}:`, error);
+    return null;
+  }
+};
 
     if (id) {
       fetchProduct();
@@ -185,22 +205,8 @@ export default function Details() {
     setQuantity(newQuantity);
   };
 
-  const getDeliveryDate = (offsetDays) => {
-  const date = new Date();
-  date.setDate(date.getDate() + offsetDays);
-  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-};
 
-const countdownToCutoff = () => {
-  const now = new Date();
-  const cutoff = new Date();
-  cutoff.setHours(23, 59, 0, 0);
-  const diff = cutoff - now;
-
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours} hrs ${minutes} mins`;
-};
+  // Early return if still loading
 
   if (loading) {
     return (
@@ -214,6 +220,7 @@ const countdownToCutoff = () => {
     );
   }
 
+  // Early return if there's an error
   if (error) {
     return (
       <>
@@ -256,22 +263,26 @@ const countdownToCutoff = () => {
 
   return (
     <>
-      <Navbar />
+<Navbar />
 <div className="product-container">
 {/* Breadcrumb Navigation */}
 <div className="breadcrumb">
 <Link to="/">Home</Link>
+
 <Link to="/products">All Products</Link>
+
+<Link to={`/category/${encodeURIComponent(product.SourceCategory )}`}>
+{product.SourceCategory }
+</Link>
 
 <Link to={`/category/${encodeURIComponent(product.category)}`}>
 {product.category}
 </Link>
 
 <Link to={`/category/${encodeURIComponent(product.category)}/${encodeURIComponent(product.brand)}`}>
-{product.subcategory || product.brand}
+{product.brand}
 </Link>
 
-<span className="current-product">{product.product_name}</span>
 </div>
 
 <div id="product-details" className="product-details">
@@ -317,62 +328,66 @@ alt={`Product view ${index + 1}`}/>
 {/* rating section */}
 
 <div className="price-section">
-  <div className="price-row">
-    <span className="price-label">Price:</span>
-    <span className="current-price">
-      <span className="price-currency">$</span>
-      {formatPrice(configPrice || product?.price || 0)}
-    </span>
-  </div>
+<div className="price-row">
+<span className="price-label">Price:</span>
+<span className="current-price">
+<span className="price-currency">$</span>
+{formatPrice(configPrice || product?.price || 0)}
+</span>
+</div>
 
   {/* Delivery Info Section */}
 <DeliveryInfo hasPremium={!!product?.gpremium} />
 
 
-  {/* Show base price if upgraded config is selected */}
-  {configPrice > basePrice && (
-    <div className="base-price">
-      Base price: ${formatPrice(basePrice)}
-    </div>
-  )}
+{/* Show base price if upgraded config is selected */}
+{configPrice > basePrice && (
+<div className="base-price">
+Base price: ${formatPrice(basePrice)}
+</div>
+)}
 
-  {/* Show quantity pricing */}
-  {quantity > 1 && (
-    <div className="quantity-pricing">
-      <div className="unit-price">
-        Unit price: ${formatPrice(configPrice || product?.price || 0)}
-      </div>
-      <div className="total-price">
-        Total: ${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}
-      </div>
-    </div>
-  )}
+{/* Show quantity pricing */}
+{quantity > 1 && (
+<div className="quantity-pricing">
+<div className="unit-price">
+Unit price: ${formatPrice(configPrice || product?.price || 0)}
+</div>
 
-  {/* Price Comparison */}
-  <div className="price-comparison">
-    <span className="original-price">
-      ${generateOriginalPrice(configPrice || product?.price || 0)}
-    </span>
-    <span className="savings">
-      Save ${calculateSavings(
-        formatPrice(configPrice || product?.price || 0),
-        generateOriginalPrice(configPrice || product?.price || 0)
-      ).amount}{' '}
-      ({calculateSavings(
-        formatPrice(configPrice || product?.price || 0),
-        generateOriginalPrice(configPrice || product?.price || 0)
-      ).percentage}
-      %)
-    </span>
-  </div>
+<div className="quantity-count">
+Quantity: {quantity}
+</div>
+
+<div className="total-price">
+Total: ${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}
+</div>
+</div>
+)}
+
+{/* Price Comparison */}
+<div className="price-comparison">
+<span className="original-price">
+${generateOriginalPrice(configPrice || product?.price || 0)}
+</span>
+
+<span className="savings">
+Save ${calculateSavings(
+formatPrice(configPrice || product?.price || 0),
+generateOriginalPrice(configPrice || product?.price || 0)).amount}{' '}
+({calculateSavings(
+formatPrice(configPrice || product?.price || 0),
+generateOriginalPrice(configPrice || product?.price || 0)
+).percentage}%)
+</span>
+</div>
 
   {/* Prime Badge, only if gpremium image exists */}
-  {product?.gpremium && (
-    <div className="prime-badge">
-      <img className="prime-logo" src={`/assets/images/${product.gpremium}`} alt="Prime" />
-      <span>FREE One-Day Delivery</span>
-    </div>
-  )}
+{product?.gpremium && (
+<div className="prime-badge">
+<img className="prime-logo" src={`/assets/images/${product.gpremium}`} alt="Prime" />
+<span>FREE One-Day Delivery</span>
+</div>
+)}
 </div>
 
 
@@ -453,9 +468,9 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 <span className="storage-price">+${storage.price}</span>
 )}
 
-{storage.popular && (
+{/* {storage.popular && (
 <span className="popular-badge">Most Popular</span>
-)}
+)} */}
 </div>
 
 {!storage.available && <div className="unavailable-text">Currently Unavailable</div>}
@@ -716,47 +731,47 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 
 <DeliveryInfo hasPremium={!!product?.gpremium} />
 
-            <div className="stock-info">{product.stock}</div>
+<div className="stock-info">{product.stock}</div>
 
-            <div className="quantity-selector">
-              <label className="quantity-label" htmlFor="quantity">Qty:</label>
-              <select 
-                className="quantity-dropdown" 
-                id="quantity"
-                value={quantity}
-                onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
-              >
-                {[1,2,3,4,5,6,7,8,9,10].map(num => (
-                  <option key={num} value={num}>{num}</option>
-                ))}
-              </select>
-            </div>
+<div className="quantity-selector">
+<label className="quantity-label" htmlFor="quantity">Qty:</label>
+<select 
+className="quantity-dropdown" 
+id="quantity"
+value={quantity}
+onChange={(e) => handleQuantityChange(parseInt(e.target.value))}>
+{[1,2,3,4,5,6,7,8,9,10].map(num => (
+<option key={num} value={num}>{num}</option>
+))}
+</select>
+</div>
 
-            <button className="add-to-cart-btn" onClick={handleAddToCart}>
-              Add to Cart - ${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}
-            </button>
-            <button className="buy-now-btn" onClick={handleBuyNow}>
-              Buy Now - ${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}
-            </button>
+<button className="add-to-cart-btn" onClick={handleAddToCart}>
+Add to Cart - ${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}
+</button>
 
-            <div className="secure-transaction">
-              🔒 <a href="#">Secure transaction</a>
-            </div>
+<button className="buy-now-btn" onClick={handleBuyNow}>
+Buy Now - ${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}
+</button>
 
-            <div className="sold-by">
-              <div><strong>Ships from</strong> Gulime</div>
-              <div><strong>Sold by</strong> <a href="#">{product.seller || 'Official Store'}</a></div>
-            </div>
+<div className="secure-transaction">🔒
+<Link to="#">Secure transaction</Link>
+</div>
 
-            <div className="additional-options">
-              <a href="#" className="option-link">🛡️ Add a protection plan</a>
-              <a href="#" className="option-link">📋 Add to List</a>
-              <a href="#" className="option-link">💝 Add to Gift List</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <Footer />
-    </>
+<div className="sold-by">
+<div><strong>Ships from</strong> {product.seller}</div>
+<div><strong>Sold by</strong> <Link href="#">{product.seller}</Link></div>
+</div>
+
+<div className="additional-options">
+<Link to="#" className="option-link">🛡️ Add a protection plan</Link>
+<Link to="#" className="option-link">📋 Add to List</Link>
+<Link to="#" className="option-link">💝 Add to Gift List</Link>
+</div>
+</div>
+</div>
+</div>
+<Footer />
+</>
   );
 }
