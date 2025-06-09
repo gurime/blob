@@ -2,10 +2,12 @@ import { NavLink } from 'react-router-dom'
 import navlogo from '../img/gulime.png'
 import { useEffect, useRef, useState } from 'react';
 import { HiOutlineShoppingCart } from 'react-icons/hi';
+import { auth } from '../db/firebase';
 export default function Navbar() {
 
 const [isOpen, setIsOpen] = useState(false);
-
+const [isSignedIn, setIsSignedIn] = useState(false);
+const [names, setNames] = useState([]);
 const navRef = useRef(null);
 
 useEffect(() => {
@@ -14,6 +16,36 @@ if (navRef.current) {
 navRef.current.focus();
 }
 }, []);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        try {
+          const userDocRef = doc(db, "users", user.uid);
+          const userDocSnapshot = await getDoc(userDocRef);
+          const userData = userDocSnapshot.data();
+          if (userData) {
+            setNames(userData.names || []);
+            setIsAdmin(userData.isAdmin || false);
+          } else {
+            setNames([]);
+            setIsAdmin(false);
+          }
+          // Check if the user is signed in
+  
+          setIsSignedIn(true);
+  
+    
+        } catch (error) {
+          // Handle errors here
+        }
+      } else {
+        setIsSignedIn(false);
+        setNames([]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
 const activeStyle = ({ isActive }) => ({
 backgroundColor: isActive ? 'blue' : '',
@@ -44,6 +76,12 @@ return (
 <NavLink to="/music" style={activeStyle}>Music</NavLink>
 <NavLink to="/fashion" style={activeStyle}>Fashion</NavLink>
 <NavLink to="/movies" style={activeStyle}>Movies</NavLink>
+{isSignedIn ? (
+<NavLink to="/profile" style={activeStyle}>Profile</NavLink>
+) : (
+<NavLink to="/login" style={activeStyle}>Login</NavLink>
+)}
+<NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
 <HiOutlineShoppingCart color='#fff' size={30}/> 
 </ul>
 
@@ -63,9 +101,14 @@ return (
 <img src={navlogo} alt="logo" />
 </NavLink>
 
-
-<HiOutlineShoppingCart className='sidenav-seperator' color='#fff' size={30}/> 
-
+<div style={{display:'flex',justifyContent:'center',alignItems:'center'}} className='sidenav-seperator'>{isSignedIn ? (
+<NavLink to="/profile" style={activeStyle}>Profile</NavLink>
+) : (
+<NavLink to="../auth/Login.jsx" style={activeStyle}>Login</NavLink>
+)}
+<NavLink to="../auth/Signup.jsx" style={activeStyle}>Sign Up</NavLink>
+<HiOutlineShoppingCart  color='#fff' size={30}/> 
+</div>
 
 <ul>
 <li className="sidenav-seperator">

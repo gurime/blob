@@ -7,6 +7,7 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import { Link } from 'react-router-dom';
 import DeliveryInfo from './DeliveryInfo'; 
 import ProductRating from './ProductRating';
+import { cartHandlers } from '../utils/cartHandlers';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -79,19 +80,8 @@ export default function Home() {
     );
   }
 
-  if (error) {
-    return (
-      <>
-        <Navbar />
-        <div className="error-container">
-          <h2>Oops! Something went wrong</h2>
-          <p>Error: {error}</p>
-        </div>
-        <Footer />
-      </>
-    );
-  }
 
+const { handleAddToCart, handleBuyNow } = cartHandlers;
   return (
     <>
       <Navbar />
@@ -175,54 +165,58 @@ export default function Home() {
                     alt={product.product_name}
                     className="product-image"
                   />
-                  <button className="wishlist-btn">♡</button>
-                  {product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
-                  {product.deal && <div className="deal-badge">Limited time deal</div>}
-                </div>
+<button className="wishlist-btn">♡</button>
+{product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
+{product.deal && <div className="deal-badge">Limited time deal</div>}
+</div>
                 
-                <div className="product-content">
-                  <h2 className="product-name">{product.product_name}</h2>
+<div className="product-content">
+<h2 className="product-name">{product.product_name}</h2>
                   
-             <ProductRating
-  rating={product.rating || 0}
-  totalReviews={product.totalReviews || 0}
-  isInteractive={true}  // Enable clicking
-  productId={product.id} // Pass the product ID
-  // userId={currentUser?.uid} // Pass current user ID
-  showLink={true} // Show link to reviews
+<ProductRating
+rating={product.rating || 0}
+totalReviews={product.totalReviews || 0}
+isInteractive={true}  // Enable clicking
+productId={product.id} // Pass the product ID
+// userId={currentUser?.uid} // Pass current user ID
+showLink={true} // Show link to reviews
 />
                   
-                  <h3 className="product-category">{product.category}</h3>
-                  <p className="product-description">{product.description}</p>
+<h3 className="product-category">{product.category}</h3>
+<p className="product-description">{product.description}</p>
+
+<div className="price-container">
+<span className="product-price">${product.price}</span>
+{product.prime && (
+<div className="prime-shipping">
+<span className="prime-badge-small">Prime</span>
+<span className="free-shipping">FREE delivery</span>
+</div>
+)}
+</div>
                   
-                  <div className="price-container">
-                    <span className="product-price">${product.price}</span>
-                    {product.prime && (
-                      <div className="prime-shipping">
-                        <span className="prime-badge-small">Prime</span>
-                        <span className="free-shipping">FREE delivery</span>
-                      </div>
-                    )}
-                  </div>
+{/* Add DeliveryInfo component here, right after price */}
+<DeliveryInfo hasPremium={!!product.prime} />
                   
-                  {/* Add DeliveryInfo component here, right after price */}
-                  <DeliveryInfo hasPremium={!!product.prime} />
+<div className="product-actions">
+<button className="add-to-cart-btn" onClick={handleAddToCart}>
+Add to Cart
+</button>
+<button className="buy-now-btn" onClick={handleBuyNow}>
+Buy Now 
+</button>
+</div>
                   
-                  <div className="product-actions">
-                    <button className="add-to-cart-btn">Add to Cart</button>
-                    <button className="buy-now-btn">Buy Now</button>
-                  </div>
-                  
-                  <Link to={`/product/${product.id}`} className="view-details">
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-      <Footer />
-    </>
-  );
+<Link to={`/product/${product.id}`} className="view-details">
+View Details
+</Link>
+</div>
+</div>
+))}
+</div>
+</section>
+</div>
+<Footer />
+</>
+);
 }
