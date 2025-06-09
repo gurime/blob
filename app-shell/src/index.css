@@ -439,11 +439,10 @@ padding: 1rem;}
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 20px;
   padding: 0;
 }
-
 /* Product Cards */
 .products-card {
   background: white;
@@ -682,10 +681,7 @@ padding: 1rem;}
     right: -15px;
   }
 
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
-  }
+
 
   .product-actions {
     flex-direction: column;
@@ -693,16 +689,14 @@ padding: 1rem;}
 }
 
 @media (max-width: 480px) {
-  .products-grid {
-    grid-template-columns: 1fr;
-  }
+
 
   .featured-products h2 {
     font-size: 1.8rem;
   }
 
   .all-products h2 {
-    font-size: 1.6rem;
+    font-size: 13px;
   }
 
   .carousel-btn {
@@ -865,18 +859,91 @@ padding: 1rem;}
   text-decoration: underline;
 }
 
+/* Rating Section Styles */
 .rating-section {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
+  margin: 10px 0;
 }
 
-.stars {
-  color: #FF9900;
+/* Display Stars (non-interactive) */
+.stars.display-stars {
+  color: #ff9f00;
   font-size: 16px;
+  letter-spacing: 1px;
 }
 
+/* Interactive Stars Container */
+.interactive-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Individual Star Styles */
+.star {
+  font-size: 20px;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.star.interactive {
+  cursor: pointer;
+  user-select: none;
+}
+
+.star.filled {
+  color: #ff9f00;
+}
+
+.star.empty {
+  color: #cccccc;
+}
+
+.star.hovered {
+  color: #ffb84d;
+  transform: scale(1.1);
+}
+
+.star.interactive:hover {
+  transform: scale(1.1);
+}
+
+/* Rating Success Message */
+.rating-success {
+  color: #008000;
+  font-size: 12px;
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+/* Rating Submitting Message */
+.rating-submitting {
+  color: #ff9f00;
+  font-size: 12px;
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+/* Submitting State */
+.star.submitting {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Login to Rate Link */
+.login-to-rate {
+  color: #007185;
+  text-decoration: underline;
+  font-size: 14px;
+}
+
+.login-to-rate:hover {
+  color: #005a6b;
+}
+
+/* Rating Text */
 .rating-text {
   color: #007185;
   text-decoration: none;
@@ -884,8 +951,30 @@ padding: 1rem;}
 }
 
 .rating-text:hover {
-  color: #C7511F;
   text-decoration: underline;
+}
+
+/* Rating Prompt */
+.rating-prompt {
+  margin-left: 10px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .rating-section {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  
+  .star {
+    font-size: 18px;
+  }
+  
+  .rating-text {
+    font-size: 13px;
+  }
 }
 
 .price-section {

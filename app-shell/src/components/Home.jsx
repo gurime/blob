@@ -5,7 +5,8 @@ import { db } from '../db/firebase';
 import { useEffect, useState } from 'react';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { Link } from 'react-router-dom';
-import DeliveryInfo from './DeliveryInfo'; // Add this import
+import DeliveryInfo from './DeliveryInfo'; 
+import ProductRating from './ProductRating';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -119,10 +120,14 @@ export default function Home() {
                       />
                       <div className="featured-content">
                         <h3 className="product-title">{product.product_name}</h3>
-                        <div className="rating-section">
-                          <div className="stars">★★★★☆</div>
-                          <span className="review-count">(1,234)</span>
-                        </div>
+<ProductRating
+  rating={product.rating || 0}
+  totalReviews={product.totalReviews || 0}
+  isInteractive={true}  // Enable clicking
+  productId={product.id} // Pass the product ID
+  // userId={currentUser?.uid} // Pass current user ID
+  showLink={true} // Show link to reviews
+/>
                         <div className="price-section">
                           <span className="current-price">${product.price}</span>
                           <span className="original-price">${(product.price * 1.3).toFixed(2)}</span>
@@ -178,10 +183,14 @@ export default function Home() {
                 <div className="product-content">
                   <h2 className="product-name">{product.product_name}</h2>
                   
-                  <div className="rating-section">
-                    <div className="stars">★★★★☆</div>
-                    <span className="review-count">(567)</span>
-                  </div>
+             <ProductRating
+  rating={product.rating || 0}
+  totalReviews={product.totalReviews || 0}
+  isInteractive={true}  // Enable clicking
+  productId={product.id} // Pass the product ID
+  // userId={currentUser?.uid} // Pass current user ID
+  showLink={true} // Show link to reviews
+/>
                   
                   <h3 className="product-category">{product.category}</h3>
                   <p className="product-description">{product.description}</p>

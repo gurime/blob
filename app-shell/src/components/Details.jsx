@@ -1,309 +1,106 @@
-import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import ClipLoader from "react-spinners/ClipLoader";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../db/firebase";
 import DeliveryInfo from "./DeliveryInfo";
+import ProductRating from "./ProductRating";
+import { useProductDetails } from "../hooks/useProductDetails";
+import { cartHandlers } from "../utils/cartHandlers";
+import { priceUtils } from "../utils/priceUtils";
 
 export default function Details() {   
+let { id } = useParams();
   
-  let { id } = useParams();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [basePrice, setBasePrice] = useState(0);
-  const [configPrice, setConfigPrice] = useState(0);
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [showMore, setShowMore] = useState(false);
-  const [selectedColor, setSelectedColor] = useState('');
-  const [selectedStorage, setSelectedStorage] = useState('');
+const {
+product,
+loading,
+error,
+selectedImage,
+basePrice,
+configPrice,
+totalPrice,
+quantity,
+showMore,
+selectedColor,
+selectedStorage,
+setSelectedImage,
+setShowMore,
+setSelectedColor,
+handleStorageChange,
+handleQuantityChange,
+getProductImages
+} = useProductDetails(id);
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const collections = ['products', 'featuredProducts'];
-        let productData = null;
-        let foundCollection = null;
+const { formatPrice, generateOriginalPrice, calculateSavings } = priceUtils;
+const { handleAddToCart, handleBuyNow } = cartHandlers;
 
-        // Decode the URL parameter (handles spaces and special characters)
-        const decodedId = decodeURIComponent(id);
+if (loading) {
+return (
+<>
+<Navbar />
+<div className="loading"> 
+<ClipLoader size={50} color="#2637be"/>
+</div>
+<Footer />
+</>
+);
+}
 
-        // Search through all collections
-        for (const collectionName of collections) {
-          const searchResult = await searchInCollection(collectionName, decodedId);
-          if (searchResult) {
-            productData = searchResult;
-            foundCollection = collectionName;
-            break;
-          }
-        }
+if (error || !product) {
+return (
+<>
+<Navbar />
+<div className="error-message">
+<h2>Product Not Found</h2>
+<p>{error || "The requested product could not be found."}</p>
+<Link to="/products">← Back to Products</Link>
+</div>
+<Footer />
+</>
+);
+}
 
-        if (productData) {
-          productData.sourceCollection = foundCollection;
-          setProduct(productData);
-        } else {
-          setError(`Product "${decodedId}" not found in any collection`);
-        }
-      } catch (error) {
-        setError(`Error fetching product: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
+const productImages = getProductImages();
 
-    // Function to search in a specific collection
-const searchInCollection = async (collectionName, searchTerm) => {
-  try {
-    const collectionRef = collection(db, collectionName);
-    
-    // Get all documents and search through them
-    const querySnapshot = await getDocs(collectionRef);
-    
-    for (const doc of querySnapshot.docs) {
-      const data = doc.data();
-      
-      // Normalize search term and data for comparison
-      const normalizedSearchTerm = searchTerm.toLowerCase().trim();
-      
-      // Check if any field matches the search term
-      const productName = (data.product_name || '').toLowerCase().trim();
-      const name = (data.name || '').toLowerCase().trim();
-      const title = (data.title || '').toLowerCase().trim();
-      const docId = doc.id.toLowerCase().trim();
-      
-      if (
-        productName === normalizedSearchTerm ||
-        name === normalizedSearchTerm ||
-        title === normalizedSearchTerm ||
-        docId === normalizedSearchTerm ||
-        // Also try exact matches without normalization in case of special characters
-        data.product_name === searchTerm ||
-        data.name === searchTerm ||
-        data.title === searchTerm ||
-        doc.id === searchTerm
-      ) {
-        console.log(`Found product in ${collectionName}:`, {
-          docId: doc.id,
-          productName: data.product_name,
-          searchTerm: searchTerm
-        });
-        
-        return {
-          id: doc.id, // This will be the actual Firestore document ID
-          ...data
-        };
-      }
-    }
-    
-    console.log(`No product found in ${collectionName} for search term: "${searchTerm}"`);
-    return null;
-  } catch (error) {
-    console.error(`Error searching in ${collectionName}:`, error);
-    return null;
-  }
-};
-
-    if (id) {
-      fetchProduct();
-    } else {
-      setError('No product ID provided');
-      setLoading(false);
-    }
-  }, [id]);
-
-  const formatPrice = (price) => {
-    const numPrice = parseFloat(price);
-    if (isNaN(numPrice) || numPrice < 0) return '0.00';
-    return numPrice.toFixed(2);
-  };
-
-  // Generate original price for display
-  const generateOriginalPrice = (currentPrice) => {
-    const num = parseFloat(currentPrice);
-    if (isNaN(num)) return '0.00';
-    return (num * 1.25).toFixed(2); // 25% markup for "original" price
-  };
-
-  // Calculate savings
-  const calculateSavings = (current, original) => {
-    const currentNum = parseFloat(current);
-    const originalNum = parseFloat(original);
-    if (isNaN(currentNum) || isNaN(originalNum)) return { amount: '0.00', percentage: 0 };
-    
-    const savings = originalNum - currentNum;
-    const percentage = Math.round((savings / originalNum) * 100);
-    return { amount: savings.toFixed(2), percentage };
-  };
-
-  const handleAddToCart = () => {
-    console.log(`Added ${quantity} ${product?.product_name} to cart`);
-    alert(`Added ${quantity} item(s) to cart!`);
-    // Add your cart logic here
-  };
-
-  const handleBuyNow = () => {
-    console.log(`Buy now: ${quantity} ${product?.product_name}`);
-    alert(`Proceeding to checkout with ${quantity} item(s)`);
-    // Add your buy now logic here
-  };
-
-  useEffect(() => {
-    setTotalPrice(configPrice * quantity);
-  }, [configPrice, quantity]);
-
-  // Set default selections when product data is loaded
-  useEffect(() => {
-    if (product && product.price) {
-      const price = parseFloat(product.price);
-      setBasePrice(price);
-      setConfigPrice(price);
-      setTotalPrice(price * quantity);
-    }
-  }, [product, quantity]);
-
-  // Update total price when quantity or config price changes
-  useEffect(() => {
-    if (configPrice > 0) {
-      setTotalPrice(configPrice * quantity);
-    }
-  }, [configPrice, quantity]);
-
-  // Set default selections when product data is loaded
-  useEffect(() => {
-    if (product && basePrice > 0) {
-      // Set default color if available
-      if (product.avaibleColors?.colors && product.avaibleColors.colors.length > 0 && !selectedColor) {
-        setSelectedColor(product.avaibleColors.colors[0].code);
-      }
-      
-      // Set default storage if available and update config price
-      if (product.storageOptions?.storage && product.storageOptions.storage.length > 0 && !selectedStorage) {
-        const defaultStorage = product.storageOptions.storage[0];
-        setSelectedStorage(defaultStorage.size);
-        const newConfigPrice = basePrice + (defaultStorage.price || 0);
-        setConfigPrice(newConfigPrice);
-      } else if (!product.storageOptions?.storage || product.storageOptions.storage.length === 0) {
-        // If no storage options, keep the base price as config price
-        setConfigPrice(basePrice);
-      }
-    }
-  }, [product, basePrice, selectedColor, selectedStorage]);
-
-  // Helper function to update price based on storage selection
-  const handleStorageChange = (storageOption) => {
-    setSelectedStorage(storageOption.size);
-    const newConfigPrice = basePrice + (storageOption.price || 0);
-    setConfigPrice(newConfigPrice);
-  };
-
-  // Helper function to handle quantity changes
-  const handleQuantityChange = (newQuantity) => {
-    setQuantity(newQuantity);
-  };
-
-
-  // Early return if still loading
-
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-        <div className="loading"> 
-          <ClipLoader size={50} color="#2637be"/>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
-  // Early return if there's an error
-  if (error) {
-    return (
-      <>
-        <Navbar />
-        <div className="error-message">Error: {error}</div>
-        <Footer />
-      </>
-    );
-  }
-
-  // Early return if product is still null
-  if (!product) {
-    return (
-      <>
-        <Navbar />
-        <div className="error-message">Product not found</div>
-        <Footer />
-      </>
-    );
-  }
-
-  // Now it's safe to access product properties
-  const formattedPrice = formatPrice(product.price);
-  const originalPrice = generateOriginalPrice(product.price);
-  const savings = calculateSavings(formattedPrice, originalPrice);
-
-  // Mock multiple images for demo - you can replace with actual product images
-  const rawImages = [
-    product?.imgUrl,
-    product?.imgUrl1 ,
-    product?.imgUrl2 ,
-    product?.imgUrl3 ,
-    product?.imgUrl4 ,
-    product?.imgUrl5 ,
-    product?.imgUrl6 ,
-    product?.imgUrl7 ,
-  ];
-
-  const productImages = rawImages.filter((img) => img && img !== 'placeholder.png');
-
-  return (
-    <>
+return (
+<>
 <Navbar />
 <div className="product-container">
 {/* Breadcrumb Navigation */}
 <div className="breadcrumb">
 <Link to="/">Home</Link>
-
 <Link to="/products">All Products</Link>
-
-<Link to={`/category/${encodeURIComponent(product.SourceCategory )}`}>
-{product.SourceCategory }
+<Link to={`/category/${encodeURIComponent(product.SourceCategory)}`}>
+{product.SourceCategory}
 </Link>
 
 <Link to={`/category/${encodeURIComponent(product.category)}`}>
 {product.category}
 </Link>
 
-<Link to={`/category/${encodeURIComponent(product.category)}/${encodeURIComponent(product.brand)}`}>
-{product.brand}
-</Link>
-
+<Link to={`/category/${encodeURIComponent(product.category)}/${encodeURIComponent(product.brand)}`}>{product.brand}</Link>
 </div>
 
 <div id="product-details" className="product-details">
 <div className="left-column">
+
 {/* Image Section */}
 <div className="image-section">
 <div className="main-image-container">
 <img 
 src={`/assets/images/${productImages[selectedImage]}`}
 alt={product.product_name}
-className="main-image"
-/>
+className="main-image"/>
 </div>
+
 {/* thumbnail images */}
 <div className="thumbnail-images">
+
 {productImages.map((img, index) => (
 <div 
 key={index}
 className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
-onClick={() => setSelectedImage(index)}
->
+onClick={() => setSelectedImage(index)}>
 <img 
 src={`/assets/images/${img}`}
 alt={`Product view ${index + 1}`}/>
@@ -311,7 +108,6 @@ alt={`Product view ${index + 1}`}/>
 ))}
 </div>
 </div>
-{/* thumbnail images */}
 
 {/* Product Information */}
 <div className="product-info">
@@ -319,13 +115,15 @@ alt={`Product view ${index + 1}`}/>
               
 <Link href="#" className="brand-link">Visit the {product.brand} Store</Link>
 
-{/* rating section */}
-<div className="rating-section">
-<span className="stars">★★★★☆</span>
-<Link href="#" className="rating-text">4.2 out of 5 stars</Link>
-<span className="rating-text">1,247 ratings</span>
-</div>
-{/* rating section */}
+{/* Rating Section - Now using the ProductRating component */}
+<ProductRating
+  rating={product.rating || 0}
+  totalReviews={product.totalReviews || 0}
+  isInteractive={true}  // Enable clicking
+  productId={product.id} // Pass the product ID
+  // userId={currentUser?.uid} // Pass current user ID
+  showLink={true} // Show link to reviews
+/>
 
 <div className="price-section">
 <div className="price-row">
@@ -336,9 +134,8 @@ alt={`Product view ${index + 1}`}/>
 </span>
 </div>
 
-  {/* Delivery Info Section */}
+{/* Delivery Info Section */}
 <DeliveryInfo hasPremium={!!product?.gpremium} />
-
 
 {/* Show base price if upgraded config is selected */}
 {configPrice > basePrice && (
@@ -381,7 +178,7 @@ generateOriginalPrice(configPrice || product?.price || 0)
 </span>
 </div>
 
-  {/* Prime Badge, only if gpremium image exists */}
+{/* Prime Badge, only if gpremium image exists */}
 {product?.gpremium && (
 <div className="prime-badge">
 <img className="prime-logo" src={`/assets/images/${product.gpremium}`} alt="Prime" />
@@ -389,7 +186,6 @@ generateOriginalPrice(configPrice || product?.price || 0)
 </div>
 )}
 </div>
-
 
 {/* Main Description */}
 <div className="product-description">
@@ -415,8 +211,7 @@ generateOriginalPrice(configPrice || product?.price || 0)
 <strong>Category:</strong> {product.category}
 </li>
 )}
-{/* Key Features - Bullet Points */}
-                
+
 <div className="product-configuration">
 {/* Color Selection */}
 {product.avaibleColors?.colors && product.avaibleColors.colors.length > 0 && (
@@ -434,17 +229,15 @@ generateOriginalPrice(configPrice || product?.price || 0)
 key={color.code}
 className={`color-swatch ${selectedColor === color.code ? 'selected' : ''} ${!color.available ? 'unavailable' : ''}`}
 onClick={() => color.available && setSelectedColor(color.code)}
-title={color.name}>
+title={color.product_name}>
 
 <div className="color-circle" style={{ backgroundColor: color.hex }}/>
-{!color.available && <div className="unavailable-overlay">✕
-</div>}
+{!color.available && <div className="unavailable-overlay">✕</div>}
 </div>
 ))}
 </div>
 </div>
 )}
-{/* Color Selection */}
 
 {/* Storage Selection */}
 {product.storageOptions?.storage && product.storageOptions.storage.length > 0 && (
@@ -463,23 +256,16 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 
 <div className="storage-info">
 <span className="storage-size">{storage.size}</span>
-
 {storage.price > 0 && (
 <span className="storage-price">+${storage.price}</span>
 )}
-
-{/* {storage.popular && (
-<span className="popular-badge">Most Popular</span>
-)} */}
 </div>
-
 {!storage.available && <div className="unavailable-text">Currently Unavailable</div>}
 </div>
 ))}
 </div>
 </div>
 )}
-{/* Storage Selection */}
 
 {/* Configuration Summary */}
 <div className="config-summary">
@@ -517,15 +303,12 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 <strong>Customer Support:</strong> Backed by excellent customer service and technical support
 </li>
 </ul>
-{/* Configuration Summary */}
 
 {/* Main Description */}
 <div className="detailed-description">
 {/* Primary Description */}
 <div className="description-text">
-<p>
-{product.description}
-</p>
+<p>{product.description}</p>
                     
 {/* Additional Description Fields */}
 {product.description1 && (
@@ -587,30 +370,29 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 </>
 )}
 
-                        
 {/* Additional detailed specs */}
 <h5>Detailed Specifications</h5>
 <div className="detailed-specs">
+
 {product.chipDetails && (
-  <p><strong>Chip:</strong> {product.chipDetails}</p>
+<p><strong>Chip:</strong> {product.chipDetails}</p>
 )}
 
 {product.displayDetails && (
-  <p><strong>Display:</strong> {product.displayDetails}</p>
+<p><strong>Display:</strong> {product.displayDetails}</p>
 )}
 
 {product.storageDetails && (
-  <p><strong>Storage:</strong> {product.storageDetails}</p>
+<p><strong>Storage:</strong> {product.storageDetails}</p>
 )}
 
 {product.connectivityDetails && (
-  <p><strong>Connectivity:</strong> {product.connectivityDetails}</p>
+<p><strong>Connectivity:</strong> {product.connectivityDetails}</p>
 )}
 
 {product.cameraDetails && (
-  <p><strong>Camera:</strong> {product.cameraDetails}</p>
+<p><strong>Camera:</strong> {product.cameraDetails}</p>
 )}
-
 </div>
 </div>
 </div>
@@ -643,7 +425,6 @@ onClick={() => storage.available && handleStorageChange(storage)}>
                       
 <div className="highlight-item">
 <span className="highlight-icon">🎯</span>
-
 <div>
 <strong>User-Friendly</strong>
 <p>Intuitive design that's easy to set up and use</p>
@@ -652,7 +433,6 @@ onClick={() => storage.available && handleStorageChange(storage)}>
                       
 <div className="highlight-item">
 <span className="highlight-icon">📞</span>
-
 <div>
 <strong>Support Included</strong>
 <p>Comprehensive customer support and documentation</p>
@@ -674,6 +454,7 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 <td className="spec-value">{product.brand}</td>
 </tr>
 )}
+
 {product.model && (
 <tr>
 <td className="spec-label">Model</td>
@@ -692,7 +473,6 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 <td className="spec-label">Item Weight</td>
 <td className="spec-value">{product.weight || '1.2 lbs'}</td>
 </tr>
-
 <tr>
 <td className="spec-label">Product Dimensions</td>
 <td className="spec-value">{product.dimensions || '10 x 7 x 0.3 inches'}</td>
@@ -713,16 +493,13 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 </div>
 </div>
 </div>
-
 {/* Purchase Section */}
 <div className="purchase-section">
 <div className="buy-box-price">
 {quantity > 1 ? (
 <div>
-
 <div className="total-price-large">${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}</div>
 <div className="unit-price-small">${formatPrice(configPrice || product?.price || 0)} each</div>
-
 </div>
 ) : (
 <div>${formatPrice(configPrice || product?.price || 0)}</div>
@@ -731,7 +508,7 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 
 <DeliveryInfo hasPremium={!!product?.gpremium} />
 
-<div className="stock-info">{product.stock}</div>
+<div className="stock-info">{product?.stock || 'In Stock'}</div>
 
 <div className="quantity-selector">
 <label className="quantity-label" htmlFor="quantity">Qty:</label>
@@ -759,8 +536,8 @@ Buy Now - ${formatPrice(totalPrice || (configPrice || product?.price || 0) * qua
 </div>
 
 <div className="sold-by">
-<div><strong>Ships from</strong> {product.seller}</div>
-<div><strong>Sold by</strong> <Link href="#">{product.seller}</Link></div>
+<div><strong>Ships from</strong> {product?.seller || 'Amazon'}</div>
+<div><strong>Sold by</strong> <Link to="#">{product?.seller || 'Amazon'}</Link></div>
 </div>
 
 <div className="additional-options">
