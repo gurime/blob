@@ -3,11 +3,15 @@ import navlogo from '../img/gulime.png'
 import { useEffect, useRef, useState } from 'react';
 import { HiOutlineShoppingCart } from 'react-icons/hi';
 import { auth } from '../db/firebase';
+// Add these imports for Firestore
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../db/firebase'; // Make sure db is exported from your firebase config
+
 export default function Navbar() {
 
 const [isOpen, setIsOpen] = useState(false);
 const [isSignedIn, setIsSignedIn] = useState(false);
-const [names, setNames] = useState([]);
+const [names, setNames] = useState('');
 const navRef = useRef(null);
 
 useEffect(() => {
@@ -23,29 +27,43 @@ navRef.current.focus();
         try {
           const userDocRef = doc(db, "users", user.uid);
           const userDocSnapshot = await getDoc(userDocRef);
-          const userData = userDocSnapshot.data();
-          if (userData) {
-            setNames(userData.names || []);
-            setIsAdmin(userData.isAdmin || false);
+          
+          if (userDocSnapshot.exists()) {
+            const userData = userDocSnapshot.data();
+            // Get the full name from fname and lname
+            const fullName = `${userData.fname || ''} ${userData.lname || ''}`.trim();
+            setNames(fullName || userData.email || 'User');
           } else {
-            setNames([]);
-            setIsAdmin(false);
+            setNames('User');
           }
-          // Check if the user is signed in
-  
+          
           setIsSignedIn(true);
-  
     
         } catch (error) {
-          // Handle errors here
+          console.error("Error fetching user data:", error);
+          setIsSignedIn(true); // Still signed in even if we can't fetch user data
+          setNames('User');
         }
       } else {
         setIsSignedIn(false);
-        setNames([]);
+        setNames('');
       }
     });
+    
     return () => unsubscribe();
   }, []);
+
+    const handleLogout = async () => {
+    try {
+      const { error } = await auth.signOut();
+      if (error) throw error;
+      
+      setIsSignedIn(false);
+      setUserData(null);
+      router.push('/');
+    } catch (error) {
+    }
+  }
 
 const activeStyle = ({ isActive }) => ({
 backgroundColor: isActive ? 'blue' : '',
@@ -56,6 +74,7 @@ textDecoration: 'none'
 
 const openSidenav = () => {setIsOpen(true);};
 const closeSidenav = () => {setIsOpen(false);};
+
 return (
 <>
 {/* navbar starts here */}
@@ -77,11 +96,16 @@ return (
 <NavLink to="/fashion" style={activeStyle}>Fashion</NavLink>
 <NavLink to="/movies" style={activeStyle}>Movies</NavLink>
 {isSignedIn ? (
-<NavLink to="/profile" style={activeStyle}>Profile</NavLink>
+<>
+<NavLink to="/profile" style={activeStyle}>{names || 'Profile'}</NavLink>
+<button className='signout' onClick={handleLogout}>Logout</button>
+</>
 ) : (
 <NavLink to="/login" style={activeStyle}>Login</NavLink>
 )}
+{!isSignedIn && (
 <NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
+)}
 <HiOutlineShoppingCart color='#fff' size={30}/> 
 </ul>
 
@@ -101,13 +125,19 @@ return (
 <img src={navlogo} alt="logo" />
 </NavLink>
 
-<div style={{display:'flex',justifyContent:'center',alignItems:'center'}} className='sidenav-seperator'>{isSignedIn ? (
-<NavLink to="/profile" style={activeStyle}>Profile</NavLink>
+<div style={{display:'flex',justifyContent:'center',alignItems:'center'}} className='sidenav-seperator'>
+{isSignedIn ? (
+<>
+<NavLink to="/profile" style={activeStyle}>{names || 'Profile'}</NavLink>
+<button className='signout' onClick={handleLogout}>Logout</button>
+</>
 ) : (
-<NavLink to="../auth/Login.jsx" style={activeStyle}>Login</NavLink>
+<NavLink to="/login" style={activeStyle}>Login</NavLink>
 )}
-<NavLink to="../auth/Signup.jsx" style={activeStyle}>Sign Up</NavLink>
-<HiOutlineShoppingCart  color='#fff' size={30}/> 
+{!isSignedIn && (
+<NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
+)}
+<HiOutlineShoppingCart color='#fff' size={30}/> 
 </div>
 
 <ul>
@@ -122,7 +152,6 @@ Home
 Electronics
 </NavLink>
 </li>
-          
 
 <li className="sidenav-seperator">
 <NavLink to="/sports" onClick={closeSidenav}>
@@ -146,11 +175,7 @@ Fashion
 <NavLink to="/movies" onClick={closeSidenav}>
 Movies
 </NavLink>
-</li>     
-
-  
-
-  
+</li>
 </ul>
 </div>
 {/* sidenav stops here */}

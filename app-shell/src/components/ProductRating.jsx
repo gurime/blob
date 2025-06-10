@@ -221,18 +221,14 @@ const ProductRating = ({
         try {
           const productRef = doc(db, collectionName, productId);
           await updateDoc(productRef, updateData);
-          console.log(`Updated product rating in ${collectionName} collection`);
         } catch (error) {
-          console.error(`Error updating product in ${collectionName}:`, error);
         }
       });
 
       await Promise.allSettled(updatePromises);
 
-      console.log(`Product rating updated in ${collectionsWithProduct.length} collections:`, collectionsWithProduct);
 
     } catch (error) {
-      console.error("Error updating product rating:", error);
     }
   };
 
@@ -254,7 +250,6 @@ const ProductRating = ({
         setCurrentTotalReviews(ratingsSnapshot.size);
       }
     } catch (error) {
-      console.error("Error fetching updated rating:", error);
     }
   };
 

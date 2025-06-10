@@ -8,13 +8,28 @@ import { Link } from 'react-router-dom';
 import DeliveryInfo from './DeliveryInfo'; 
 import ProductRating from './ProductRating';
 import { cartHandlers } from '../utils/cartHandlers';
+import { auth } from '../db/firebase'; // Import auth from your firebase config
+import { onAuthStateChanged } from 'firebase/auth';
+
 
 export default function Home() {
-  const [products, setProducts] = useState([]);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
+const [products, setProducts] = useState([]);
+const [featuredProducts, setFeaturedProducts] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState(null);
+const [currentSlide, setCurrentSlide] = useState(0);
+const [user, setUser] = useState(null);
+const [userLoading, setUserLoading] = useState(true);
+
+
+  
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setUserLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
@@ -66,8 +81,7 @@ export default function Home() {
     }
   }, [featuredProducts.length]);
 
-
-  if (loading) {
+  if (loading || userLoading) {
     return (
       <>
         <Navbar />
@@ -80,8 +94,8 @@ export default function Home() {
     );
   }
 
-
-const { handleAddToCart, handleBuyNow } = cartHandlers;
+  const { handleAddToCart, handleBuyNow } = cartHandlers;
+  
   return (
     <>
       <Navbar />
@@ -104,20 +118,20 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
                     <div className="featured-card">
                       <div className="product-badge">{product.Deal} </div>
                       <img 
-                    src={`/assets/images/${product.imgUrl}`} 
+                        src={`/assets/images/${product.imgUrl}`} 
                         alt={product.product_name}
                         className="featured-image"
                       />
                       <div className="featured-content">
                         <h3 className="product-title">{product.product_name}</h3>
-<ProductRating
-  rating={product.rating || 0}
-  totalReviews={product.totalReviews || 0}
-  isInteractive={true}  // Enable clicking
-  productId={product.id} // Pass the product ID
-  // userId={currentUser?.uid} // Pass current user ID
-  showLink={true} // Show link to reviews
-/>
+                        <ProductRating
+                          rating={product.rating || 0}
+                          totalReviews={product.totalReviews || 0}
+                          isInteractive={true}  // Enable clicking
+                          productId={product._id} // Use _id for featured products
+                          userId={user?.uid || null} // Pass current user ID safely
+                          showLink={true} // Show link to reviews
+                        />
                         <div className="price-section">
                           <span className="current-price">${product.price}</span>
                           <span className="original-price">${(product.price * 1.3).toFixed(2)}</span>
@@ -165,58 +179,58 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
                     alt={product.product_name}
                     className="product-image"
                   />
-<button className="wishlist-btn">♡</button>
-{product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
-{product.deal && <div className="deal-badge">Limited time deal</div>}
-</div>
+                  <button className="wishlist-btn">♡</button>
+                  {product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
+                  {product.deal && <div className="deal-badge">Limited time deal</div>}
+                </div>
                 
-<div className="product-content">
-<h2 className="product-name">{product.product_name}</h2>
+                <div className="product-content">
+                  <h2 className="product-name">{product.product_name}</h2>
                   
-<ProductRating
-rating={product.rating || 0}
-totalReviews={product.totalReviews || 0}
-isInteractive={true}  // Enable clicking
-productId={product.id} // Pass the product ID
-// userId={currentUser?.uid} // Pass current user ID
-showLink={true} // Show link to reviews
-/>
+                  <ProductRating
+                    rating={product.rating || 0}
+                    totalReviews={product.totalReviews || 0}
+                    isInteractive={true}  // Enable clicking
+                    productId={product.id} // Pass the product ID
+                    userId={user?.uid || null} // Pass current user ID safely
+                    showLink={true} // Show link to reviews
+                  />
                   
-<h3 className="product-category">{product.category}</h3>
-<p className="product-description">{product.description}</p>
+                  <h3 className="product-category">{product.category}</h3>
+                  <p className="product-description">{product.description}</p>
 
-<div className="price-container">
-<span className="product-price">${product.price}</span>
-{product.prime && (
-<div className="prime-shipping">
-<span className="prime-badge-small">Prime</span>
-<span className="free-shipping">FREE delivery</span>
-</div>
-)}
-</div>
+                  <div className="price-container">
+                    <span className="product-price">${product.price}</span>
+                    {product.prime && (
+                      <div className="prime-shipping">
+                        <span className="prime-badge-small">Prime</span>
+                        <span className="free-shipping">FREE delivery</span>
+                      </div>
+                    )}
+                  </div>
                   
-{/* Add DeliveryInfo component here, right after price */}
-<DeliveryInfo hasPremium={!!product.prime} />
+                  {/* Add DeliveryInfo component here, right after price */}
+                  <DeliveryInfo hasPremium={!!product.prime} />
                   
-<div className="product-actions">
-<button className="add-to-cart-btn" onClick={handleAddToCart}>
-Add to Cart
-</button>
-<button className="buy-now-btn" onClick={handleBuyNow}>
-Buy Now 
-</button>
-</div>
+                  <div className="product-actions">
+                    <button className="add-to-cart-btn" onClick={handleAddToCart}>
+                      Add to Cart
+                    </button>
+                    <button className="buy-now-btn" onClick={handleBuyNow}>
+                      Buy Now 
+                    </button>
+                  </div>
                   
-<Link to={`/product/${product.id}`} className="view-details">
-View Details
-</Link>
-</div>
-</div>
-))}
-</div>
-</section>
-</div>
-<Footer />
-</>
-);
+                  <Link to={`/product/${product.id}`} className="view-details">
+                    View Details
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+      <Footer />
+    </>
+  );
 }

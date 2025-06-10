@@ -2028,6 +2028,17 @@ background-color: #f4f4f4;
   font-size: 0.9rem;
 }
 
+.signout{
+ background: #dc2626;
+  color: white;
+  border: none;
+  padding: 5px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .login-page {

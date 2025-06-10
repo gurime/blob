@@ -7,9 +7,23 @@ import ProductRating from "./ProductRating";
 import { useProductDetails } from "../hooks/useProductDetails";
 import { cartHandlers } from "../utils/cartHandlers";
 import { priceUtils } from "../utils/priceUtils";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../db/firebase";
 
 export default function Details() {   
 let { id } = useParams();
+const [user, setUser] = useState(null);
+const [userLoading, setUserLoading] = useState(true);
+
+ useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setUserLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
   
 const {
 product,
@@ -116,13 +130,13 @@ alt={`Product view ${index + 1}`}/>
 <Link href="#" className="brand-link">Visit the {product.brand} Store</Link>
 
 {/* Rating Section - Now using the ProductRating component */}
-<ProductRating
-  rating={product.rating || 0}
-  totalReviews={product.totalReviews || 0}
-  isInteractive={true}  // Enable clicking
-  productId={product.id} // Pass the product ID
-  // userId={currentUser?.uid} // Pass current user ID
-  showLink={true} // Show link to reviews
+  <ProductRating
+rating={product.rating || 0}
+totalReviews={product.totalReviews || 0}
+isInteractive={true}  // Enable clicking
+productId={product.id} // Use _id for featured products
+userId={user?.uid || null} // Pass current user ID safely
+showLink={true} // Show link to reviews
 />
 
 <div className="price-section">
