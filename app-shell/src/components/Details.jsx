@@ -10,6 +10,7 @@ import { priceUtils } from "../utils/priceUtils";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../db/firebase";
+import SecNav from "./SecNav";
 
 export default function Details() {   
 let { id } = useParams();
@@ -79,6 +80,7 @@ const productImages = getProductImages();
 return (
 <>
 <Navbar />
+<SecNav/>
 <div className="product-container">
 {/* Breadcrumb Navigation */}
 <div className="breadcrumb">

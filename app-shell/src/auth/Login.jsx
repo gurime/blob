@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../db/firebase';
+import SecNav from "../components/SecNav";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -47,6 +48,7 @@ export default function Login() {
   return (
     <>
       <Navbar />
+      <SecNav />
       <div className="login-page">
         <div className="login-container">
           <div className="login-card">

@@ -8,9 +8,10 @@ import { Link } from 'react-router-dom';
 import DeliveryInfo from './DeliveryInfo'; 
 import ProductRating from './ProductRating';
 import { cartHandlers } from '../utils/cartHandlers';
+import { priceUtils } from '../utils/priceUtils'; // Import priceUtils
 import { auth } from '../db/firebase'; // Import auth from your firebase config
 import { onAuthStateChanged } from 'firebase/auth';
-
+import SecNav from './SecNav';
 
 export default function Home() {
 const [products, setProducts] = useState([]);
@@ -20,7 +21,6 @@ const [error, setError] = useState(null);
 const [currentSlide, setCurrentSlide] = useState(0);
 const [user, setUser] = useState(null);
 const [userLoading, setUserLoading] = useState(true);
-
 
   
   useEffect(() => {
@@ -76,7 +76,7 @@ const [userLoading, setUserLoading] = useState(true);
   // Auto-slide functionality
   useEffect(() => {
     if (featuredProducts.length > 0) {
-      const interval = setInterval(nextSlide, 5000);
+      const interval = setInterval(nextSlide, 10000);
       return () => clearInterval(interval);
     }
   }, [featuredProducts.length]);
@@ -95,15 +95,17 @@ const [userLoading, setUserLoading] = useState(true);
   }
 
   const { handleAddToCart, handleBuyNow } = cartHandlers;
+  const { formatPrice, generateOriginalPrice, calculateSavings } = priceUtils;
   
   return (
     <>
       <Navbar />
+      <SecNav/>
       <div className="container">
 
         {/* Featured Products Carousel Section */}
         <section className="featured-products">
-          <h2>Today's Deals & Featured Products</h2>
+          <h2>Today's Deals</h2>
           <div className="carousel-container">
             <button className="carousel-btn prev-btn" onClick={prevSlide}>
               &#8249;
@@ -133,14 +135,18 @@ const [userLoading, setUserLoading] = useState(true);
                           showLink={true} // Show link to reviews
                         />
                         <div className="price-section">
-                          <span className="current-price">${product.price}</span>
-                          <span className="original-price">${(product.price * 1.3).toFixed(2)}</span>
-                          <span className="discount">23% off</span>
+                          <span className="current-price">${formatPrice(product.price)}</span>
+                          <span className="original-price">${generateOriginalPrice(product.price)}</span>
+                          <span className="discount">
+                            {calculateSavings(product.price, generateOriginalPrice(product.price).replace(/,/g, '')).percentage}% off
+                          </span>
                           <Link to={`/product/${product._id}`} className="view-details">
                             View Details
                           </Link>
                         </div>
                         <span className="category-tag">{product.category}</span>
+                        <div className="product-description">{product.description}</div>
+                        
                         <div className="prime-badge">
                           <img className="prime-logo" src={`/assets/images/${product.gpremium}`} alt="Prime" />
                         </div>
@@ -196,11 +202,13 @@ const [userLoading, setUserLoading] = useState(true);
                     showLink={true} // Show link to reviews
                   />
                   
-                  <h3 className="product-category">{product.category}</h3>
+                  <Link className="product-category" to={`/category/${encodeURIComponent(product.category)}`}>
+{product.category}
+</Link>
                   <p className="product-description">{product.description}</p>
 
                   <div className="price-container">
-                    <span className="product-price">${product.price}</span>
+                    <span className="product-price">${formatPrice(product.price)}</span>
                     {product.prime && (
                       <div className="prime-shipping">
                         <span className="prime-badge-small">Prime</span>
@@ -210,7 +218,7 @@ const [userLoading, setUserLoading] = useState(true);
                   </div>
                   
                   {/* Add DeliveryInfo component here, right after price */}
-                  <DeliveryInfo hasPremium={!!product.prime} />
+<DeliveryInfo hasPremium={!!product?.gpremium} />
                   
                   <div className="product-actions">
                     <button className="add-to-cart-btn" onClick={handleAddToCart}>

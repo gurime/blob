@@ -15,6 +15,12 @@ export const useProductDetails = (id) => {
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedStorage, setSelectedStorage] = useState('');
 
+  // Helper function to format numbers with commas
+  const formatPrice = useCallback((price) => {
+  if (typeof price !== 'number' || isNaN(price)) return '0';
+    return price.toLocaleString('en-US');
+  }, []);
+
   // Function to search in a specific collection
   const searchInCollection = useCallback(async (collectionName, searchTerm) => {
     try {
@@ -197,7 +203,8 @@ export const useProductDetails = (id) => {
     handleStorageChange,
     handleQuantityChange,
     
-// Helpers
-getProductImages
+    // Helpers
+    getProductImages,
+    formatPrice
   };
 };
