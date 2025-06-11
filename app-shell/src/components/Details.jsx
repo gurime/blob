@@ -86,15 +86,17 @@ return (
 <div className="breadcrumb">
 <Link to="/">Home</Link>
 <Link to="/products">All Products</Link>
-<Link to={`/category/${encodeURIComponent(product.SourceCategory)}`}>
-{product.SourceCategory}
-</Link>
-
-<Link to={`/category/${encodeURIComponent(product.category)}`}>
-{product.category}
-</Link>
-
-<Link to={`/category/${encodeURIComponent(product.category)}/${encodeURIComponent(product.brand)}`}>{product.brand}</Link>
+<div className="breadcrumbs">
+  <Link to={`/category/${encodeURIComponent(product.SourceCategory.toLowerCase())}`}>
+    {product.SourceCategory}
+  </Link>
+  <Link to={`/category/${encodeURIComponent(product.SourceCategory.toLowerCase())}/${encodeURIComponent(product.category.toLowerCase())}`}>
+    {product.category}
+  </Link>
+  <Link to={`/category/${encodeURIComponent(product.SourceCategory.toLowerCase())}/${encodeURIComponent(product.category.toLowerCase())}/${encodeURIComponent(product.brand.toLowerCase())}`}>
+    {product.brand}
+  </Link>
+</div>
 </div>
 
 <div id="product-details" className="product-details">
