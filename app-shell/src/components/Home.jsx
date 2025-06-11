@@ -186,7 +186,7 @@ const [userLoading, setUserLoading] = useState(true);
                     className="product-image"
                   />
                   <button className="wishlist-btn">♡</button>
-                  {product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
+{product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
                   {product.deal && <div className="deal-badge">Limited time deal</div>}
                 </div>
                 

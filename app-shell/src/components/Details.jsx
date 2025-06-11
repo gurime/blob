@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import ClipLoader from "react-spinners/ClipLoader";
@@ -16,7 +16,7 @@ export default function Details() {
 let { id } = useParams();
 const [user, setUser] = useState(null);
 const [userLoading, setUserLoading] = useState(true);
-
+const navigate = useNavigate();
  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -68,7 +68,7 @@ return (
 <div className="error-message">
 <h2>Product Not Found</h2>
 <p>{error || "The requested product could not be found."}</p>
-<Link to="/products">← Back to Products</Link>
+          <button onClick={() => navigate(-1)} className="no-page-button">← Go Back</button>
 </div>
 <Footer />
 </>
@@ -93,9 +93,7 @@ return (
   <Link to={`/category/${encodeURIComponent(product.SourceCategory.toLowerCase())}/${encodeURIComponent(product.category.toLowerCase())}`}>
     {product.category}
   </Link>
-  <Link to={`/category/${encodeURIComponent(product.SourceCategory.toLowerCase())}/${encodeURIComponent(product.category.toLowerCase())}/${encodeURIComponent(product.brand.toLowerCase())}`}>
-    {product.brand}
-  </Link>
+  <span className="current-product">{product.brand}</span>
 </div>
 </div>
 

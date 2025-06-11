@@ -22,33 +22,51 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/product/:id" element={<Details />} />
         
-        {/* Generic category routes */}
-        <Route path="/category/:category" element={<CategoryPage />} />
-        <Route path="/category/:category/:subcategory" element={<CategoryPage />} />
-<Route path="/category/:category/:subcategory/:brand" element={<CategoryPage />} />
-
-
-        {/* Specific category routes - main categories */}
+        {/* Specific category routes - these need to come BEFORE generic routes */}
         <Route path="/books" element={<CategoryPage />} />
         <Route path="/books/:subcategory" element={<CategoryPage />} />
+        <Route path="/books/:subcategory/:subsubcategory" element={<CategoryPage />} />
+        
         <Route path="/automotive" element={<CategoryPage />} />
         <Route path="/automotive/:subcategory" element={<CategoryPage />} />
+        <Route path="/automotive/:subcategory/:subsubcategory" element={<CategoryPage />} />
+        
         <Route path="/toys" element={<CategoryPage />} />
         <Route path="/toys/:subcategory" element={<CategoryPage />} />
+        <Route path="/toys/:subcategory/:subsubcategory" element={<CategoryPage />} />
+        
         <Route path="/home-appliances" element={<CategoryPage />} />
         <Route path="/home-appliances/:subcategory" element={<CategoryPage />} />
+        <Route path="/home-appliances/:subcategory/:subsubcategory" element={<CategoryPage />} />
+        
         <Route path="/health-beauty" element={<CategoryPage />} />
         <Route path="/health-beauty/:subcategory" element={<CategoryPage />} />
+        <Route path="/health-beauty/:subcategory/:subsubcategory" element={<CategoryPage />} />
+        
         <Route path="/grocery" element={<CategoryPage />} />
         <Route path="/grocery/:subcategory" element={<CategoryPage />} />
+        <Route path="/grocery/:subcategory/:subsubcategory" element={<CategoryPage />} />
+        
         <Route path="/pet-supplies" element={<CategoryPage />} />
         <Route path="/pet-supplies/:subcategory" element={<CategoryPage />} />
+        <Route path="/pet-supplies/:subcategory/:subsubcategory" element={<CategoryPage />} />
+        
         <Route path="/baby-products" element={<CategoryPage />} />
         <Route path="/baby-products/:subcategory" element={<CategoryPage />} />
+        <Route path="/baby-products/:subcategory/:subsubcategory" element={<CategoryPage />} />
+        
         <Route path="/furniture" element={<CategoryPage />} />
         <Route path="/furniture/:subcategory" element={<CategoryPage />} />
+        <Route path="/furniture/:subcategory/:subsubcategory" element={<CategoryPage />} />
+        
         <Route path="/garden-outdoor" element={<CategoryPage />} />
         <Route path="/garden-outdoor/:subcategory" element={<CategoryPage />} />
+        <Route path="/garden-outdoor/:subcategory/:subsubcategory" element={<CategoryPage />} />
+        
+        {/* Generic category routes - these come AFTER specific routes */}
+        <Route path="/category/:category" element={<CategoryPage />} />
+        <Route path="/category/:category/:subcategory" element={<CategoryPage />} />
+        <Route path="/category/:category/:subcategory/:subsubcategory" element={<CategoryPage />} />
         
         {/* Other routes */}
         <Route path="/about" element={<About />} />

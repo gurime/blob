@@ -15,15 +15,48 @@ import { auth } from '../db/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 export default function CategoryPage() {
- const { category, subcategory, brand } = useParams(); // supports /:category/:subcategory/:brand
+  const params = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  
+  // New state for filters and sorting
+  const [sortBy, setSortBy] = useState('featured');
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedRatings, setSelectedRatings] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState('grid'); // grid or list
+  const productsPerPage = 16;
+const { handleAddToCart, handleBuyNow } = cartHandlers;
 
-  // Optional: format category name for display
+  // Determine category structure based on URL pattern
+  const getCategoryInfo = useCallback(() => {
+    const pathname = location.pathname;
+    
+    if (pathname.startsWith('/category/')) {
+      return {
+        category: params.category,
+        subcategory: params.subcategory,
+        subsubcategory: params.subsubcategory
+      };
+    } else {
+      const pathSegments = pathname.split('/').filter(Boolean);
+      return {
+        category: pathSegments[0],
+        subcategory: params.subcategory,
+        subsubcategory: params.subsubcategory
+      };
+    }
+  }, [params, location.pathname]);
+
+  // Format category name for display
   const formatCategoryName = useCallback((...parts) => {
     return parts
       .filter(Boolean)
@@ -41,68 +74,180 @@ export default function CategoryPage() {
     return () => unsubscribe();
   }, []);
 
-  // Fetch products
+  // Fetch products based on category structure
   useEffect(() => {
-   const fetchProducts = async () => {
-  setLoading(true);
-  setError(null);
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
 
-  try {
-    let colRef;
+      try {
+        const { category, subcategory, subsubcategory } = getCategoryInfo();
+        
+        if (!category) {
+          throw new Error("Category not found");
+        }
 
-    if (category && subcategory && brand) {
-      // 3-level nested: category / subcategory (as doc) / brand (as subcollection)
-      colRef = collection(db, category, subcategory, brand);
-    } else if (category && subcategory) {
-      // 2-level nested: category / subcategory (as doc) / products (as subcollection)
-      colRef = collection(db, category, subcategory, 'products');
-    } else if (category) {
-      // 1-level: just a flat collection
-      colRef = collection(db, category); // must be a top-level collection like 'automotive'
-    } else {
-      throw new Error("Category not found");
-    }
+        let colRef;
+        let productsData = [];
 
-    const querySnapshot = await getDocs(colRef);
+        console.log('Fetching products for:', { category, subcategory, subsubcategory });
 
-    const productsData = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+        if (category && subcategory && subsubcategory) {
+          colRef = collection(db, category, subcategory, subsubcategory, 'products');
+        } else if (category && subcategory) {
+          colRef = collection(db, category, subcategory, 'products');
+        } else if (category) {
+          try {
+            colRef = collection(db, category);
+            const querySnapshot = await getDocs(colRef);
+            
+            if (!querySnapshot.empty) {
+              const firstDoc = querySnapshot.docs[0];
+              const data = firstDoc.data();
+              
+              if (data.product_name || data.price || data.description) {
+                productsData = querySnapshot.docs.map((doc) => ({
+                  id: doc.id,
+                  ...doc.data(),
+                }));
+              } else {
+                for (const doc of querySnapshot.docs) {
+                  try {
+                    const subColRef = collection(db, category, doc.id, 'products');
+                    const subSnapshot = await getDocs(subColRef);
+                    const subProducts = subSnapshot.docs.map((subDoc) => ({
+                      id: subDoc.id,
+                      subcategory: doc.id,
+                      ...subDoc.data(),
+                    }));
+                    productsData.push(...subProducts);
+                  } catch (subError) {
+                    console.log(`No products subcollection in ${category}/${doc.id}`);
+                  }
+                }
+              }
+            }
+          } catch (directError) {
+            console.error("Error fetching from direct collection:", directError);
+            throw new Error(`Category "${category}" not found`);
+          }
+        }
 
-    setProducts(productsData);
-  } catch (err) {
-    console.error("Error fetching products:", err);
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+        if (productsData.length === 0 && colRef) {
+          const querySnapshot = await getDocs(colRef);
+          productsData = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+        }
 
+        console.log(`Found ${productsData.length} products`);
+        setProducts(productsData);
+        setFilteredProducts(productsData);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchProducts();
-  }, [category, subcategory, brand]);
+  }, [location.pathname, getCategoryInfo]);
+
+  // Filter and sort products
+  useEffect(() => {
+    let filtered = [...products];
+
+    // Apply price filter
+    if (priceRange.min || priceRange.max) {
+      filtered = filtered.filter(product => {
+        const price = product.price;
+        const min = priceRange.min ? parseFloat(priceRange.min) : 0;
+        const max = priceRange.max ? parseFloat(priceRange.max) : Infinity;
+        return price >= min && price <= max;
+      });
+    }
+
+    // Apply brand filter
+    if (selectedBrands.length > 0) {
+      filtered = filtered.filter(product => 
+        selectedBrands.includes(product.brand || 'Unknown')
+      );
+    }
+
+    // Apply rating filter
+    if (selectedRatings.length > 0) {
+      filtered = filtered.filter(product => {
+        const rating = product.rating || 0;
+        return selectedRatings.some(minRating => rating >= minRating);
+      });
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'price-low':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-high':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'rating':
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
+        break;
+      default: // featured
+        filtered.sort((a, b) => {
+          if (a.bestseller && !b.bestseller) return -1;
+          if (!a.bestseller && b.bestseller) return 1;
+          return (b.rating || 0) - (a.rating || 0);
+        });
+    }
+
+    setFilteredProducts(filtered);
+    setCurrentPage(1);
+  }, [products, sortBy, priceRange, selectedBrands, selectedRatings]);
+
+  // Get unique brands from products
+  const availableBrands = [...new Set(products.map(p => p.brand || 'Unknown'))].sort();
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
 
   const formatPrice = (price) => {
     return priceUtils?.formatPrice ? priceUtils.formatPrice(price) : price.toFixed(2);
   };
 
-  const handleAddToCart = (product) => {
-    if (cartHandlers?.addToCart) {
-      cartHandlers.addToCart(product, user);
-    } else {
-      console.log('Add to cart:', product);
-    }
+
+
+  const handleBrandChange = (brand) => {
+    setSelectedBrands(prev => 
+      prev.includes(brand) 
+        ? prev.filter(b => b !== brand)
+        : [...prev, brand]
+    );
   };
 
-  const handleBuyNow = (product) => {
-    if (cartHandlers?.buyNow) {
-      cartHandlers.buyNow(product, user);
-    } else {
-      console.log('Buy now:', product);
-    }
+  const handleRatingChange = (rating) => {
+    setSelectedRatings(prev => 
+      prev.includes(rating) 
+        ? prev.filter(r => r !== rating)
+        : [...prev, rating]
+    );
   };
-  const navigate = useNavigate();
+
+  const clearFilters = () => {
+    setPriceRange({ min: '', max: '' });
+    setSelectedBrands([]);
+    setSelectedRatings([]);
+    setSortBy('featured');
+  };
+
+  const { category, subcategory, subsubcategory } = getCategoryInfo();
 
   if (loading) {
     return (
@@ -111,7 +256,7 @@ export default function CategoryPage() {
         <SecNav />
         <div className="loading-container">
           <ClipLoader color="#FF9900" size={50} />
-          <p>Loading {formatCategoryName(category, subcategory)} products...</p>
+          <p>Loading {formatCategoryName(category, subcategory, subsubcategory)} products...</p>
         </div>
         <Footer />
       </>
@@ -125,7 +270,7 @@ export default function CategoryPage() {
         <SecNav />
         <div className="error-container">
           <p>Error loading products: {error}</p>
-            <button  onClick={() => navigate(-1)}  className="no-page-button">← Go Back</button>
+          <button onClick={() => navigate(-1)} className="no-page-button">← Go Back</button>
         </div>
         <Footer />
       </>
@@ -136,83 +281,301 @@ export default function CategoryPage() {
     <>
       <Navbar />
       <SecNav />
-      <div className="container">
+      <div className="category-page-container">
+        {/* Breadcrumb */}
+        <div className="breadcrumb">
+          <Link to="/">Home</Link>
+          {category && (
+            <>
+              <span className="breadcrumb-separator">›</span>
+              <Link to={`/category/${encodeURIComponent(category)}`}>
+                {formatCategoryName(category)}
+              </Link>
+            </>
+          )}
+          {subcategory && (
+            <>
+              <span className="breadcrumb-separator">›</span>
+              <Link to={`/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}`}>
+                {formatCategoryName(subcategory)}
+              </Link>
+            </>
+          )}
+          {subsubcategory && (
+            <>
+              <span className="breadcrumb-separator">›</span>
+              <Link to={`/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}/${encodeURIComponent(subsubcategory)}`}>
+                {formatCategoryName(subsubcategory)}
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* Category Header */}
         <div className="category-header">
-          <h1>{formatCategoryName(category, subcategory)}</h1>
-          <p>{products.length} products found</p>
+          <h1>{formatCategoryName(category, subcategory, subsubcategory)}</h1>
+          <p className="results-count">
+            {filteredProducts.length > 0 
+              ? `1-${Math.min(productsPerPage, filteredProducts.length)} of ${filteredProducts.length} results`
+              : 'No results found'
+            }
+          </p>
         </div>
 
         {products.length === 0 ? (
           <div className="no-products">
             <p>No products found in this category.</p>
-            <button  onClick={() => navigate(-1)}  className="no-page-button">← Go Back</button>
+            <button onClick={() => navigate(-1)} className="no-page-button">← Go Back</button>
           </div>
         ) : (
-          <section className="category-products">
-            <div className="products-grid">
-              {products.map(product => (
-                <div key={product.id} className="products-card">
-                  <div className="product-image-container">
-                    <img 
-                      src={`/assets/images/${product.imgUrl}`} 
-                      alt={product.product_name}
-                      className="product-image"
-                      onError={(e) => {
-                        e.target.src = '/assets/images/default-product.jpg';
-                      }}
-                    />
-                    <button className="wishlist-btn">♡</button>
-                    {product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
-                    {product.deal && <div className="deal-badge">Limited time deal</div>}
-                  </div>
+          <div className="category-content">
+            {/* Sidebar Filters */}
+            <aside className={`filters-sidebar ${showFilters ? 'show-mobile' : ''}`}>
+              <div className="filters-header">
+                <h3>Filters</h3>
+                <button 
+                  className="clear-filters-btn" 
+                  onClick={clearFilters}
+                  disabled={!priceRange.min && !priceRange.max && selectedBrands.length === 0 && selectedRatings.length === 0}
+                >
+                  Clear All
+                </button>
+              </div>
 
-                  <div className="product-content">
-                    <h2 className="product-name">{product.product_name}</h2>
-                    
-                    <ProductRating
-                      rating={product.rating || 0}
-                      totalReviews={product.totalReviews || 0}
-                      isInteractive={true}
-                      productId={product.id}
-                      userId={user?.uid || null}
-                      showLink={true}
-                    />
+              {/* Price Range Filter */}
+              <div className="filter-group">
+                <h4>Price</h4>
+                <div className="price-range-inputs">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={priceRange.min}
+                    onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+                    className="price-input"
+                  />
+                  <span>to</span>
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={priceRange.max}
+                    onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+                    className="price-input"
+                  />
+                </div>
+              </div>
 
-                    <Link className="product-category" to={`/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}`}>
-                      {formatCategoryName(category, subcategory)}
-                    </Link>
-
-                    <p className="product-description">{product.description}</p>
-
-                    <div className="price-container">
-                      <span className="product-price">${formatPrice(product.price)}</span>
-                      {product.prime && (
-                        <div className="prime-shipping">
-                          <span className="prime-badge-small">Prime</span>
-                          <span className="free-shipping">FREE delivery</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <DeliveryInfo hasPremium={!!product?.gpremium} />
-
-                    <div className="product-actions">
-                      <button className="add-to-cart-btn" onClick={() => handleAddToCart(product)}>
-                        Add to Cart
-                      </button>
-                      <button className="buy-now-btn" onClick={() => handleBuyNow(product)}>
-                        Buy Now 
-                      </button>
-                    </div>
-
-                    <Link to={`/product/${product.id}`} className="view-details">
-                      View Details
-                    </Link>
+              {/* Brand Filter */}
+              {availableBrands.length > 1 && (
+                <div className="filter-group">
+                  <h4>Brand</h4>
+                  <div className="checkbox-list">
+                    {availableBrands.slice(0, 10).map(brand => (
+                      <label key={brand} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={selectedBrands.includes(brand)}
+                          onChange={() => handleBrandChange(brand)}
+                        />
+                        <span>{brand}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
+              )}
+
+              {/* Rating Filter */}
+              <div className="filter-group">
+                <h4>Customer Reviews</h4>
+                <div className="rating-filters">
+                  {[4, 3, 2, 1].map(rating => (
+                    <label key={rating} className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedRatings.includes(rating)}
+                        onChange={() => handleRatingChange(rating)}
+                      />
+                      <span className="rating-filter-text">
+                        {'★'.repeat(rating)}{'☆'.repeat(5-rating)} & Up
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </aside>
+
+            {/* Main Content */}
+            <main className="products-main">
+              {/* Sort and View Controls */}
+              <div className="controls-bar">
+                <div className="sort-controls">
+                  <button 
+                    className="filters-toggle-btn mobile-only"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    Filters {showFilters ? '−' : '+'}
+                  </button>
+                  
+                  <label htmlFor="sort-select">Sort by:</label>
+                  <select 
+                    id="sort-select"
+                    value={sortBy} 
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="sort-select"
+                  >
+                    <option value="featured">Featured</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="rating">Avg. Customer Review</option>
+                    <option value="newest">Newest Arrivals</option>
+                  </select>
+                </div>
+
+                <div className="view-controls">
+                  <button 
+                    className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                    onClick={() => setViewMode('grid')}
+                    title="Grid View"
+                  >
+                    ⊞
+                  </button>
+                  <button 
+                    className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+                    onClick={() => setViewMode('list')}
+                    title="List View"
+                  >
+                    ☰
+                  </button>
+                </div>
+              </div>
+
+              {/* Products Grid/List */}
+              <section className={`products-section ${viewMode}`}>
+                <div className={`products-${viewMode}`}>
+                  {currentProducts.map(product => (
+                    <div key={product.id} className={`product-card ${viewMode}`}>
+                      <div className="product-image-container">
+                        <img 
+                          src={`/assets/images/${product.imgUrl}`} 
+                          alt={product.product_name}
+                          className="product-image"
+                          onError={(e) => {
+                            e.target.src = '/assets/images/default-product.jpg';
+                          }}
+                        />
+                        <button className="wishlist-btn">♡</button>
+                        {product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
+                        {product.deal && <div className="deal-badge">Limited time deal</div>}
+                      </div>
+
+                      <div className="product-content">
+                        <h3 className="product-name">
+                          <Link to={`/product/${product.id}`}>
+                            {product.product_name}
+                          </Link>
+                        </h3>
+                        
+                        <ProductRating
+                          rating={product.rating || 0}
+                          totalReviews={product.totalReviews || 0}
+                          isInteractive={true}
+                          productId={product.id}
+                          userId={user?.uid || null}
+                          showLink={true}
+                        />
+
+                        <Link 
+                          className="product-category" 
+                          to={`/${encodeURIComponent(category)}${subcategory ? `/${encodeURIComponent(subcategory)}` : ''}${subsubcategory ? `/${encodeURIComponent(subsubcategory)}` : ''}`}
+                        >
+                          {formatCategoryName(category, subcategory, subsubcategory)}
+                        </Link>
+
+                        {viewMode === 'list' && (
+                          <p className="product-description">{product.description}</p>
+                        )}
+
+                        <div className="price-container">
+                          <span className="product-price">${formatPrice(product.price)}</span>
+                          {product.originalPrice && product.originalPrice > product.price && (
+                            <span className="original-price">${formatPrice(product.originalPrice)}</span>
+                          )}
+                          {product.prime && (
+                            <div className="prime-shipping">
+                              <span className="prime-badge-small">Prime</span>
+                              <span className="free-shipping">FREE delivery</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <DeliveryInfo hasPremium={!!product?.gpremium} />
+
+                        <div className="product-actions">
+<button className="add-to-cart-btn" onClick={handleAddToCart}>
+                      Add to Cart
+                    </button>
+                    <button className="buy-now-btn" onClick={handleBuyNow}>
+                      Buy Now 
+                    </button>
+                  </div>
+
+                        {viewMode === 'grid' && (
+                          <Link to={`/product/${product.id}`} className="view-details">
+                            View Details
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="pagination-btn"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="page-numbers">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`page-btn ${currentPage === pageNum ? 'active' : ''}`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="pagination-btn"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </main>
+          </div>
         )}
       </div>
       <Footer />
