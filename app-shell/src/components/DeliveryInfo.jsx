@@ -19,7 +19,7 @@ const countdownToCutoff = () => {
 
 const DeliveryInfo = ({ hasPremium }) => {
   return (
-    <div className="delivery-info">
+    <div  className="delivery-info ">
       <div><span className="highlight">FREE Returns</span></div>
 
       {hasPremium ? (

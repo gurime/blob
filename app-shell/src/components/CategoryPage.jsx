@@ -90,7 +90,6 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
         let colRef;
         let productsData = [];
 
-        console.log('Fetching products for:', { category, subcategory, subsubcategory });
 
         if (category && subcategory && subsubcategory) {
           colRef = collection(db, category, subcategory, subsubcategory, 'products');
@@ -122,13 +121,11 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
                     }));
                     productsData.push(...subProducts);
                   } catch (subError) {
-                    console.log(`No products subcollection in ${category}/${doc.id}`);
                   }
                 }
               }
             }
           } catch (directError) {
-            console.error("Error fetching from direct collection:", directError);
             throw new Error(`Category "${category}" not found`);
           }
         }
@@ -141,11 +138,9 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
           }));
         }
 
-        console.log(`Found ${productsData.length} products`);
         setProducts(productsData);
         setFilteredProducts(productsData);
       } catch (err) {
-        console.error("Error fetching products:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -283,34 +278,38 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
       <SecNav />
       <div className="category-page-container">
         {/* Breadcrumb */}
-        <div className="breadcrumb">
-          <Link to="/">Home</Link>
-          {category && (
-            <>
-              <span className="breadcrumb-separator">›</span>
-              <Link to={`/category/${encodeURIComponent(category)}`}>
-                {formatCategoryName(category)}
-              </Link>
-            </>
-          )}
-          {subcategory && (
-            <>
-              <span className="breadcrumb-separator">›</span>
-              <Link to={`/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}`}>
-                {formatCategoryName(subcategory)}
-              </Link>
-            </>
-          )}
-          {subsubcategory && (
-            <>
-              <span className="breadcrumb-separator">›</span>
-              <Link to={`/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}/${encodeURIComponent(subsubcategory)}`}>
-                {formatCategoryName(subsubcategory)}
-              </Link>
-            </>
-          )}
-        </div>
+{/* Breadcrumb */}
+<div className="breadcrumb">
+  <Link to="/">Home</Link>
+   
 
+  {category && category.trim() !== '' && (
+    <>
+      <span className="breadcrumb-separator">›</span>
+      <Link to={`/category/${encodeURIComponent(category)}`}>
+        {formatCategoryName(category)}
+      </Link>
+    </>
+  )}
+  
+  {category && category.trim() !== '' && subcategory && subcategory.trim() !== '' && (
+    <>
+      <span className="breadcrumb-separator">›</span>
+      <Link to={`/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}`}>
+        {formatCategoryName(subcategory)}
+      </Link>
+    </>
+  )}
+  
+  {category && category.trim() !== '' && subcategory && subcategory.trim() !== '' && subsubcategory && subsubcategory.trim() !== '' && (
+    <>
+      <span className="breadcrumb-separator">›</span>
+      <Link to={`/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}/${encodeURIComponent(subsubcategory)}`}>
+        {formatCategoryName(subsubcategory)}
+      </Link>
+    </>
+  )}
+</div>
         {/* Category Header */}
         <div className="category-header">
           <h1>{formatCategoryName(category, subcategory, subsubcategory)}</h1>
@@ -449,84 +448,67 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
               </div>
 
               {/* Products Grid/List */}
-              <section className={`products-section ${viewMode}`}>
+              <section className={`products-gtrid products-${viewMode}`}>
                 <div className={`products-${viewMode}`}>
                   {currentProducts.map(product => (
-                    <div key={product.id} className={`product-card ${viewMode}`}>
-                      <div className="product-image-container">
-                        <img 
-                          src={`/assets/images/${product.imgUrl}`} 
-                          alt={product.product_name}
-                          className="product-image"
-                          onError={(e) => {
-                            e.target.src = '/assets/images/default-product.jpg';
-                          }}
-                        />
-                        <button className="wishlist-btn">♡</button>
-                        {product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
-                        {product.deal && <div className="deal-badge">Limited time deal</div>}
+                   <div key={product.id} className="products-card">
+                <div className="product-image-container">
+                  <img 
+                    src={`/assets/images/${product.imgUrl}`} 
+                    alt={product.product_name}
+                    className="product-image"
+                  />
+                  <button className="wishlist-btn">♡</button>
+{product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
+                  {product.deal && <div className="deal-badge">Limited time deal</div>}
+                </div>
+                
+                <div className="product-content">
+                  <h2 className="product-name">{product.product_name}</h2>
+                  
+                  <ProductRating
+                    rating={product.rating || 0}
+                    totalReviews={product.totalReviews || 0}
+                    isInteractive={true}  // Enable clicking
+                    productId={product.id} // Pass the product ID
+                    userId={user?.uid || null} // Pass current user ID safely
+                    showLink={true} // Show link to reviews
+                  />
+                  
+                  <Link className="product-category" to={`/category/${encodeURIComponent(product.category)}`}>
+{product.category}
+</Link>
+                  <p className="product-description">{product.description}</p>
+
+                  <div className="price-container">
+                    <span className="product-price">${formatPrice(product.price)}</span>
+                    {product.prime && (
+                      <div className="prime-shipping">
+                        <span className="prime-badge-small">Prime</span>
+                        <span className="free-shipping">FREE delivery</span>
                       </div>
-
-                      <div className="product-content">
-                        <h3 className="product-name">
-                          <Link to={`/product/${product.id}`}>
-                            {product.product_name}
-                          </Link>
-                        </h3>
-                        
-                        <ProductRating
-                          rating={product.rating || 0}
-                          totalReviews={product.totalReviews || 0}
-                          isInteractive={true}
-                          productId={product.id}
-                          userId={user?.uid || null}
-                          showLink={true}
-                        />
-
-                        <Link 
-                          className="product-category" 
-                          to={`/${encodeURIComponent(category)}${subcategory ? `/${encodeURIComponent(subcategory)}` : ''}${subsubcategory ? `/${encodeURIComponent(subsubcategory)}` : ''}`}
-                        >
-                          {formatCategoryName(category, subcategory, subsubcategory)}
-                        </Link>
-
-                        {viewMode === 'list' && (
-                          <p className="product-description">{product.description}</p>
-                        )}
-
-                        <div className="price-container">
-                          <span className="product-price">${formatPrice(product.price)}</span>
-                          {product.originalPrice && product.originalPrice > product.price && (
-                            <span className="original-price">${formatPrice(product.originalPrice)}</span>
-                          )}
-                          {product.prime && (
-                            <div className="prime-shipping">
-                              <span className="prime-badge-small">Prime</span>
-                              <span className="free-shipping">FREE delivery</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <DeliveryInfo hasPremium={!!product?.gpremium} />
-
-                        <div className="product-actions">
-<button className="add-to-cart-btn" onClick={handleAddToCart}>
+                    )}
+                  </div>
+                  
+                  {/* Add DeliveryInfo component here, right after price */}
+<DeliveryInfo  hasPremium={!!product?.gpremium} />
+                  
+                  <div className="product-actions">
+                    <button className="add-to-cart-btn" onClick={handleAddToCart}>
                       Add to Cart
                     </button>
                     <button className="buy-now-btn" onClick={handleBuyNow}>
                       Buy Now 
                     </button>
                   </div>
-
-                        {viewMode === 'grid' && (
-                          <Link to={`/product/${product.id}`} className="view-details">
-                            View Details
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                  
+                  <Link to={`/product/${product.id}`} className="view-details">
+                    View Details
+                  </Link>
                 </div>
+              </div>
+            ))}
+          </div>
               </section>
 
               {/* Pagination */}

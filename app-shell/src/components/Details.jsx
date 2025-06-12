@@ -85,7 +85,6 @@ return (
 {/* Breadcrumb Navigation */}
 <div className="breadcrumb">
 <Link to="/">Home</Link>
-<Link to="/products">All Products</Link>
 <div className="breadcrumbs">
   <Link to={`/category/${encodeURIComponent(product.SourceCategory.toLowerCase())}`}>
     {product.SourceCategory}

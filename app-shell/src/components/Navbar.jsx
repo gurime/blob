@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import navlogo from '../img/gulime.png'
 import { useEffect, useRef, useState } from 'react';
 import { HiOutlineShoppingCart } from 'react-icons/hi';
@@ -13,7 +13,7 @@ const [isOpen, setIsOpen] = useState(false);
 const [isSignedIn, setIsSignedIn] = useState(false);
 const [names, setNames] = useState('');
 const navRef = useRef(null);
-
+const navigate = useNavigate();
 useEffect(() => {
 // Focus on mount
 if (navRef.current) {
@@ -60,7 +60,7 @@ navRef.current.focus();
       
       setIsSignedIn(false);
       setUserData(null);
-      router.push('/');
+      navigate.push('/');
     } catch (error) {
     }
   }

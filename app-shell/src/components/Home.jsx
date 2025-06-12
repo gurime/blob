@@ -8,28 +8,88 @@ import { Link } from 'react-router-dom';
 import DeliveryInfo from './DeliveryInfo'; 
 import ProductRating from './ProductRating';
 import { cartHandlers } from '../utils/cartHandlers';
-import { priceUtils } from '../utils/priceUtils'; // Import priceUtils
-import { auth } from '../db/firebase'; // Import auth from your firebase config
+import { priceUtils } from '../utils/priceUtils';
+import { wishlistHandlers } from '../utils/wishlistHandler'; // Import wishlist handlers
+import { auth } from '../db/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import SecNav from './SecNav';
 
 export default function Home() {
-const [products, setProducts] = useState([]);
-const [featuredProducts, setFeaturedProducts] = useState([]);
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState(null);
-const [currentSlide, setCurrentSlide] = useState(0);
-const [user, setUser] = useState(null);
-const [userLoading, setUserLoading] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [wishlistItems, setWishlistItems] = useState(new Set()); // Track wishlisted items
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
-  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setUserLoading(false);
+      
+      // Load user's wishlist when user changes
+      if (currentUser) {
+        loadUserWishlist(currentUser.uid);
+      } else {
+        setWishlistItems(new Set());
+      }
     });
     return () => unsubscribe();
   }, []);
+
+  // Load user's wishlist
+  const loadUserWishlist = async (userId) => {
+    try {
+      const result = await wishlistHandlers.getUserWishlist(userId);
+      if (result.success) {
+        const wishlistProductIds = new Set(
+          result.wishlist.map(item => item.productId)
+        );
+        setWishlistItems(wishlistProductIds);
+      }
+    } catch (error) {
+      console.error('Error loading wishlist:', error);
+    }
+  };
+
+  // Handle wishlist toggle
+  const handleWishlistToggle = async (product) => {
+    if (!user) {
+      alert('Please log in to add items to your wishlist');
+      return;
+    }
+
+    setWishlistLoading(true);
+    try {
+      const result = await wishlistHandlers.toggleWishlist(user.uid, product);
+      
+      if (result.success) {
+        const productId = product.id || product._id;
+        const newWishlistItems = new Set(wishlistItems);
+        
+        if (newWishlistItems.has(productId)) {
+          newWishlistItems.delete(productId);
+        } else {
+          newWishlistItems.add(productId);
+        }
+        
+        setWishlistItems(newWishlistItems);
+        
+        // Optional: Show success message
+        console.log(result.message);
+      } else {
+        alert(result.message || 'Error updating wishlist');
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      alert('Error updating wishlist');
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
@@ -129,10 +189,10 @@ const [userLoading, setUserLoading] = useState(true);
                         <ProductRating
                           rating={product.rating || 0}
                           totalReviews={product.totalReviews || 0}
-                          isInteractive={true}  // Enable clicking
-                          productId={product._id} // Use _id for featured products
-                          userId={user?.uid || null} // Pass current user ID safely
-                          showLink={true} // Show link to reviews
+                          isInteractive={true}
+                          productId={product._id}
+                          userId={user?.uid || null}
+                          showLink={true}
                         />
                         <div className="price-section">
                           <span className="current-price">${formatPrice(product.price)}</span>
@@ -150,7 +210,6 @@ const [userLoading, setUserLoading] = useState(true);
                         <div className="prime-badge">
                           <img className="prime-logo" src={`/assets/images/${product.gpremium}`} alt="Prime" />
                         </div>
-                        {/* Add DeliveryInfo component here */}
                         <DeliveryInfo hasPremium={!!product.gpremium} />
                       </div>
                     </div>
@@ -185,8 +244,16 @@ const [userLoading, setUserLoading] = useState(true);
                     alt={product.product_name}
                     className="product-image"
                   />
-                  <button className="wishlist-btn">♡</button>
-{product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
+                  {/* Updated wishlist button */}
+                  <button 
+                    className={`wishlist-btn ${wishlistItems.has(product.id) ? 'wishlisted' : ''}`}
+                    onClick={() => handleWishlistToggle(product)}
+                    disabled={wishlistLoading}
+                    title={wishlistItems.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                  >
+                    {wishlistItems.has(product.id) ? '♥' : '♡'}
+                  </button>
+                  {product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
                   {product.deal && <div className="deal-badge">Limited time deal</div>}
                 </div>
                 
@@ -196,15 +263,15 @@ const [userLoading, setUserLoading] = useState(true);
                   <ProductRating
                     rating={product.rating || 0}
                     totalReviews={product.totalReviews || 0}
-                    isInteractive={true}  // Enable clicking
-                    productId={product.id} // Pass the product ID
-                    userId={user?.uid || null} // Pass current user ID safely
-                    showLink={true} // Show link to reviews
+                    isInteractive={true}
+                    productId={product.id}
+                    userId={user?.uid || null}
+                    showLink={true}
                   />
                   
                   <Link className="product-category" to={`/category/${encodeURIComponent(product.category)}`}>
-{product.category}
-</Link>
+                    {product.category}
+                  </Link>
                   <p className="product-description">{product.description}</p>
 
                   <div className="price-container">
@@ -217,8 +284,7 @@ const [userLoading, setUserLoading] = useState(true);
                     )}
                   </div>
                   
-                  {/* Add DeliveryInfo component here, right after price */}
-<DeliveryInfo hasPremium={!!product?.gpremium} />
+                  <DeliveryInfo hasPremium={!!product?.gpremium} />
                   
                   <div className="product-actions">
                     <button className="add-to-cart-btn" onClick={handleAddToCart}>
