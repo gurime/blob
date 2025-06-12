@@ -14,13 +14,15 @@ export default function SecNav() {
     books: ['Fiction', 'Non-Fiction', 'Mystery', 'Romance', 'Science Fiction', 'Biography'],
     toys: ['Action Figures', 'Board Games', 'Educational', 'Outdoor Toys', 'Puzzles', 'Electronic Toys'],
     'home-appliances': ['Kitchen', 'Laundry', 'Cleaning', 'Small Appliances', 'Refrigeration', 'Air Conditioning'],
-    'health-beauty': ['Skincare', 'Makeup', 'Hair Care', 'Personal Care', 'Vitamins', 'Fitness'],
+    'health-beauty': ['Skincare', 'Makeup', 'Hair Care', 'Personal Care', 'Vitamins', 'Fitness', 'Fragrances', 'Oral Care', 'Grooming', 'Men\'s Grooming', 'Women\'s Grooming', 'Health Supplements', 'Medical Supplies','womens clothing', 'mens clothing'],
     automotive: ['Electric', 'SUV', 'Vans', 'Sedans', 'Trucks', 'Parts & Accessories'],
     grocery: ['Fresh Produce', 'Dairy', 'Meat', 'Beverages', 'Snacks', 'Frozen Foods'],
     'pet-supplies': ['Dog Supplies', 'Cat Supplies', 'Fish & Aquatic', 'Birds', 'Small Animals', 'Reptiles'],
     'baby-products': ['Feeding', 'Diapers', 'Toys', 'Clothing', 'Safety', 'Strollers'],
     furniture: ['Living Room', 'Bedroom', 'Dining Room', 'Office', 'Outdoor', 'Storage'],
-    'garden-outdoor': ['Gardening Tools', 'Plants', 'Outdoor Furniture', 'Grilling', 'Lawn Care', 'Patio']
+    'garden-outdoor': ['Gardening Tools', 'Plants', 'Outdoor Furniture', 'Grilling', 'Lawn Care', 'Patio'],
+    music:['Instruments', 'Vinyl Records', 'CDs', 'Music Accessories', 'Sheet Music', 'Audio Equipment'],
+    electronics: ['Mobile Phones', 'Laptops', 'Tablets', 'Cameras', 'Audio & Video', 'Wearables'],
   };
 
   const handleDropdownToggle = (category, event) => {
@@ -61,7 +63,9 @@ export default function SecNav() {
     { to: '/pet-supplies', label: 'Pet Supplies', key: 'pet-supplies' },
     { to: '/baby-products', label: 'Baby Products', key: 'baby-products' },
     { to: '/furniture', label: 'Furniture', key: 'furniture' },
-    { to: '/garden-outdoor', label: 'Garden & Outdoor', key: 'garden-outdoor' }
+    { to: '/garden-outdoor', label: 'Garden & Outdoor', key: 'garden-outdoor' },
+    { to: '/music', label: 'Music', key: 'music' },
+    { to: '/electronics', label: 'Electronics', key: 'electronics' },
   ];
 
   return (

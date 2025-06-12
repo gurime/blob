@@ -5,6 +5,7 @@ import { ShoppingCart } from 'lucide-react';
 import { auth } from '../db/firebase';
 // Add these imports for Firestore
 import { doc, getDoc } from 'firebase/firestore';
+import gpremium from '../img/gulimepremium2.png';
 import { db } from '../db/firebase'; // Make sure db is exported from your firebase config
 
 export default function Navbar() {
@@ -80,7 +81,13 @@ return (
 {/* navbar starts here */}
 <nav ref={navRef} tabIndex={-1} className="navbar" id="top-navbar">
 <div className="logo">
-<NavLink to="/"><img src={navlogo} alt="Logo" /></NavLink>
+<NavLink to="/">
+{isSignedIn ? (  
+<img src={gpremium} alt="" />
+) : (
+<img src={navlogo} alt="Logo"/>  
+)}
+</NavLink>
 </div>
 
 <form className='nav-search-form' action="">
@@ -92,9 +99,6 @@ return (
 <NavLink to="/" style={activeStyle}>Home</NavLink>
 <NavLink to="/technology" style={activeStyle}>Electronics</NavLink>
 <NavLink to="/sports" style={activeStyle}>Sports</NavLink>
-<NavLink to="/music" style={activeStyle}>Music</NavLink>
-<NavLink to="/fashion" style={activeStyle}>Fashion</NavLink>
-<NavLink to="/movies" style={activeStyle}>Movies</NavLink>
 {isSignedIn ? (
 <>
 <NavLink to="/profile" style={activeStyle}>{names || 'Profile'}</NavLink>
@@ -106,7 +110,7 @@ return (
 {!isSignedIn && (
 <NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
 )}
-<HiOutlineShoppingCart color='#fff' size={30}/> 
+<ShoppingCart color='#fff' size={30}/> 
 </ul>
 
 <div className="burger">
@@ -159,23 +163,6 @@ Sports
 </NavLink>
 </li>
 
-<li className="sidenav-seperator">
-<NavLink to="/music" onClick={closeSidenav}>
-Music
-</NavLink>
-</li>
-
-<li className="sidenav-seperator">
-<NavLink to="/fashion" onClick={closeSidenav}>
-Fashion
-</NavLink>
-</li>
-
-<li className="sidenav-seperator">
-<NavLink to="/movies" onClick={closeSidenav}>
-Movies
-</NavLink>
-</li>
 </ul>
 </div>
 {/* sidenav stops here */}

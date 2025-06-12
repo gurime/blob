@@ -1,3 +1,4 @@
+import React from 'react';
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../db/firebase";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
@@ -244,6 +245,13 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
 
   const { category, subcategory, subsubcategory } = getCategoryInfo();
 
+  const breadcrumbItems = [
+  { name: "Home", to: "/" },
+  category && { name: formatCategoryName(category), to: `/category/${encodeURIComponent(category)}` },
+  subcategory && { name: formatCategoryName(subcategory), to: `/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}` },
+  subsubcategory && { name: formatCategoryName(subsubcategory), to: `/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}/${encodeURIComponent(subsubcategory)}` }
+].filter(Boolean);
+
   if (loading) {
     return (
       <>
@@ -280,36 +288,16 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
         {/* Breadcrumb */}
 {/* Breadcrumb */}
 <div className="breadcrumb">
-  <Link to="/">Home</Link>
-   
-
-  {category && category.trim() !== '' && (
-    <>
-      <span className="breadcrumb-separator">›</span>
-      <Link to={`/category/${encodeURIComponent(category)}`}>
-        {formatCategoryName(category)}
-      </Link>
-    </>
-  )}
-  
-  {category && category.trim() !== '' && subcategory && subcategory.trim() !== '' && (
-    <>
-      <span className="breadcrumb-separator">›</span>
-      <Link to={`/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}`}>
-        {formatCategoryName(subcategory)}
-      </Link>
-    </>
-  )}
-  
-  {category && category.trim() !== '' && subcategory && subcategory.trim() !== '' && subsubcategory && subsubcategory.trim() !== '' && (
-    <>
-      <span className="breadcrumb-separator">›</span>
-      <Link to={`/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}/${encodeURIComponent(subsubcategory)}`}>
-        {formatCategoryName(subsubcategory)}
-      </Link>
-    </>
-  )}
+  {breadcrumbItems.map((item, idx) => (
+    <React.Fragment key={item.to}>
+      <Link to={item.to}>{item.name}</Link>
+      {idx < breadcrumbItems.length - 1 && (
+        <span className="breadcrumb-separator">›</span>
+      )}
+    </React.Fragment>
+  ))}
 </div>
+
         {/* Category Header */}
         <div className="category-header">
           <h1>{formatCategoryName(category, subcategory, subsubcategory)}</h1>

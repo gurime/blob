@@ -23,13 +23,13 @@ export default function Help() {
         </div>
         <div className="help-content">
           <h2 id="faq">Frequently Asked Questions</h2>
-          <p>Find answers to common questions in our <a href="/faq">FAQ section</a>.</p>
+          <p>Find answers to common questions in our <Link to="/faq">FAQ section</Link>.</p>
 
           <h2 id="contact">Contact Support</h2>
           <p>If you need further assistance, please <Link to="/contact">contact our support team</Link>.</p>
 
           <h2 id="shipping">Shipping Information</h2>
-          <p>Learn about our shipping policies and options on our <a href="/shipping">Shipping Information page</a>.</p>
+<p>Learn about our shipping policies and options on our <Link to="/shipping">Shipping Information page</Link>.</p>
 
           <h2 id="returns">Returns & Refunds</h2>
           <p>For details on returns and refunds, visit our <a href="/returns">Returns & Refunds page</a>.</p>
