@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import navlogo from '../img/gulime.png'
 import { useEffect, useRef, useState } from 'react';
-import { HiOutlineShoppingCart } from 'react-icons/hi';
+import { ShoppingCart } from 'lucide-react';
 import { auth } from '../db/firebase';
 // Add these imports for Firestore
 import { doc, getDoc } from 'firebase/firestore';
@@ -137,7 +137,7 @@ return (
 {!isSignedIn && (
 <NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
 )}
-<HiOutlineShoppingCart color='#fff' size={30}/> 
+<ShoppingCart color='#fff' size={30}/> 
 </div>
 
 <ul>
