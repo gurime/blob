@@ -3,16 +3,18 @@ import SecNav from './SecNav';
 import Footer from './Footer';
 import { useState, useEffect } from 'react';
 import { db } from '../db/firebase';
-import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../db/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import ClipLoader from 'react-spinners/ClipLoader';
+import { Save } from 'lucide-react';
 
 export default function Cart() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [cartItems, setCartItems] = useState([]);
+    const [savedItems, setSavedItems] = useState([]);
     const [user, setUser] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
     const [cartSummary, setCartSummary] = useState({
@@ -37,8 +39,10 @@ export default function Cart() {
             
             if (currentUser) {
                 fetchUserCart(currentUser.uid);
+                fetchSavedItems(currentUser.uid);
             } else {
                 setCartItems([]);
+                setSavedItems([]);
                 setLoading(false);
             }
         });
@@ -62,7 +66,6 @@ export default function Cart() {
                     totalValue: cartData.totalValue || 0
                 });
             } else {
-                // No cart exists for this user
                 setCartItems([]);
                 setCartSummary({ totalItems: 0, totalValue: 0 });
             }
@@ -71,6 +74,23 @@ export default function Cart() {
             setError('Failed to load cart items. Please try again.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Fetch saved items from Firestore
+    const fetchSavedItems = async (userId) => {
+        try {
+            const savedRef = doc(db, 'savedItems', userId);
+            const savedDoc = await getDoc(savedRef);
+            
+            if (savedDoc.exists()) {
+                const savedData = savedDoc.data();
+                setSavedItems(savedData.items || []);
+            } else {
+                setSavedItems([]);
+            }
+        } catch (error) {
+            console.error('Error fetching saved items:', error);
         }
     };
 
@@ -157,6 +177,155 @@ export default function Cart() {
         }
     };
 
+    // Save item for later
+    const saveForLater = async (productId) => {
+        if (!user) return;
+
+        try {
+            // Find the item in cart
+            const itemToSave = cartItems.find(item => item.productId === productId);
+            if (!itemToSave) return;
+
+            // Remove from cart
+            const updatedCartItems = cartItems.filter(item => item.productId !== productId);
+            
+            // Add to saved items (reset quantity to 1)
+            const savedItem = {
+                ...itemToSave,
+                quantity: 1,
+                totalPrice: itemToSave.price,
+                savedAt: new Date().toISOString()
+            };
+            
+            const updatedSavedItems = [...savedItems, savedItem];
+
+            // Update cart in Firestore
+            if (updatedCartItems.length === 0) {
+                const cartRef = doc(db, 'carts', user.uid);
+                await deleteDoc(cartRef);
+                setCartItems([]);
+                setCartSummary({ totalItems: 0, totalValue: 0 });
+            } else {
+                const newTotalItems = updatedCartItems.reduce((sum, item) => sum + item.quantity, 0);
+                const newTotalValue = updatedCartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+
+                const cartRef = doc(db, 'carts', user.uid);
+                await updateDoc(cartRef, {
+                    items: updatedCartItems,
+                    totalItems: newTotalItems,
+                    totalValue: newTotalValue,
+                    updatedAt: new Date().toISOString()
+                });
+
+                setCartItems(updatedCartItems);
+                setCartSummary({
+                    totalItems: newTotalItems,
+                    totalValue: newTotalValue
+                });
+            }
+
+            // Update saved items in Firestore
+            const savedRef = doc(db, 'savedItems', user.uid);
+            await setDoc(savedRef, {
+                items: updatedSavedItems,
+                updatedAt: new Date().toISOString()
+            });
+
+            setSavedItems(updatedSavedItems);
+            showToast('Item saved for later!', 'success');
+        } catch (error) {
+            console.error('Error saving item:', error);
+            showToast('Failed to save item for later', 'error');
+        }
+    };
+
+    // Move saved item back to cart
+    const moveToCart = async (productId) => {
+        if (!user) return;
+
+        try {
+            // Find the item in saved items
+            const itemToMove = savedItems.find(item => item.productId === productId);
+            if (!itemToMove) return;
+
+            // Remove from saved items
+            const updatedSavedItems = savedItems.filter(item => item.productId !== productId);
+
+            // Add to cart
+            const cartItem = {
+                ...itemToMove,
+                quantity: 1,
+                totalPrice: itemToMove.price,
+                addedAt: new Date().toISOString()
+            };
+
+            const updatedCartItems = [...cartItems, cartItem];
+            const newTotalItems = updatedCartItems.reduce((sum, item) => sum + item.quantity, 0);
+            const newTotalValue = updatedCartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+
+            // Update cart in Firestore
+            const cartRef = doc(db, 'carts', user.uid);
+            await setDoc(cartRef, {
+                items: updatedCartItems,
+                totalItems: newTotalItems,
+                totalValue: newTotalValue,
+                updatedAt: new Date().toISOString()
+            });
+
+            // Update saved items in Firestore
+            if (updatedSavedItems.length === 0) {
+                const savedRef = doc(db, 'savedItems', user.uid);
+                await deleteDoc(savedRef);
+                setSavedItems([]);
+            } else {
+                const savedRef = doc(db, 'savedItems', user.uid);
+                await updateDoc(savedRef, {
+                    items: updatedSavedItems,
+                    updatedAt: new Date().toISOString()
+                });
+                setSavedItems(updatedSavedItems);
+            }
+
+            setCartItems(updatedCartItems);
+            setCartSummary({
+                totalItems: newTotalItems,
+                totalValue: newTotalValue
+            });
+
+            showToast('Item moved to cart!', 'success');
+        } catch (error) {
+            console.error('Error moving item to cart:', error);
+            showToast('Failed to move item to cart', 'error');
+        }
+    };
+
+    // Delete saved item
+    const deleteSavedItem = async (productId) => {
+        if (!user) return;
+
+        try {
+            const updatedSavedItems = savedItems.filter(item => item.productId !== productId);
+
+            if (updatedSavedItems.length === 0) {
+                const savedRef = doc(db, 'savedItems', user.uid);
+                await deleteDoc(savedRef);
+                setSavedItems([]);
+            } else {
+                const savedRef = doc(db, 'savedItems', user.uid);
+                await updateDoc(savedRef, {
+                    items: updatedSavedItems,
+                    updatedAt: new Date().toISOString()
+                });
+                setSavedItems(updatedSavedItems);
+            }
+
+            showToast('Item removed from saved items', 'success');
+        } catch (error) {
+            console.error('Error deleting saved item:', error);
+            showToast('Failed to remove saved item', 'error');
+        }
+    };
+
     // Loading state
     if (loading || userLoading) {
         return (
@@ -212,92 +381,179 @@ export default function Cart() {
         <>
             <Navbar />
             <SecNav />
-            <div className="cart-header">
-                <h1>Shopping Cart</h1>
-                <p>Manage your items below</p>
-            </div>
-            
-            <div className="cart-container">
-                {cartItems.length === 0 ? (
-                    <div className="empty-cart">
-                        <h2>Your cart is empty</h2>
-                        <p>Add some items to get started!</p>
-                        <button 
-                            onClick={() => navigate('/')} 
-                            className="continue-shopping-button"
-                        >
-                            Continue Shopping
-                        </button>
-                    </div>
-                ) : (
-                    <>
-                        <div className="cart-summary">
-                            <h2>Cart Summary</h2>
-                            <p>Items: {cartSummary.totalItems}</p>
-                            <p>Total: ${cartSummary.totalValue.toFixed(2)}</p>
+            <div className="cart-main-container">
+                <div className="cart-content">
+                    {/* Left Column - Cart Items */}
+                    <div className="cart-left-column">
+                        <div className="cart-header">
+                            <h1>Shopping Cart</h1>
+                            {cartItems.length > 0 && (
+                                <p className="cart-item-count">{cartSummary.totalItems} item(s) in your cart</p>
+                            )}
                         </div>
 
-                        <div className="cart-items">
-                            {cartItems.map((item) => (
-                                <div key={item.productId} className="cart-item">
-                                    <img 
-                                        src={`/assets/images/${item.imgUrl}`} 
-                                        alt={item.productName} 
-                                        className="cart-item-image"
-                                    />
-                                    <div className="cart-item-details">
-                                        <h3>{item.productName}</h3>
-                                        <p className="cart-item-category">{item.category}</p>
-                                        <p className="cart-item-price">Price: ${item.price.toFixed(2)}</p>
-                                        
-                                        <div className="quantity-controls">
-                                            <button 
-                                                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                                                disabled={item.quantity <= 1}
-                                                className="quantity-btn"
-                                            >
-                                                -
-                                            </button>
-                                            <span className="quantity-display">Quantity: {item.quantity}</span>
-                                            <button 
-                                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                                                className="quantity-btn"
-                                            >
-                                                +
-                                            </button>
+                        {cartItems.length === 0 ? (
+                            <div className="empty-cart">
+                                <div className="empty-cart-icon">🛒</div>
+                                <h2>Your Gulime cart is empty</h2>
+                                <p>Add some amazing products to get started!</p>
+                                <button 
+                                    onClick={() => navigate('/')} 
+                                    className="continue-shopping-btn"
+                                >
+                                    Continue Shopping
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="cart-items-container">
+                                {cartItems.map((item) => (
+                                    <div key={item.productId} className="cart-item">
+                                        <div className="cart-item-image-container">
+                                            <img 
+                                                src={`/assets/images/${item.imgUrl}`} 
+                                                alt={item.productName} 
+                                                className="cart-item-image"
+                                            />
                                         </div>
                                         
-                                        <p className="cart-item-total">Total: ${item.totalPrice.toFixed(2)}</p>
+                                        <div className="cart-item-details">
+                                            <h3 className="cart-item-title">{item.productName}</h3>
+                                            <p className="cart-item-category">Category: {item.category}</p>
+                                            <p className="cart-item-stock">✅ In Stock</p>
+                                            <p className="cart-item-shipping">🚚 FREE shipping with Gulime Premium</p>
+                                            
+                                            <div className="cart-item-actions-row">
+                                                <div className="quantity-selector">
+                                                    <label htmlFor={`qty-${item.productId}`}>Qty:</label>
+                                                    <select 
+                                                        id={`qty-${item.productId}`}
+                                                        value={item.quantity}
+                                                        onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value))}
+                                                        className="quantity-dropdown"
+                                                    >
+                                                        {[...Array(10)].map((_, i) => (
+                                                            <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                
+                                                <button 
+                                                    onClick={() => removeItem(item.productId)}
+                                                    className="remove-btn">
+                                                    Delete
+                                                </button>
+                                                
+                                                <button 
+                                                    onClick={() => saveForLater(item.productId)}
+                                                    className="save-later-btn">
+                                                    <Save size={16} />
+                                                    Save for later
+                                                </button>
+                                            </div>
+                                        </div>
                                         
-                                        <button 
-                                            onClick={() => removeItem(item.productId)}
-                                            className="remove-button"
-                                        >
-                                            Remove
-                                        </button>
+                                        <div className="cart-item-price-section">
+                                            <span className="cart-item-price">${item.price.toFixed(2)}</span>
+                                            {item.quantity > 1 && (
+                                                <p className="cart-item-subtotal">
+                                                    Subtotal: ${item.totalPrice.toFixed(2)}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                                
+                                <div className="cart-subtotal-bar">
+                                    <span className="cart-subtotal-text">
+                                        Subtotal ({cartSummary.totalItems} items): 
+                                        <strong> ${cartSummary.totalValue.toFixed(2)}</strong>
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Saved for Later Section */}
+                        <div className="saved-items-section">
+                            <h2>Saved for later ({savedItems.length})</h2>
+                            {savedItems.length === 0 ? (
+                                <div className="saved-items-placeholder">
+                                    <p>No items saved for later</p>
+                                </div>
+                            ) : (
+                                <div className="saved-items-container">
+                                    {savedItems.map((item) => (
+                                        <div key={item.productId} className="saved-item">
+                                            <div className="saved-item-image-container">
+                                                <img 
+                                                    src={`/assets/images/${item.imgUrl}`} 
+                                                    alt={item.productName} 
+                                                    className="saved-item-image"
+                                                />
+                                            </div>
+                                            
+                                            <div className="saved-item-details">
+                                                <h4 className="saved-item-title">{item.productName}</h4>
+                                                <p className="saved-item-price">${item.price.toFixed(2)}</p>
+                                                <p className="saved-item-stock">✅ In Stock</p>
+                                                
+                                                <div className="saved-item-actions">
+                                                    <button 
+                                                        onClick={() => moveToCart(item.productId)}
+                                                        className="move-to-cart-btn">
+                                                        Move to cart
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => deleteSavedItem(item.productId)}
+                                                        className="delete-saved-btn">
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Column - Checkout Summary */}
+                    {cartItems.length > 0 && (
+                        <div className="cart-right-column">
+                            <div className="checkout-summary">
+                                <div className="prime-offer">
+                                    <div className="prime-logo">Premium</div>
+                                    <p>FREE One-Day Delivery available</p>
+                                </div>
+                                
+                                <div className="summary-details">
+                                    <div className="summary-row">
+                                        <span>Subtotal ({cartSummary.totalItems} items):</span>
+                                        <span className="summary-price">${cartSummary.totalValue.toFixed(2)}</span>
+                                    </div>
+                                    <div className="summary-row">
+                                        <span>Shipping:</span>
+                                        <span className="summary-price">FREE</span>
+                                    </div>
+                                    <div className="summary-row total-row">
+                                        <span>Total:</span>
+                                        <span className="summary-total">${cartSummary.totalValue.toFixed(2)}</span>
                                     </div>
                                 </div>
-                            ))}
+                                
+                                <button className="checkout-btn">
+                                    Proceed to checkout
+                                </button>
+                                
+                                <button 
+                                    onClick={() => navigate('/')}
+                                    className="continue-shopping-link"
+                                >
+                                    Continue shopping
+                                </button>
+                            </div>
                         </div>
-
-                        <div className="cart-actions">
-                            <button className="checkout-button">
-                                Proceed to Checkout (${cartSummary.totalValue.toFixed(2)})
-                            </button>
-                            <button 
-                                onClick={() => navigate('/')}
-                                className="continue-shopping-button"
-                            >
-                                Continue Shopping
-                            </button>
-                        </div>
-                    </>
-                )}
-            </div>
-
-            <div className="saved-items-section">
-                <h2>Saved Items</h2>
-                <p>Items you saved for later will appear here.</p>
+                    )}
+                </div>
             </div>
 
             <Footer />

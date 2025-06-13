@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { auth } from '../db/firebase';
 // Add these imports for Firestore
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import gpremium from '../img/gulimepremium2.png';
 import { db } from '../db/firebase'; // Make sure db is exported from your firebase config
 
@@ -13,6 +13,23 @@ export default function Navbar() {
 const [isOpen, setIsOpen] = useState(false);
 const [isSignedIn, setIsSignedIn] = useState(false);
 const [names, setNames] = useState('');
+const [cartCount, setCartCount] = useState(0);
+
+useEffect(() => {
+  const fetchCartItems = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const cartRef = collection(db, 'users', user.uid, 'carts');
+        const cartSnapshot = await getDocs(cartRef);
+        setCartCount(cartSnapshot.size); // Number of cart items
+      } catch (error) {
+        console.error("Error fetching cart items:", error);
+      }
+    }
+  };
+  fetchCartItems();
+}, [isSignedIn]);
 
 
 const navRef = useRef(null);
@@ -68,6 +85,9 @@ navRef.current.focus();
   }
 }
 
+
+
+
 const activeStyle = ({ isActive }) => ({
 backgroundColor: isActive ? 'blue' : '',
 color: isActive ? 'white' : '',
@@ -112,7 +132,14 @@ return (
 {!isSignedIn && (
 <NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
 )}
-<Link to='/cart'><ShoppingCart color='#fff' size={30}/> </Link>
+<Link to='/cart' className='cart-link'>
+<ShoppingCart color='#fff' size={30} />
+{cartCount > 0 && (
+<span className='cart-badge'>
+{cartCount}
+</span>
+)}
+</Link>
 </ul>
 
 <div className="burger">
@@ -143,7 +170,14 @@ return (
 {!isSignedIn && (
 <NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
 )}
-<Link to='/cart'><ShoppingCart color='#fff' size={30}/> </Link>
+<Link to='/cart' className='cart-link'>
+<ShoppingCart color='#fff' size={30} />
+{cartCount > 0 && (
+<span className='cart-badge'>
+{cartCount}
+</span>
+)}
+</Link>
 </div>
 
 <ul>
