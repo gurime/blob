@@ -257,6 +257,7 @@ export default function Cart() {
                 quantity: 1,
                 totalPrice: itemToMove.price,
                 addedAt: new Date().toISOString()
+                
             };
 
             const updatedCartItems = [...cartItems, cartItem];
@@ -387,10 +388,10 @@ export default function Cart() {
                     <div className="cart-left-column">
                         <div className="cart-header">
                             <h1>Shopping Cart</h1>
-                            {cartItems.length > 0 && (
-                                <p className="cart-item-count">{cartSummary.totalItems} item(s) in your cart</p>
-                            )}
-                        </div>
+{cartItems.length > 0 && (
+<p className="cart-item-count">{cartSummary.totalItems} item(s) in your cart</p>
+)}
+</div>
 
                         {cartItems.length === 0 ? (
                             <div className="empty-cart">
@@ -405,37 +406,35 @@ export default function Cart() {
                                 </button>
                             </div>
                         ) : (
-                            <div className="cart-items-container">
-                                {cartItems.map((item) => (
-                                    <div key={item.productId} className="cart-item">
-                                        <div className="cart-item-image-container">
-                                            <img 
-                                                src={`/assets/images/${item.imgUrl}`} 
-                                                alt={item.productName} 
-                                                className="cart-item-image"
-                                            />
-                                        </div>
+<div className="cart-items-container">
+{cartItems.map((item) => (
+<div key={item.productId} className="cart-item">
+<div className="cart-item-image-container">
+<img 
+src={`/assets/images/${item.imgUrl}`} 
+alt={item.productName} 
+className="cart-item-image"/>
+</div>
                                         
-                                        <div className="cart-item-details">
-                                            <h3 className="cart-item-title">{item.productName}</h3>
-                                            <p className="cart-item-category">Category: {item.category}</p>
-                                            <p className="cart-item-stock">✅ In Stock</p>
-                                            <p className="cart-item-shipping">🚚 FREE shipping with Gulime Premium</p>
+<div className="cart-item-details">
+<h3 className="cart-item-title">{item.productName}</h3>
+<p className="cart-item-category">Category: {item.category}</p>
+<p className="cart-item-stock">✅ {item.stock}</p>
+<p className="cart-item-shipping">🚚 FREE shipping with Gulime Premium</p>
                                             
-                                            <div className="cart-item-actions-row">
-                                                <div className="quantity-selector">
-                                                    <label htmlFor={`qty-${item.productId}`}>Qty:</label>
-                                                    <select 
-                                                        id={`qty-${item.productId}`}
-                                                        value={item.quantity}
-                                                        onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value))}
-                                                        className="quantity-dropdown"
-                                                    >
-                                                        {[...Array(10)].map((_, i) => (
-                                                            <option key={i + 1} value={i + 1}>{i + 1}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
+<div className="cart-item-actions-row">
+<div className="quantity-selector">
+<label htmlFor={`qty-${item.productId}`}>Qty:</label>
+<select 
+id={`qty-${item.productId}`}
+value={item.quantity}
+onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value))}
+className="quantity-dropdown">
+{[...Array(10)].map((_, i) => (
+<option key={i + 1} value={i + 1}>{i + 1}</option>
+))}
+</select>
+</div>
                                                 
                                                 <button 
                                                     onClick={() => removeItem(item.productId)}
@@ -452,51 +451,51 @@ export default function Cart() {
                                             </div>
                                         </div>
                                         
-                                        <div className="cart-item-price-section">
-                                            <span className="cart-item-price">${item.price.toFixed(2)}</span>
-                                            {item.quantity > 1 && (
-                                                <p className="cart-item-subtotal">
-                                                    Subtotal: ${item.totalPrice.toFixed(2)}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+<div className="cart-item-price-section">
+<span className="cart-item-price">${item.price.toLocaleString(2)}</span>
+{item.quantity > 1 && (
+<p className="cart-item-subtotal">
+Subtotal: ${item.totalPrice.toLocaleString(2)}
+</p>
+)}
+</div>
+</div>
+))}
                                 
-                                <div className="cart-subtotal-bar">
-                                    <span className="cart-subtotal-text">
-                                        Subtotal ({cartSummary.totalItems} items): 
-                                        <strong> ${cartSummary.totalValue.toFixed(2)}</strong>
-                                    </span>
-                                </div>
-                            </div>
-                        )}
+<div className="cart-subtotal-bar">
+<span className="cart-subtotal-text">
+Subtotal ({cartSummary.totalItems} items): 
+<strong> ${cartSummary.totalValue.toLocaleString(2)}</strong>
+</span>
+</div>
+</div>
+)}
 
                         {/* Saved for Later Section */}
-                        <div className="saved-items-section">
-                            <h2>Saved for later ({savedItems.length})</h2>
-                            {savedItems.length === 0 ? (
-                                <div className="saved-items-placeholder">
-                                    <p>No items saved for later</p>
-                                </div>
-                            ) : (
-                                <div className="saved-items-container">
-                                    {savedItems.map((item) => (
-                                        <div key={item.productId} className="saved-item">
-                                            <div className="saved-item-image-container">
-                                                <img 
-                                                    src={`/assets/images/${item.imgUrl}`} 
-                                                    alt={item.productName} 
-                                                    className="saved-item-image"
-                                                />
-                                            </div>
+<div className="saved-items-section">
+<h2>Saved for later ({savedItems.length})</h2>
+{savedItems.length === 0 ? (
+<div className="saved-items-placeholder">
+<p>No items saved for later</p>
+</div>
+) : (
+<div className="saved-items-container">
+{savedItems.map((item) => (
+<div key={item.productId} className="saved-item">
+<div className="saved-item-image-container">
+<img 
+src={`/assets/images/${item.imgUrl}`} 
+alt={item.productName} 
+className="saved-item-image"
+/>
+</div>
                                             
-                                            <div className="saved-item-details">
-                                                <h4 className="saved-item-title">{item.productName}</h4>
-                                                <p className="saved-item-price">${item.price.toFixed(2)}</p>
-                                                <p className="saved-item-stock">✅ In Stock</p>
+<div className="saved-item-details">
+<h4 className="saved-item-title">{item.productName}</h4>
+<p className="saved-item-price">${item.price.toLocaleString(2)}</p>
+<p className="saved-item-stock">✅ {item.stock}</p>
                                                 
-                                                <div className="saved-item-actions">
+<div className="saved-item-actions">
                                                     <button 
                                                         onClick={() => moveToCart(item.productId)}
                                                         className="move-to-cart-btn">
@@ -528,7 +527,7 @@ export default function Cart() {
                                 <div className="summary-details">
                                     <div className="summary-row">
                                         <span>Subtotal ({cartSummary.totalItems} items):</span>
-                                        <span className="summary-price">${cartSummary.totalValue.toFixed(2)}</span>
+                                        <span className="summary-price">${cartSummary.totalValue.toLocaleString(2)}</span>
                                     </div>
                                     <div className="summary-row">
                                         <span>Shipping:</span>
@@ -536,7 +535,7 @@ export default function Cart() {
                                     </div>
                                     <div className="summary-row total-row">
                                         <span>Total:</span>
-                                        <span className="summary-total">${cartSummary.totalValue.toFixed(2)}</span>
+                                        <span className="summary-total">${cartSummary.totalValue.toLocaleString(2)}</span>
                                     </div>
                                 </div>
                                 

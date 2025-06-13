@@ -14,6 +14,7 @@ export const useProductDetails = (id) => {
   const [showMore, setShowMore] = useState(false);
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedStorage, setSelectedStorage] = useState('');
+const [displayStorageName, setDisplayStorageName] = useState('');
 
   // Helper function to format numbers with commas
   const formatPrice = useCallback((price) => {
@@ -66,11 +67,15 @@ export const useProductDetails = (id) => {
   }, []);
 
   // Helper function to update price based on storage selection
-  const handleStorageChange = useCallback((storageOption) => {
-    setSelectedStorage(storageOption.size);
-    const newConfigPrice = basePrice + (storageOption.price || 0);
-    setConfigPrice(newConfigPrice);
-  }, [basePrice]);
+const handleStorageChange = useCallback((storageOption) => {
+  setSelectedStorage(storageOption.size);
+  const newConfigPrice = basePrice + (storageOption.price || 0);
+  setConfigPrice(newConfigPrice);
+  // Update displayStorageName, for example: "Product Name - 256GB"
+  if (product?.product_name && storageOption.size) {
+    setDisplayStorageName(`${product.product_name} - ${storageOption.size}`);
+  }
+}, [basePrice, product]);
 
   // Helper function to handle quantity changes
   const handleQuantityChange = useCallback((newQuantity) => {
@@ -167,17 +172,18 @@ export const useProductDetails = (id) => {
       setSelectedColor(product.avaibleColors.colors[0].code);
     }
     
-    // Set default storage if available and update config price
-    if (product.storageOptions?.storage?.length > 0 && !selectedStorage) {
-      const defaultStorage = product.storageOptions.storage[0];
-      setSelectedStorage(defaultStorage.size);
-      const newConfigPrice = basePrice + (defaultStorage.price || 0);
-      setConfigPrice(newConfigPrice);
-    } else if (!product.storageOptions?.storage?.length) {
-      // If no storage options, keep the base price as config price
-      setConfigPrice(basePrice);
+     if (product.storageOptions?.storage?.length > 0 && !selectedStorage) {
+    const defaultStorage = product.storageOptions.storage[0];
+    setSelectedStorage(defaultStorage.size);
+    setConfigPrice(basePrice + (defaultStorage.price || 0));
+    if (product.product_name && defaultStorage.size) {
+      setDisplayStorageName(`${product.product_name} - ${defaultStorage.size}`);
     }
-  }, [product, basePrice, selectedColor, selectedStorage]);
+  } else if (!product.storageOptions?.storage?.length) {
+    setConfigPrice(basePrice);
+    setDisplayStorageName(product.product_name);
+  }
+}, [product, basePrice, selectedColor, selectedStorage]);
 
   // Always return the same object structure
   return {

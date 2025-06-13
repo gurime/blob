@@ -16,6 +16,13 @@ export default function Details() {
 let { id } = useParams();
 const [user, setUser] = useState(null);
 const [userLoading, setUserLoading] = useState(true);
+ const [toast, setToast] = useState({ show: false, message: '', type: '' });
+ const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: '' });
+    }, 4000);
+  };
 const navigate = useNavigate();
  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -24,6 +31,8 @@ const navigate = useNavigate();
     });
     return () => unsubscribe();
   }, []);
+
+  
 
   
 const {
@@ -43,12 +52,22 @@ setShowMore,
 setSelectedColor,
 handleStorageChange,
 handleQuantityChange,
-getProductImages
+getProductImages,
+  displayStorageName,
 } = useProductDetails(id);
 
 const { formatPrice, generateOriginalPrice, calculateSavings } = priceUtils;
 const { handleAddToCart, handleBuyNow } = cartHandlers;
-
+  const handleCartButtonClick = async (product) => {
+  const result = await cartHandlers.handleAddToCart(product, 1, showToast);
+  
+  if (result.success && result.shouldNavigate) {
+    // Navigate to cart page after successful addition
+    setTimeout(() => {
+      navigate('/cart');
+    }, 1000); // Small delay to show the toast first
+  }
+};
 if (loading) {
 return (
 <>
@@ -126,7 +145,9 @@ alt={`Product view ${index + 1}`}/>
 
 {/* Product Information */}
 <div className="product-info">
-<h1 className="product-title">{product.product_name}</h1>
+<h1 className="product-title">
+  {displayStorageName || product.product_name}
+</h1>
               
 <Link href="#" className="brand-link">Visit the {product.brand} Store</Link>
 
@@ -538,13 +559,17 @@ onChange={(e) => handleQuantityChange(parseInt(e.target.value))}>
 </select>
 </div>
 
-<button className="add-to-cart-btn" onClick={handleAddToCart}>
+<button className="add-to-cart-btn"   onClick={() => handleCartButtonClick(product)}
+>
 Add to Cart - ${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}
 </button>
 
-<button className="buy-now-btn" onClick={handleBuyNow}>
-Buy Now - ${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}
-</button>
+<button style={{ width: '100%' }}
+onClick={() => navigate('/')} 
+className="continue-shopping-btn"
+>
+Continue Shopping
+</button> 
 
 <div className="secure-transaction">🔒
 <Link to="#">Secure transaction</Link>
@@ -564,6 +589,23 @@ Buy Now - ${formatPrice(totalPrice || (configPrice || product?.price || 0) * qua
 </div>
 </div>
 <Footer />
+         {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast ${toast.type}`}>
+          <div className="toast-content">
+            <span className="toast-icon">
+              {toast.type === 'success' ? '✓' : '✕'}
+            </span>
+            <span className="toast-message">{toast.message}</span>
+            <button 
+              className="toast-close"
+              onClick={() => setToast({ show: false, message: '', type: '' })}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 </>
   );
 }

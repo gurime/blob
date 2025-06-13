@@ -11,6 +11,7 @@ import SecNav from "./SecNav";
 import ProductRating from './ProductRating';
 import DeliveryInfo from './DeliveryInfo';
 import { cartHandlers } from '../utils/cartHandlers';
+import { wishlistHandlers } from '../utils/wishlistHandler';
 import { priceUtils } from '../utils/priceUtils';
 import { auth } from '../db/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -25,6 +26,9 @@ export default function CategoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [wishlistItems, setWishlistItems] = useState(new Set());
+  const [wishlistLoading, setWishlistLoading] = useState(false);
   
   // New state for filters and sorting
   const [sortBy, setSortBy] = useState('featured');
@@ -34,8 +38,81 @@ export default function CategoryPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState('grid'); // grid or list
+    const [toast, setToast] = useState({ show: false, message: '', type: '' });
+useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setUserLoading(false);
+      
+      // Load user's wishlist when user changes
+      if (currentUser) {
+        loadUserWishlist(currentUser.uid);
+      } else {
+        setWishlistItems(new Set());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load user's wishlist
+  const loadUserWishlist = async (userId) => {
+    try {
+      const result = await wishlistHandlers.getUserWishlist(userId);
+      if (result.success) {
+        const wishlistProductIds = new Set(
+          result.wishlist.map(item => item.productId)
+        );
+        setWishlistItems(wishlistProductIds);
+      }
+    } catch (error) {
+      console.error('Error loading wishlist:', error);
+    }
+  };
+
+  // Handle wishlist toggle
+  const handleWishlistToggle = async (product) => {
+    if (!user) {
+      alert('Please log in to add items to your wishlist');
+      return;
+    }
+
+    setWishlistLoading(true);
+    try {
+      const result = await wishlistHandlers.toggleWishlist(user.uid, product);
+      
+      if (result.success) {
+        const productId = product.id || product._id;
+        const newWishlistItems = new Set(wishlistItems);
+        
+        if (newWishlistItems.has(productId)) {
+          newWishlistItems.delete(productId);
+        } else {
+          newWishlistItems.add(productId);
+        }
+        
+        setWishlistItems(newWishlistItems);
+        
+        // Optional: Show success message
+        console.log(result.message);
+      } else {
+        alert(result.message || 'Error updating wishlist');
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      alert('Error updating wishlist');
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
   const productsPerPage = 16;
 const { handleAddToCart, handleBuyNow } = cartHandlers;
+ const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: '' });
+    }, 4000);
+  };
 
   // Determine category structure based on URL pattern
   const getCategoryInfo = useCallback(() => {
@@ -252,6 +329,17 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
   subsubcategory && { name: formatCategoryName(subsubcategory), to: `/category/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}/${encodeURIComponent(subsubcategory)}` }
 ].filter(Boolean);
 
+  const handleCartButtonClick = async (product) => {
+  const result = await cartHandlers.handleAddToCart(product, 1, showToast);
+  
+  if (result.success && result.shouldNavigate) {
+    // Navigate to cart page after successful addition
+    setTimeout(() => {
+      navigate('/cart');
+    }, 1000); // Small delay to show the toast first
+  }
+};
+
   if (loading) {
     return (
       <>
@@ -446,8 +534,14 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
                     alt={product.product_name}
                     className="product-image"
                   />
-                  <button className="wishlist-btn">♡</button>
-{product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
+<button 
+className={`wishlist-btn ${wishlistItems.has(product.id) ? 'wishlisted' : ''}`}
+                    onClick={() => handleWishlistToggle(product)}
+                    disabled={wishlistLoading}
+                    title={wishlistItems.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                  >
+                    {wishlistItems.has(product.id) ? '♥' : '♡'}
+                  </button>{product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
                   {product.deal && <div className="deal-badge">Limited time deal</div>}
                 </div>
                 
@@ -482,12 +576,18 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
 <DeliveryInfo  hasPremium={!!product?.gpremium} />
                   
                   <div className="product-actions">
-                    <button className="add-to-cart-btn" onClick={handleAddToCart}>
+                    <button className="add-to-cart-btn" 
+                     onClick={() => handleCartButtonClick(product)}
+>
                       Add to Cart
                     </button>
-                    <button className="buy-now-btn" onClick={handleBuyNow}>
-                      Buy Now 
-                    </button>
+
+<button style={{ width: '100%' }}
+onClick={() => navigate('/')} 
+className="continue-shopping-btn"
+>
+Continue Shopping
+</button> 
                   </div>
                   
                   <Link to={`/product/${product.id}`} className="view-details">
@@ -549,6 +649,23 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
         )}
       </div>
       <Footer />
+                  {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast ${toast.type}`}>
+          <div className="toast-content">
+            <span className="toast-icon">
+              {toast.type === 'success' ? '✓' : '✕'}
+            </span>
+            <span className="toast-message">{toast.message}</span>
+            <button 
+              className="toast-close"
+              onClick={() => setToast({ show: false, message: '', type: '' })}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

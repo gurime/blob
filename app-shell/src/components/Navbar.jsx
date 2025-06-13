@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { auth } from '../db/firebase';
 // Add these imports for Firestore
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, onSnapshot } from 'firebase/firestore';
 import gpremium from '../img/gulimepremium2.png';
 import { db } from '../db/firebase'; // Make sure db is exported from your firebase config
 
@@ -14,22 +14,35 @@ const [isOpen, setIsOpen] = useState(false);
 const [isSignedIn, setIsSignedIn] = useState(false);
 const [names, setNames] = useState('');
 const [cartCount, setCartCount] = useState(0);
-
 useEffect(() => {
-  const fetchCartItems = async () => {
+  let unsubscribe;
+
+  if (isSignedIn) {
     const user = auth.currentUser;
+
     if (user) {
-      try {
-        const cartRef = collection(db, 'users', user.uid, 'carts');
-        const cartSnapshot = await getDocs(cartRef);
-        setCartCount(cartSnapshot.size); // Number of cart items
-      } catch (error) {
-        console.error("Error fetching cart items:", error);
-      }
+      const cartDocRef = doc(db, 'carts', user.uid);
+
+      unsubscribe = onSnapshot(cartDocRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const data = docSnapshot.data();
+          const items = data.items || [];
+          setCartCount(items.length);
+        } else {
+          setCartCount(0);
+        }
+      }, (error) => {
+        console.error("Error fetching cart in Navbar:", error);
+        setCartCount(0);
+      });
     }
+  }
+
+  return () => {
+    if (unsubscribe) unsubscribe();
   };
-  fetchCartItems();
 }, [isSignedIn]);
+
 
 
 const navRef = useRef(null);
@@ -121,16 +134,19 @@ return (
 <NavLink to="/" style={activeStyle}>Home</NavLink>
 <NavLink to="/technology" style={activeStyle}>Electronics</NavLink>
 <NavLink to="/sports" style={activeStyle}>Sports</NavLink>
+
+
+</ul>
 {isSignedIn ? (
 <>
-<NavLink to="/profile" style={activeStyle}>{names || 'Profile'}</NavLink>
+<NavLink className='profilecss' to="/profile" >{names || 'Profile'}</NavLink>
 <button className='signout' onClick={handleLogout}>Logout</button>
 </>
 ) : (
-<NavLink to="/login" style={activeStyle}>Login</NavLink>
+<NavLink className='profilecss' to="/login" >Login</NavLink>
 )}
 {!isSignedIn && (
-<NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
+<NavLink className='profilecss' to="/signup" >Sign Up</NavLink>
 )}
 <Link to='/cart' className='cart-link'>
 <ShoppingCart color='#fff' size={30} />
@@ -140,8 +156,6 @@ return (
 </span>
 )}
 </Link>
-</ul>
-
 <div className="burger">
 <a href="#!" onClick={openSidenav}>&#9776;</a>
 </div>

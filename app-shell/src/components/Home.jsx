@@ -264,8 +264,8 @@ export default function Home() {
                     className="product-image"
                   />
                   {/* Updated wishlist button */}
-                  <button 
-                    className={`wishlist-btn ${wishlistItems.has(product.id) ? 'wishlisted' : ''}`}
+<button 
+className={`wishlist-btn ${wishlistItems.has(product.id) ? 'wishlisted' : ''}`}
                     onClick={() => handleWishlistToggle(product)}
                     disabled={wishlistLoading}
                     title={wishlistItems.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -312,9 +312,9 @@ export default function Home() {
 >
   Add to Cart
 </button>
-                    <button className="buy-now-btn" onClick={handleBuyNow}>
+                    {/* <button className="buy-now-btn" onClick={handleBuyNow}>
                       Buy Now 
-                    </button>
+                    </button> */}
                   </div>
                   
                   <Link to={`/product/${product.id}`} className="view-details">
