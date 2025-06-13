@@ -1,10 +1,11 @@
+/* eslint-disable no-unused-vars */
 import Navbar from './Navbar';
 import Footer from './Footer';
 import {getDocs, collection } from 'firebase/firestore';
 import { db } from '../db/firebase';
 import { useEffect, useState } from 'react';
 import ClipLoader from 'react-spinners/ClipLoader';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DeliveryInfo from './DeliveryInfo'; 
 import ProductRating from './ProductRating';
 import { cartHandlers } from '../utils/cartHandlers';
@@ -24,7 +25,14 @@ export default function Home() {
   const [userLoading, setUserLoading] = useState(true);
   const [wishlistItems, setWishlistItems] = useState(new Set()); // Track wishlisted items
   const [wishlistLoading, setWishlistLoading] = useState(false);
-
+  const navigate = useNavigate();
+  const [toast, setToast] = useState({ show: false, message: '', type: '' });
+ const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: '' });
+    }, 4000);
+  };
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -141,6 +149,17 @@ export default function Home() {
     }
   }, [featuredProducts.length]);
 
+  const handleCartButtonClick = async (product) => {
+  const result = await cartHandlers.handleAddToCart(product, 1, showToast);
+  
+  if (result.success && result.shouldNavigate) {
+    // Navigate to cart page after successful addition
+    setTimeout(() => {
+      navigate('/cart');
+    }, 1000); // Small delay to show the toast first
+  }
+};
+
   if (loading || userLoading) {
     return (
       <>
@@ -165,7 +184,7 @@ export default function Home() {
 
         {/* Featured Products Carousel Section */}
         <section className="featured-products">
-          <h2>Today's Deals</h2>
+          <h2>Today&#39;s Deals</h2>
           <div className="carousel-container">
             <button className="carousel-btn prev-btn" onClick={prevSlide}>
               &#8249;
@@ -287,9 +306,12 @@ export default function Home() {
                   <DeliveryInfo hasPremium={!!product?.gpremium} />
                   
                   <div className="product-actions">
-                    <button className="add-to-cart-btn" onClick={handleAddToCart}>
-                      Add to Cart
-                    </button>
+                    <button 
+  className="add-to-cart-btn" 
+  onClick={() => handleCartButtonClick(product)}
+>
+  Add to Cart
+</button>
                     <button className="buy-now-btn" onClick={handleBuyNow}>
                       Buy Now 
                     </button>
@@ -305,6 +327,23 @@ export default function Home() {
         </section>
       </div>
       <Footer />
+            {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast ${toast.type}`}>
+          <div className="toast-content">
+            <span className="toast-icon">
+              {toast.type === 'success' ? '✓' : '✕'}
+            </span>
+            <span className="toast-message">{toast.message}</span>
+            <button 
+              className="toast-close"
+              onClick={() => setToast({ show: false, message: '', type: '' })}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

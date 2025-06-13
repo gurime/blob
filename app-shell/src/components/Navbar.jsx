@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import navlogo from '../img/gulime.png'
 import { useEffect, useRef, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
@@ -13,6 +13,8 @@ export default function Navbar() {
 const [isOpen, setIsOpen] = useState(false);
 const [isSignedIn, setIsSignedIn] = useState(false);
 const [names, setNames] = useState('');
+
+
 const navRef = useRef(null);
 const navigate = useNavigate();
 useEffect(() => {
@@ -54,17 +56,17 @@ navRef.current.focus();
     return () => unsubscribe();
   }, []);
 
-    const handleLogout = async () => {
-    try {
-      const { error } = await auth.signOut();
-      if (error) throw error;
-      
-      setIsSignedIn(false);
-      setUserData(null);
-      navigate.push('/');
-    } catch (error) {
-    }
+  const handleLogout = async () => {
+  try {
+    await auth.signOut();
+    setIsSignedIn(false);
+    // setUserData(null);
+    navigate('/');
+  } catch (error) {
+    // Optionally handle error here
+    console.error("Logout error:", error);
   }
+}
 
 const activeStyle = ({ isActive }) => ({
 backgroundColor: isActive ? 'blue' : '',
@@ -110,7 +112,7 @@ return (
 {!isSignedIn && (
 <NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
 )}
-<ShoppingCart color='#fff' size={30}/> 
+<Link to='/cart'><ShoppingCart color='#fff' size={30}/> </Link>
 </ul>
 
 <div className="burger">
@@ -141,7 +143,7 @@ return (
 {!isSignedIn && (
 <NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
 )}
-<ShoppingCart color='#fff' size={30}/> 
+<Link to='/cart'><ShoppingCart color='#fff' size={30}/> </Link>
 </div>
 
 <ul>

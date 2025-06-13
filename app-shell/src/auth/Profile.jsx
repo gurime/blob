@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../db/firebase';
-import { User, Edit3, Save, X, Package, MapPin, CreditCard, Bell, Shield, Heart, Trash2, ShoppingCart, ExternalLink } from 'lucide-react';
+import { User, Edit3, Save, X, Package, MapPin, CreditCard, Bell, Shield, Heart, Trash2, ShoppingCart, ExternalLink,Settings  } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SecNav from '../components/SecNav';
-import { wishlistHandlers } from '../utils/wishlistHandler'; // Import wishlist handlers
-import { priceUtils } from '../utils/priceUtils'; // Import price utilities
+import { wishlistHandlers } from '../utils/wishlistHandler'; 
+import { priceUtils } from '../utils/priceUtils'; 
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);
@@ -17,6 +17,14 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState('account');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const implementedTabs = ['account', 'wishlist','cookies'];
+  const [cookieSettings, setCookieSettings] = useState({
+  necessary: true, // Always true, can't be disabled
+  analytics: true,
+  marketing: false,
+  functional: true,
+  preferences: true
+});
   
   // Wishlist specific states
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -100,6 +108,7 @@ export default function Profile() {
           
           // Load wishlist when user data is loaded
           await loadWishlist(user.uid);
+                  await loadCookieSettings(user.uid);
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
@@ -152,10 +161,91 @@ export default function Profile() {
     }
   };
 
-  const handleCancel = () => {
-    setFormData(userData);
-    setEditing(false);
-  };
+  // const handleCancel = () => {
+  //   setFormData(userData);
+  //   setEditing(false);
+  // };
+
+  const loadCookieSettings = async (userId) => {
+  try {
+    const userDocRef = doc(db, "users", userId);
+    const userDoc = await getDoc(userDocRef);
+    if (userDoc.exists() && userDoc.data().cookieSettings) {
+      setCookieSettings(userDoc.data().cookieSettings);
+    }
+  } catch (error) {
+    console.error("Error loading cookie settings:", error);
+  }
+};
+
+const saveCookieSettings = async () => {
+  if (!auth.currentUser) return;
+  
+  setSaving(true);
+  try {
+    const userDocRef = doc(db, "users", auth.currentUser.uid);
+    await setDoc(userDocRef, { 
+      cookieSettings: cookieSettings,
+      updatedAt: new Date()
+    }, { merge: true });
+    
+    // Apply cookie settings to the browser
+    applyCookieSettings(cookieSettings);
+    
+    showToast('Cookie preferences updated successfully!', 'success');
+  } catch (error) {
+    console.error("Error saving cookie settings:", error);
+    showToast('Error updating cookie preferences. Please try again.', 'error');
+  } finally {
+    setSaving(false);
+  }
+};
+
+const applyCookieSettings = (settings) => {
+  // Store the settings in localStorage for immediate access
+  localStorage.setItem('cookieSettings', JSON.stringify(settings));
+  
+  // If analytics is disabled, you might want to disable Google Analytics, etc.
+  if (!settings.analytics) {
+    // Disable analytics tracking
+    if (window.gtag) {
+      window.gtag('consent', 'update', {
+        'analytics_storage': 'denied'
+      });
+    }
+  } else {
+    if (window.gtag) {
+      window.gtag('consent', 'update', {
+        'analytics_storage': 'granted'
+      });
+    }
+  }
+  
+  // Handle marketing cookies
+  if (!settings.marketing) {
+    // Disable marketing/advertising cookies
+    if (window.gtag) {
+      window.gtag('consent', 'update', {
+        'ad_storage': 'denied'
+      });
+    }
+  } else {
+    if (window.gtag) {
+      window.gtag('consent', 'update', {
+        'ad_storage': 'granted'
+      });
+    }
+  }
+};
+
+const handleCookieToggle = (cookieType) => {
+  if (cookieType === 'necessary') return; // Can't disable necessary cookies
+  
+  setCookieSettings(prev => ({
+    ...prev,
+    [cookieType]: !prev[cookieType]
+  }));
+};
 
   if (loading) {
     return (
@@ -185,7 +275,8 @@ export default function Profile() {
     { id: 'payment', label: 'Payment', icon: CreditCard },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'wishlist', label: 'Wishlist', icon: Heart }
+    { id: 'wishlist', label: 'Wishlist', icon: Heart },
+    { id: 'cookies', label: 'Cookie Settings', icon: Settings } // New tab
   ];
 
   return (
@@ -208,14 +299,17 @@ export default function Profile() {
             <p className="profile-email">{userData?.email}</p>
             <p className="profile-status">✓ Verified Account</p>
           </div>
-          <button
-            className={`edit-btn ${editing ? 'cancel' : 'edit'}`}
-            onClick={() => setEditing(!editing)}
-            disabled={saving}
-          >
-            {editing ? <X size={16} /> : <Edit3 size={16} />}
-            {editing ? 'Cancel' : 'Edit Profile'}
-          </button>
+       {activeTab === 'account' && (
+  <button
+    className={`edit-btn ${editing ? 'cancel' : 'edit'}`}
+    onClick={() => setEditing(!editing)}
+    disabled={saving}
+  >
+    {editing ? <X size={16} /> : <Edit3 size={16} />}
+    {editing ? 'Cancel' : 'Edit Profile'}
+  </button>
+)}
+
         </div>
 
         {/* Navigation Tabs */}
@@ -248,13 +342,13 @@ export default function Profile() {
                 <h2>Account Information</h2>
                 {editing && (
                   <div className="action-buttons">
-                    <button 
+                    {/* <button 
                       className="btn btn-secondary"
                       onClick={handleCancel}
                       disabled={saving}
                     >
                       Cancel
-                    </button>
+                    </button> */}
                     <button
                       className="btn btn-primary"
                       onClick={handleSave}
@@ -491,11 +585,214 @@ export default function Profile() {
                     </div>
                   ))}
                 </div>
+                
               )}
             </div>
           )}
 
-          {activeTab !== 'account' && activeTab !== 'wishlist' && (
+
+
+          
+
+       
+
+
+        {/* Cookie Settings Tab */}
+                  {activeTab === 'cookies' && (
+  <div className="cookies-section">
+    <div className="section-header">
+      <h2>Cookie Settings</h2>
+      <p className="section-subtitle">
+        Manage your cookie preferences to control how we use cookies on our site
+      </p>
+    </div>
+
+    <div className="cookie-settings-content">
+      <div className="cookie-info-banner">
+        <h3>About Cookies</h3>
+        <p>
+          We use cookies to enhance your browsing experience, provide personalized content, 
+          and analyze our traffic. You can choose which types of cookies you want to allow.
+        </p>
+      </div>
+
+      <div className="cookie-categories">
+        <div className="cookie-category">
+          <div className="cookie-category-header">
+            <div className="cookie-category-info">
+              <h4>Necessary Cookies</h4>
+              <p>Essential for the website to function properly. These cannot be disabled.</p>
+            </div>
+            <div className="cookie-toggle">
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={cookieSettings.necessary}
+                  disabled={true}
+                />
+                <span className="toggle-slider disabled"></span>
+              </label>
+            </div>
+          </div>
+          <div className="cookie-category-details">
+            <p>These cookies are essential for you to browse the website and use its features, such as accessing secure areas of the site.</p>
+          </div>
+        </div>
+
+        <div className="cookie-category">
+          <div className="cookie-category-header">
+            <div className="cookie-category-info">
+              <h4>Analytics Cookies</h4>
+              <p>Help us understand how visitors interact with our website.</p>
+            </div>
+            <div className="cookie-toggle">
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={cookieSettings.analytics}
+                  onChange={() => handleCookieToggle('analytics')}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div className="cookie-category-details">
+            <p>These cookies collect information about how you use our website, which pages you visit, and any errors you encounter.</p>
+          </div>
+        </div>
+
+        <div className="cookie-category">
+          <div className="cookie-category-header">
+            <div className="cookie-category-info">
+              <h4>Marketing Cookies</h4>
+              <p>Used to deliver personalized advertisements relevant to you.</p>
+            </div>
+            <div className="cookie-toggle">
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={cookieSettings.marketing}
+                  onChange={() => handleCookieToggle('marketing')}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div className="cookie-category-details">
+            <p>These cookies track your browsing habits to enable us to show advertising which is more likely to be of interest to you.</p>
+          </div>
+        </div>
+
+        <div className="cookie-category">
+          <div className="cookie-category-header">
+            <div className="cookie-category-info">
+              <h4>Functional Cookies</h4>
+              <p>Enable enhanced functionality and personalization.</p>
+            </div>
+            <div className="cookie-toggle">
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={cookieSettings.functional}
+                  onChange={() => handleCookieToggle('functional')}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div className="cookie-category-details">
+            <p>These cookies allow the website to remember choices you make and provide enhanced, more personal features.</p>
+          </div>
+        </div>
+
+        <div className="cookie-category">
+          <div className="cookie-category-header">
+            <div className="cookie-category-info">
+              <h4>Preference Cookies</h4>
+              <p>Remember your preferences and settings.</p>
+            </div>
+            <div className="cookie-toggle">
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={cookieSettings.preferences}
+                  onChange={() => handleCookieToggle('preferences')}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div className="cookie-category-details">
+            <p>These cookies remember your preferences such as language, region, or theme settings.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="cookie-actions">
+        <button
+          className="btn btn-primary"
+          onClick={saveCookieSettings}
+          disabled={saving}
+        >
+          <Save size={14} />
+          {saving ? 'Saving...' : 'Save Cookie Preferences'}
+        </button>
+        
+        <button
+          className="btn btn-secondary"
+          onClick={() => {
+            setCookieSettings({
+              necessary: true,
+              analytics: false,
+              marketing: false,
+              functional: false,
+              preferences: false
+            });
+          }}
+        >
+          Accept Only Necessary
+        </button>
+        
+        <button
+          className="btn-primary btn-secondary"
+          onClick={() => {
+            setCookieSettings({
+              necessary: true,
+              analytics: true,
+              marketing: true,
+              functional: true,
+              preferences: true
+            });
+          }}
+        >
+          Accept All Cookies
+        </button>
+      </div>
+
+      <div className="cookie-info-footer">
+        <h4>More Information</h4>
+        <p>
+          For more details about how we use cookies, please read our{' '}
+          <Link to="/privacy" className="cookie-link">Privacy Policy</Link> and{' '}
+          <Link to="/cookie" className="cookie-link">Cookie Policy</Link>.
+        </p>
+        <p>
+          You can also manage cookies through your browser settings. However, disabling certain cookies may affect the functionality of our website.
+        </p>
+      </div>
+    </div>
+  </div>
+  )}
+       
+{/* {activeTab && !['account', 'wishlist', 'orders', 'security', 'addresses', 'payment', 'notifications'].includes(activeTab) && (
+  <div className="coming-soon">
+    <div className="coming-soon-icon">📋</div>
+    <h3>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Section</h3>
+    <p>This section is coming soon. You can implement specific functionality for {activeTab} here.</p>
+  </div>
+)} */}
+
+    {!implementedTabs.includes(activeTab) && (
             <div className="coming-soon">
               <div className="coming-soon-icon">📋</div>
               <h3>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Section</h3>
@@ -503,7 +800,9 @@ export default function Profile() {
             </div>
           )}
         </div>
-      </div>
+
+  </div>
+      
       
       <Footer />
       
