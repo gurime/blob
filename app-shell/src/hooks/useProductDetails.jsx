@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useState, useCallback } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../db/firebase";
@@ -67,15 +68,6 @@ const [displayStorageName, setDisplayStorageName] = useState('');
   }, []);
 
   // Helper function to update price based on storage selection
-const handleStorageChange = useCallback((storageOption) => {
-  setSelectedStorage(storageOption.size);
-  const newConfigPrice = basePrice + (storageOption.price || 0);
-  setConfigPrice(newConfigPrice);
-  // Update displayStorageName, for example: "Product Name - 256GB"
-  if (product?.product_name && storageOption.size) {
-    setDisplayStorageName(`${product.product_name} - ${storageOption.size}`);
-  }
-}, [basePrice, product]);
 
   // Helper function to handle quantity changes
   const handleQuantityChange = useCallback((newQuantity) => {
@@ -163,8 +155,30 @@ const handleStorageChange = useCallback((storageOption) => {
     }
   }, [configPrice, quantity]);
 
+  const handleStorageChange = useCallback((storageOption) => {
+    setSelectedStorage(storageOption.size);
+    const newConfigPrice = basePrice + (storageOption.price || 0);
+    setConfigPrice(newConfigPrice);
+    
+    // Update displayStorageName
+    if (product?.product_name && storageOption.size) {
+      setDisplayStorageName(`${product.product_name} - ${storageOption.size}`);
+    }
+  }, [basePrice, product]);
+
+  // New function to get current selections for cart
+  const getCurrentSelections = useCallback(() => {
+    return {
+      selectedColor,
+      selectedStorage,
+      selectedSize: null, // Add if you have size selection
+      currentPrice: configPrice,
+      displayName: displayStorageName || product?.product_name || product?.name
+    };
+  }, [selectedColor, selectedStorage, configPrice, displayStorageName, product]);
+
   // Set default selections when product data is loaded
-  useEffect(() => {
+   useEffect(() => {
     if (!product || basePrice <= 0) return;
 
     // Set default color if available and not already selected
@@ -172,18 +186,21 @@ const handleStorageChange = useCallback((storageOption) => {
       setSelectedColor(product.avaibleColors.colors[0].code);
     }
     
-     if (product.storageOptions?.storage?.length > 0 && !selectedStorage) {
-    const defaultStorage = product.storageOptions.storage[0];
-    setSelectedStorage(defaultStorage.size);
-    setConfigPrice(basePrice + (defaultStorage.price || 0));
-    if (product.product_name && defaultStorage.size) {
-      setDisplayStorageName(`${product.product_name} - ${defaultStorage.size}`);
+    // Handle storage options - check if they exist
+    if (product.storageOptions?.storage?.length > 0 && !selectedStorage) {
+      const defaultStorage = product.storageOptions.storage[0];
+      setSelectedStorage(defaultStorage.size);
+      setConfigPrice(basePrice + (defaultStorage.price || 0));
+      if (product.product_name && defaultStorage.size) {
+        setDisplayStorageName(`${product.product_name} - ${defaultStorage.size}`);
+      }
+    } else if (!product.storageOptions?.storage?.length) {
+      // No storage options available, use base price
+      setConfigPrice(basePrice);
+      setDisplayStorageName(product.product_name || product.name);
+      setSelectedStorage(null); // Explicitly set to null
     }
-  } else if (!product.storageOptions?.storage?.length) {
-    setConfigPrice(basePrice);
-    setDisplayStorageName(product.product_name);
-  }
-}, [product, basePrice, selectedColor, selectedStorage]);
+  }, [product, basePrice, selectedColor, selectedStorage]);
 
   // Always return the same object structure
   return {
@@ -199,6 +216,7 @@ const handleStorageChange = useCallback((storageOption) => {
     showMore,
     selectedColor,
     selectedStorage,
+    displayStorageName,
     
     // Setters
     setSelectedImage,
@@ -211,6 +229,7 @@ const handleStorageChange = useCallback((storageOption) => {
     
     // Helpers
     getProductImages,
-    formatPrice
+    formatPrice,
+    getCurrentSelections
   };
 };

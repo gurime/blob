@@ -2,9 +2,8 @@ import { setDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from '../db/firebase';
 import { auth } from '../db/firebase';
 
-// Cart and purchase handlers
 export const cartHandlers = {
-    handleAddToCart: async (product, quantity = 1, showToast) => {
+    handleAddToCart: async (product, quantity = 1, showToast, selectedOptions = {}) => {
         try {
             // Check if user is authenticated
             const user = auth.currentUser;
@@ -13,28 +12,30 @@ export const cartHandlers = {
                 return { success: false, message: 'User not authenticated' };
             }
 
-            // Calculate total price
-            const totalPrice = product.price * quantity;
+            // Use the current price (which includes storage price if selected)
+            const currentPrice = selectedOptions.currentPrice || product.price;
+            const totalPrice = currentPrice * quantity;
 
             // Create cart item object - match the structure expected by Cart component
             const cartItem = {
                 productId: product._id || product.id,
-                productName: product.product_name || product.name, // Match Cart component's expectation
-                price: product.price,
+                productName: selectedOptions.displayName || product.product_name || product.name,
+                price: currentPrice, // Use the calculated price including storage
+                basePrice: product.price, // Store original base price
                 quantity: quantity,
-                totalPrice: totalPrice, // Add this field that Cart component expects
+                totalPrice: totalPrice,
                 category: product.category || 'General',
                 imgUrl: product.imgUrl || 'default-product.jpg',
                 brand: product.brand || 'Unknown',
-                color: product.selectedColor || product.color || null,
-                size: product.selectedSize || product.size || null,
-                storage: product.selectedStorage || product.storage || null,
-                stock: product.stock || 'In Stock', // Match Cart component's expectation
+                color: selectedOptions.selectedColor || product.color || null,
+                size: selectedOptions.selectedSize || product.size || null,
+                storage: selectedOptions.selectedStorage || null, // Use selected storage
+                stock: product.stock || 'In Stock',
                 hasPrime: product.gpremium || false,
                 seller: product.seller || 'Gulime',
                 inStock: product.inStock !== undefined ? product.inStock : true,
                 warranty: product.warranty || '1 Year',
-                addedAt: new Date().toISOString() // Match Cart component's expectation
+                addedAt: new Date().toISOString()
             };
 
             // Remove any undefined values to prevent Firestore errors
@@ -55,9 +56,12 @@ export const cartHandlers = {
                 const existingCart = cartDoc.data();
                 const existingItems = existingCart.items || [];
                 
-                // Check if product already exists in cart
+                // Check if product already exists in cart with same configuration
                 const existingItemIndex = existingItems.findIndex(
-                    item => item.productId === (product.id || product._id)
+                    item => item.productId === (product.id || product._id) &&
+                           item.color === cartItem.color &&
+                           item.storage === cartItem.storage &&
+                           item.size === cartItem.size
                 );
                 
                 if (existingItemIndex >= 0) {
@@ -95,10 +99,10 @@ export const cartHandlers = {
             
             // Show success toast if function is provided
             if (showToast) {
-                showToast(`Added ${quantity} ${product.product_name || product.name} to cart!`, 'success');
+                const displayName = selectedOptions.displayName || product.product_name || product.name;
+                showToast(`Added ${quantity} ${displayName} to cart!`, 'success');
             }
             
-            console.log(`Added ${quantity} ${product.product_name || product.name} to cart`);
             return {
                 success: true,
                 message: `Added ${quantity} item(s) to cart!`,

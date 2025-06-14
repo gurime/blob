@@ -1,10 +1,11 @@
+/* eslint-disable no-unused-vars */
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import navlogo from '../img/gulime.png'
 import { useEffect, useRef, useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { CircleUserRound, ShoppingCart } from 'lucide-react';
 import { auth } from '../db/firebase';
 // Add these imports for Firestore
-import { collection, doc, getDoc, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import gpremium from '../img/gulimepremium2.png';
 import { db } from '../db/firebase'; // Make sure db is exported from your firebase config
 
@@ -14,6 +15,13 @@ const [isOpen, setIsOpen] = useState(false);
 const [isSignedIn, setIsSignedIn] = useState(false);
 const [names, setNames] = useState('');
 const [cartCount, setCartCount] = useState(0);
+
+// Add search state variables
+const [searchTerm, setSearchTerm] = useState('');
+const [searchResults, setSearchResults] = useState([]);
+const [showSearchResults, setShowSearchResults] = useState(false);
+const searchRef = useRef(null);
+
 useEffect(() => {
   let unsubscribe;
 
@@ -43,50 +51,63 @@ useEffect(() => {
   };
 }, [isSignedIn]);
 
-
-
 const navRef = useRef(null);
 const navigate = useNavigate();
+
 useEffect(() => {
-// Focus on mount
-if (navRef.current) {
-navRef.current.focus();
-}
+  // Focus on mount
+  if (navRef.current) {
+    navRef.current.focus();
+  }
 }, []);
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        try {
-          const userDocRef = doc(db, "users", user.uid);
-          const userDocSnapshot = await getDoc(userDocRef);
-          
-          if (userDocSnapshot.exists()) {
-            const userData = userDocSnapshot.data();
-            // Get the full name from fname and lname
-            const fullName = `${userData.fname || ''} ${userData.lname || ''}`.trim();
-            setNames(fullName || userData.email || 'User');
-          } else {
-            setNames('User');
-          }
-          
-          setIsSignedIn(true);
-    
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-          setIsSignedIn(true); // Still signed in even if we can't fetch user data
+// Close search results when clicking outside
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (searchRef.current && !searchRef.current.contains(event.target)) {
+      setShowSearchResults(false);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, []);
+
+useEffect(() => {
+  const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      try {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnapshot = await getDoc(userDocRef);
+        
+        if (userDocSnapshot.exists()) {
+          const userData = userDocSnapshot.data();
+          // Get the full name from fname and lname
+          const fullName = `${userData.fname || ''} ${userData.lname || ''}`.trim();
+          setNames(fullName || userData.email || 'User');
+        } else {
           setNames('User');
         }
-      } else {
-        setIsSignedIn(false);
-        setNames('');
+        
+        setIsSignedIn(true);
+  
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setIsSignedIn(true); // Still signed in even if we can't fetch user data
+        setNames('User');
       }
-    });
-    
-    return () => unsubscribe();
-  }, []);
+    } else {
+      setIsSignedIn(false);
+      setNames('');
+    }
+  });
+  
+  return () => unsubscribe();
+}, []);
 
-  const handleLogout = async () => {
+const handleLogout = async () => {
   try {
     await auth.signOut();
     setIsSignedIn(false);
@@ -98,15 +119,67 @@ navRef.current.focus();
   }
 }
 
+const handleSearch = async (e) => {
+  e.preventDefault();
+  if (!searchTerm.trim()) return;
+  await performSearch(searchTerm);
+};
 
+const handleSearchInputChange = async (e) => {
+  const value = e.target.value;
+  setSearchTerm(value);
 
+  if (value.trim().length > 2) {
+    await performSearch(value);
+  } else {
+    setSearchResults([]);
+    setShowSearchResults(false);
+  }
+};
 
-const activeStyle = ({ isActive }) => ({
-backgroundColor: isActive ? 'blue' : '',
-color: isActive ? 'white' : '',
-padding: '1rem',
-textDecoration: 'none'
-})
+const performSearch = async (searchQuery) => {
+  if (!searchQuery.trim()) return;
+
+  try {
+    const searchLower = searchQuery.toLowerCase();
+    
+    // Get all products since Firestore doesn't support complex OR queries easily
+    const productsRef = collection(db, "products");
+    const snapshot = await getDocs(productsRef);
+    
+    const allProducts = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    // Filter products based on multiple fields
+    const filteredResults = allProducts.filter(product => {
+      const searchFields = [
+        product.product_name || '',
+        product.brand || '',
+        product.category || '',
+        product.description || '',
+        product.sourceCategory || ''
+      ];
+
+      // Check if any field contains the search term
+      return searchFields.some(field => 
+        field.toLowerCase().includes(searchLower)
+      );
+    });
+
+    setSearchResults(filteredResults);
+    setShowSearchResults(true);
+  } catch (error) {
+    console.error("Search error:", error);
+  }
+};
+
+const handleProductClick = (productId) => {
+  setShowSearchResults(false);
+  setSearchTerm('');
+  navigate(`/product/${productId}`);
+};
 
 const openSidenav = () => {setIsOpen(true);};
 const closeSidenav = () => {setIsOpen(false);};
@@ -116,49 +189,115 @@ return (
 {/* navbar starts here */}
 <nav ref={navRef} tabIndex={-1} className="navbar" id="top-navbar">
 <div className="logo">
-<NavLink to="/">
+<Link to="/">
 {isSignedIn ? (  
 <img src={gpremium} alt="" />
 ) : (
 <img src={navlogo} alt="Logo"/>  
 )}
-</NavLink>
+</Link>
 </div>
 
-<form className='nav-search-form' action="">
-<input className='nav-search' placeholder='Search Gulime' type="text" />
-<input className='nav-search-btn' type="submit" value="Search" />
-</form>
+<div className="search-container" ref={searchRef}>
+  <form className="nav-search-form" onSubmit={handleSearch}>
+    <input
+      className="nav-search"
+      placeholder="Search Gulime"
+      type="text"
+      value={searchTerm}
+      onChange={handleSearchInputChange}
+      onFocus={() => searchResults.length > 0 && setShowSearchResults(true)}
+    />
+    <input className="nav-search-btn" type="submit" value="Search" />
+  </form>
+
+  {/* Search Results Dropdown */}
+  {showSearchResults && searchResults.length > 0 && (
+    <div className="search-dropdown">
+      {searchResults.slice(0, 8).map((product) => (
+        <div 
+          key={product.id} 
+          className="search-result-item"
+          onClick={() => handleProductClick(product.id)}
+        >
+          <div className="search-result-image">
+            {product.imgurl1 && (
+              <img src={product.imgurl1} alt={product.product_name} />
+            )}
+          </div>
+          <div className="search-result-info">
+            <div className="search-result-name">
+              {product.product_name || 'Unnamed Product'}
+            </div>
+            <div className="search-result-price">
+              ${product.price ? Number(product.price).toFixed(2) : 'N/A'}
+            </div>
+            {product.brand && (
+              <div className="search-result-brand">{product.brand}</div>
+            )}
+          </div>
+        </div>
+      ))}
+      {searchResults.length > 8 && (
+        <div className="search-result-more">
+          View all {searchResults.length} results
+        </div>
+      )}
+    </div>
+  )}
+
+  {/* No Results Message */}
+  {showSearchResults && searchResults.length === 0 && searchTerm.length > 2 && (
+    <div className="search-dropdown">
+      <div className="search-no-results">
+        No products found for &quot;{searchTerm}&quot;
+      </div>
+    </div>
+  )}
+</div>
 
 <ul className="navlinks">
-<NavLink to="/" style={activeStyle}>Home</NavLink>
-<NavLink to="/technology" style={activeStyle}>Electronics</NavLink>
-<NavLink to="/sports" style={activeStyle}>Sports</NavLink>
+  {isSignedIn ? (
+    <>
+      <li>
+        <Link className="profilecss" to="/profile">
+          {names || 'Profile'} <CircleUserRound style={{padding:'0 8px'}} size={30}/>
+        </Link>
+      </li>
+      <li>
+        <button className="signout" onClick={handleLogout}>
+          Logout
+        </button>
+      </li>
+    </>
+  ) : (
+    <>
+      <li>
+        <Link className="profilecss" to="/login">
+          Login
+        </Link>
+      </li>
+      <li>
+        <Link className="profilecss" to="/signup">
+          Sign Up
+        </Link>
+      </li>
+    </>
+  )}
 
-
+  <li>
+    <Link to="/cart" className="cart-link">
+      <ShoppingCart color="#fff" size={30} />
+      {cartCount > 0 && (
+        <span className="cart-badge">{cartCount}</span>
+      )}
+    </Link>
+  </li>
 </ul>
-{isSignedIn ? (
-<>
-<NavLink className='profilecss' to="/profile" >{names || 'Profile'}</NavLink>
-<button className='signout' onClick={handleLogout}>Logout</button>
-</>
-) : (
-<NavLink className='profilecss' to="/login" >Login</NavLink>
-)}
-{!isSignedIn && (
-<NavLink className='profilecss' to="/signup" >Sign Up</NavLink>
-)}
-<Link to='/cart' className='cart-link'>
-<ShoppingCart color='#fff' size={30} />
-{cartCount > 0 && (
-<span className='cart-badge'>
-{cartCount}
-</span>
-)}
-</Link>
-<div className="burger">
+
+{/* <div className="burger">
 <a href="#!" onClick={openSidenav}>&#9776;</a>
-</div>
+</div> */}
 </nav>
 {/* navbar stops here */}
 
@@ -168,21 +307,21 @@ return (
 <a href="#!" onClick={closeSidenav}>&#10005;</a>
 </div>
 
-<NavLink to="/" className="sidenav-headline" onClick={closeSidenav}>
+<Link to="/" className="sidenav-headline" onClick={closeSidenav}>
 <img src={navlogo} alt="logo" />
-</NavLink>
+</Link>
 
 <div style={{display:'flex',justifyContent:'center',alignItems:'center'}} className='sidenav-seperator'>
 {isSignedIn ? (
 <>
-<NavLink to="/profile" style={activeStyle}>{names || 'Profile'}</NavLink>
+<Link to="/profile">{names || 'Profile'}</Link>
 <button className='signout' onClick={handleLogout}>Logout</button>
 </>
 ) : (
-<NavLink to="/login" style={activeStyle}>Login</NavLink>
+<Link to="/login">Login</Link>
 )}
 {!isSignedIn && (
-<NavLink to="/signup" style={activeStyle}>Sign Up</NavLink>
+<Link to="/signup">Sign Up</Link>
 )}
 <Link to='/cart' className='cart-link'>
 <ShoppingCart color='#fff' size={30} />
@@ -194,26 +333,6 @@ return (
 </Link>
 </div>
 
-<ul>
-<li className="sidenav-seperator">
-<NavLink to="/" onClick={closeSidenav}>
-Home
-</NavLink>
-</li>
-
-<li className="sidenav-seperator">  
-<NavLink to="/technology" onClick={closeSidenav}>
-Electronics
-</NavLink>
-</li>
-
-<li className="sidenav-seperator">
-<NavLink to="/sports" onClick={closeSidenav}>
-Sports
-</NavLink>
-</li>
-
-</ul>
 </div>
 {/* sidenav stops here */}
 </>

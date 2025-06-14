@@ -173,7 +173,6 @@ export default function Home() {
     );
   }
 
-  const { handleAddToCart, handleBuyNow } = cartHandlers;
   const { formatPrice, generateOriginalPrice, calculateSavings } = priceUtils;
   
   return (

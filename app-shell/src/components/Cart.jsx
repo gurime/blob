@@ -4,7 +4,7 @@ import Footer from './Footer';
 import { useState, useEffect } from 'react';
 import { db } from '../db/firebase';
 import { doc, getDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../db/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import ClipLoader from 'react-spinners/ClipLoader';
@@ -417,7 +417,10 @@ className="cart-item-image"/>
 </div>
                                         
 <div className="cart-item-details">
-<h3 className="cart-item-title">{item.productName}</h3>
+<Link to={`/product/${item.productId}`} >
+<h3 className="cart-item-title">{item.productName || item.storage}GB</h3>
+</Link>
+
 <p className="cart-item-category">Category: {item.category}</p>
 <p className="cart-item-stock">✅ {item.stock}</p>
 <p className="cart-item-shipping">🚚 FREE shipping with Gulime Premium</p>

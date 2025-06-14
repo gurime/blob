@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -47,27 +48,40 @@ quantity,
 showMore,
 selectedColor,
 selectedStorage,
+displayStorageName,
 setSelectedImage,
 setShowMore,
 setSelectedColor,
 handleStorageChange,
 handleQuantityChange,
 getProductImages,
-  displayStorageName,
+getCurrentSelections
 } = useProductDetails(id);
 
 const { formatPrice, generateOriginalPrice, calculateSavings } = priceUtils;
 const { handleAddToCart, handleBuyNow } = cartHandlers;
-  const handleCartButtonClick = async (product) => {
-  const result = await cartHandlers.handleAddToCart(product, 1, showToast);
-  
+ const handleCartButtonClick = async (product) => {
+  const selections = getCurrentSelections();
+  const quantity = 1;
+
+  const result = await cartHandlers.handleAddToCart(
+    product,
+    quantity,
+    showToast,
+    selections
+  );
+
   if (result.success && result.shouldNavigate) {
-    // Navigate to cart page after successful addition
+    showToast('Item added to cart!', 'success');
+
     setTimeout(() => {
       navigate('/cart');
-    }, 1000); // Small delay to show the toast first
+    }, 1000);
+  } else {
+    showToast('Failed to add to cart.', 'error');
   }
 };
+
 if (loading) {
 return (
 <>
@@ -146,7 +160,7 @@ alt={`Product view ${index + 1}`}/>
 {/* Product Information */}
 <div className="product-info">
 <h1 className="product-title">
-  {displayStorageName || product.product_name}
+  {displayStorageName  || product.product_name}GB
 </h1>
               
 <Link href="#" className="brand-link">Visit the {product.brand} Store</Link>
@@ -396,7 +410,7 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 {/* What's in the Box */}
 {[product.boxItem1, product.boxItem2, product.boxItem3, product.boxItem4].some(Boolean) && (
 <>
-<h5>What's in the Box</h5>
+<h5>What&apos;s in the Box</h5>
 <ul className="box-contents">
 {product.boxItem1 && <li>{product.boxItem1}</li>}
 {product.boxItem2 && <li>{product.boxItem2}</li>}
@@ -463,7 +477,7 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 <span className="highlight-icon">🎯</span>
 <div>
 <strong>User-Friendly</strong>
-<p>Intuitive design that's easy to set up and use</p>
+<p>Intuitive design that&apos;s easy to set up and use</p>
 </div>
 </div>
                       
