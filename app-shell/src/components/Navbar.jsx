@@ -2,7 +2,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import navlogo from '../img/gulime.png'
 import { useEffect, useRef, useState } from 'react';
-import { CircleUserRound, ShoppingCart } from 'lucide-react';
+import { ChevronDown, CircleUserRound, Settings, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { auth } from '../db/firebase';
 // Add these imports for Firestore
 import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
@@ -85,7 +85,7 @@ useEffect(() => {
         if (userDocSnapshot.exists()) {
           const userData = userDocSnapshot.data();
           // Get the full name from fname and lname
-          const fullName = `${userData.fname || ''} ${userData.lname || ''}`.trim();
+          const fullName = `${userData.fname || ''} `.trim();
           setNames(fullName || userData.email || 'User');
         } else {
           setNames('User');
@@ -222,7 +222,8 @@ return (
         >
           <div className="search-result-image">
             {product.imgurl1 && (
-              <img src={product.imgurl1} alt={product.product_name} />
+              <img  src={`/assets/images/${product.imgUrl}`}  alt={product.product_name} />
+
             )}
           </div>
           <div className="search-result-info">
@@ -259,16 +260,43 @@ return (
 <ul className="navlinks">
   {isSignedIn ? (
     <>
-      <li>
-        <Link className="profilecss" to="/profile">
-          {names || 'Profile'} <CircleUserRound style={{padding:'0 8px'}} size={30}/>
-        </Link>
-      </li>
-      <li>
-        <button className="signout" onClick={handleLogout}>
-          Logout
-        </button>
-      </li>
+<li className="account-lists">
+  <div className="profile-wrapper">
+    <span className="profile-top">Hello, {names}</span>
+    <span className="profile-bottom">
+      Account & Lists <ChevronDown size={12} style={{ marginLeft: 4 }} />
+    </span>
+
+    {/* Dropdown */}
+    <div className="account-dropdown">
+<Link style={{color:'#000'}} to="/profile?tab=account"className="dropdown-link">
+<div style={{display:'flex',alignItems:'center'}}><CircleUserRound style={{padding: '0 5px 0px 0'}}/>Your Account</div>
+</Link>
+
+<div style={{display:'flex',alignItems:'center'}}>  
+<Link style={{color:'#000'}} to="/profile?tab=orders" className="dropdown-link">  <ShoppingBag style={{padding: '0 5px 0px 0'}}/>
+Your Orders</Link>
+</div>
+   
+<div style={{display:'flex',alignItems:'center'}}>  
+<Link style={{color:'#000'}} to="/profile?tab=cookies" className="dropdown-link">  <Settings style={{padding: '0 5px 0px 0'}}/>
+Cookie Settings</Link>
+</div>
+   
+      <button onClick={handleLogout} className="dropdown-link logout-btn">Logout</button>
+    </div>
+  </div>
+</li>
+
+  <li>
+    <Link to="/cart" className="cart-link">
+      <ShoppingCart color="#fff" size={30} />
+      {cartCount > 0 && (
+        <span className="cart-badge">{cartCount}</span>
+      )}
+    </Link>
+  </li>
+    
     </>
   ) : (
     <>
@@ -284,15 +312,6 @@ return (
       </li>
     </>
   )}
-
-  <li>
-    <Link to="/cart" className="cart-link">
-      <ShoppingCart color="#fff" size={30} />
-      {cartCount > 0 && (
-        <span className="cart-badge">{cartCount}</span>
-      )}
-    </Link>
-  </li>
 </ul>
 
 {/* <div className="burger">

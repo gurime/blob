@@ -1,5 +1,6 @@
 import  { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useSearchParams } from "react-router-dom";
 import { auth, db } from '../db/firebase';
 import { User, Edit3, Save, X, Package, MapPin, CreditCard, Bell, Shield, Heart, Trash2, ShoppingCart, ExternalLink,Settings  } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -14,8 +15,10 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({});
-  const [activeTab, setActiveTab] = useState('account');
-  const [saving, setSaving] = useState(false);
+const [searchParams] = useSearchParams();
+const defaultTab = searchParams.get("tab") || "account";
+const [activeTab, setActiveTab] = useState(defaultTab);  
+const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
   const implementedTabs = ['account', 'wishlist','cookies'];
   const [cookieSettings, setCookieSettings] = useState({
@@ -25,7 +28,7 @@ export default function Profile() {
   functional: true,
   preferences: true
 });
-  
+ 
   // Wishlist specific states
   const [wishlistItems, setWishlistItems] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
