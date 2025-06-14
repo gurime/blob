@@ -9,6 +9,7 @@ import { auth } from '../db/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { Save } from 'lucide-react';
+import DeliveryInfo from './DeliveryInfo';
 
 export default function Cart() {
     const [loading, setLoading] = useState(true);
@@ -423,8 +424,9 @@ className="cart-item-image"/>
 
 <p className="cart-item-category">Category: {item.category}</p>
 <p className="cart-item-stock">✅ {item.stock}</p>
-<p className="cart-item-shipping">🚚 FREE shipping with Gulime Premium</p>
-                                            
+{(item.premium || item.hasPrime) && (
+    <p className="cart-item-shipping">🚚 FREE shipping with Gulime Premium</p>
+)}                                            
 <div className="cart-item-actions-row">
 <div className="quantity-selector">
 <label htmlFor={`qty-${item.productId}`}>Qty:</label>
@@ -439,20 +441,20 @@ className="quantity-dropdown">
 </select>
 </div>
                                                 
-                                                <button 
-                                                    onClick={() => removeItem(item.productId)}
-                                                    className="remove-btn">
-                                                    Delete
-                                                </button>
+<button 
+onClick={() => removeItem(item.productId)}
+className="remove-btn">
+Delete
+</button>
                                                 
-                                                <button 
-                                                    onClick={() => saveForLater(item.productId)}
-                                                    className="save-later-btn">
-                                                    <Save size={16} />
-                                                    Save for later
-                                                </button>
-                                            </div>
-                                        </div>
+<button 
+onClick={() => saveForLater(item.productId)}
+className="save-later-btn">
+<Save size={16} />
+Save for later
+</button>
+</div>
+</div>
                                         
 <div className="cart-item-price-section">
 <span className="cart-item-price">${item.price.toLocaleString(2)}</span>
@@ -494,62 +496,81 @@ className="saved-item-image"
 </div>
                                             
 <div className="saved-item-details">
-<h4 className="saved-item-title">{item.productName}</h4>
+<h4 className="saved-item-title">{item.productName || item.storage}GB</h4>
 <p className="saved-item-price">${item.price.toLocaleString(2)}</p>
-<p className="saved-item-stock">✅ {item.stock}</p>
-                                                
+<p className="saved-item-stock">
+{item.stock 
+? <span style={{ color: 'green' }}>✅ {item.stock}</span>
+: <span style={{ color: 'red' }}>❌ Out Of Stock</span>}
+</p>                                                
 <div className="saved-item-actions">
-                                                    <button 
-                                                        onClick={() => moveToCart(item.productId)}
-                                                        className="move-to-cart-btn">
-                                                        Move to cart
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => deleteSavedItem(item.productId)}
-                                                        className="delete-saved-btn">
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+<button 
+onClick={() => moveToCart(item.productId)}
+className="move-to-cart-btn">
+Move to cart
+</button>
 
-                    {/* Right Column - Checkout Summary */}
-                    {cartItems.length > 0 && (
-                        <div className="cart-right-column">
-                            <div className="checkout-summary">
-                                <div className="prime-offer">
-                                    <div className="prime-logo">Premium</div>
-                                    <p>FREE One-Day Delivery available</p>
-                                </div>
+<button 
+onClick={() => deleteSavedItem(item.productId)}
+className="delete-saved-btn">
+Delete
+</button>
+</div>
+</div>
+</div>
+))}
+</div>
+)}
+</div>
+</div>
+
+{/* Right Column - Checkout Summary */}
+{cartItems.length > 0 && (
+<div className="cart-right-column">
+<div className="checkout-summary">
+{cartItems.some(item => item.premium === "Gulime Premium" || item.hasPrime) && (
+<div className="prime-offer">
+<div className="prime-logo">Gulime Premium</div>
+<p>FREE One-Day Delivery available</p>
+</div>
+)}
+
                                 
-                                <div className="summary-details">
-                                    <div className="summary-row">
-                                        <span>Subtotal ({cartSummary.totalItems} items):</span>
-                                        <span className="summary-price">${cartSummary.totalValue.toLocaleString(2)}</span>
-                                    </div>
-                                    <div className="summary-row">
-                                        <span>Shipping:</span>
-                                        <span className="summary-price">FREE</span>
-                                    </div>
-                                    <div className="summary-row total-row">
-                                        <span>Total:</span>
-                                        <span className="summary-total">${cartSummary.totalValue.toLocaleString(2)}</span>
-                                    </div>
-                                </div>
+<div className="summary-details">
+
+<div className="summary-row">
+<span>Subtotal ({cartSummary.totalItems} items):</span>
+<span className="summary-price">${cartSummary.totalValue.toLocaleString(2)}</span>
+</div>
+
+<div className="summary-row">
+<span>Shipping:</span>
+{cartItems.some(item => item.premium === "Gulime Premium" || item.hasPrime) && (
+<span className="summary-price">FREE</span>
+)}
+</div>
+
+<div className="summary-row">
+<span>Seller:</span>
+<span className="summary-price">           
+{cartItems.map(item => item.seller)}
+</span>
+</div>
+
+<div className="summary-row total-row">
+<span>Total:</span>
+<span className="summary-total">${cartSummary.totalValue.toLocaleString(2)}</span>
+</div>
+</div>
                                 
-                                <button className="checkout-btn">
-                                    Proceed to checkout
-                                </button>
+<button className="checkout-btn">
+Proceed to checkout
+</button>
                                 
-                                <button 
-                                    onClick={() => navigate('/')}
-                                    className="continue-shopping-link"
-                                >
+<button 
+onClick={() => navigate('/')}
+className="continue-shopping-link"
+>
                                     Continue shopping
                                 </button>
                             </div>
