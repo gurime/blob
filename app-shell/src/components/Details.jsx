@@ -10,14 +10,72 @@ import { cartHandlers } from "../utils/cartHandlers";
 import { priceUtils } from "../utils/priceUtils";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../db/firebase";
+import { auth, db } from "../db/firebase";
 import SecNav from "./SecNav";
+import { collection, getDocs } from "firebase/firestore";
 
 export default function Details() {   
-let { id } = useParams();
-const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null);
 const [userLoading, setUserLoading] = useState(true);
  const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const [Product, setProduct] = useState(null);
+const [selectedCarColor, setSelectedCarColor] = useState('');
+const [selectedWheels, setSelectedWheels] = useState('');
+const [selectedInterior, setSelectedInterior] = useState('');
+const [selectedAutopilot, setSelectedAutopilot] = useState('');
+const [selectedExtras, setSelectedExtras] = useState([]);
+let { id } = useParams();
+
+const fetchAllProducts = async () => {
+  try {
+    const allProducts = [];
+
+    const productCollections = [
+      "products",
+      "featuredProducts",
+      "automotive",
+    ];
+
+    for (const path of productCollections) {
+      try {
+        const colRef = collection(db, ...path.split("/"));
+        const snapshot = await getDocs(colRef);
+
+        snapshot.forEach((doc) => {
+          allProducts.push({
+            id: doc.id,
+            ...doc.data(),
+            sourceCollection: path,
+          });
+        });
+      } catch (err) {
+        console.warn(`Failed to fetch from ${path}:`, err.message);
+        // Continue to next collection
+      }
+    }
+
+    return allProducts;
+  } catch (error) {
+    console.error("Error fetching all products:", error);
+    return [];
+  }
+};
+
+useEffect(() => {
+  const loadProduct = async () => {
+    const allProducts = await fetchAllProducts();
+    const matched = allProducts.find((prod) => prod.id === id);
+    if (matched) {
+      setProduct(matched);
+    } else {
+      console.error("Product not found");
+    }
+  };
+
+  loadProduct();
+}, [id]);
+
+
  const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -37,29 +95,34 @@ const navigate = useNavigate();
 
   
 const {
-product,
-loading,
-error,
-selectedImage,
-basePrice,
-configPrice,
-totalPrice,
-quantity,
-showMore,
-selectedColor,
-selectedStorage,
-displayStorageName,
-setSelectedImage,
-setShowMore,
-setSelectedColor,
-handleStorageChange,
-handleQuantityChange,
-getProductImages,
-getCurrentSelections
+  product,
+    loading,
+    error,
+    selectedImage,
+    basePrice,
+    configPrice,
+    totalPrice,
+    quantity,
+    showMore,
+    selectedColor,
+    selectedStorage,
+    displayStorageName,
+    setSelectedImage,
+    setShowMore,
+    setSelectedColor,
+    handleStorageChange,
+    handleQuantityChange,
+    getProductImages,
+    getCurrentSelections,
+    handleExtrasChange,
+    handleAutopilotChange,
+    handleInteriorChange,
+    handleModelChange,
+    handleTrimChange,
+    handleWheelsChange,
 } = useProductDetails(id);
 
 const { formatPrice, generateOriginalPrice, calculateSavings } = priceUtils;
-const { handleAddToCart, handleBuyNow } = cartHandlers;
  const handleCartButtonClick = async (product) => {
   const selections = getCurrentSelections();
   const quantity = 1;
@@ -356,6 +419,8 @@ return (
 
 const productImages = getProductImages();
 
+
+
 return (
 <>
 <Navbar />
@@ -488,6 +553,192 @@ generateOriginalPrice(configPrice || product?.price || 0)
 {/* Key Features - Bullet Points */}
 <ul className="feature-list">
 <div className="product-configuration">
+
+
+{/* Car Configuration Section - Only show for automotive products */}
+{product.category?.toLowerCase() === 'automotive' && product.colors && (
+  <div className="product-configuration">
+    <div className="config-section">
+      <h1 className="product-title">{product.model || product.product_name}</h1>
+
+      {/* Color Selector */}
+      <div className="section">
+        <h2>Color</h2>
+        <div className="color-options">
+          {product.colors.map((color) => (
+            <div
+              key={color.code}
+              className={`color-circle ${
+                selectedCarColor === color.code ? 'selected' : ''
+              }`}
+              style={{ backgroundColor: color.hex }}
+              onClick={() => setSelectedCarColor(color.code)}
+              title={color.name}
+            />
+          ))}
+        </div>
+        <p className="selected-color-name">
+          {product.colors.find(c => c.code === selectedCarColor)?.name || 'Select a color'}
+        </p>
+      </div>
+
+      {/* Wheels Selector */}
+      {product.wheels && product.wheels.length > 0 && (
+        <div className="section">
+          <h2>Wheels</h2>
+          {product.wheels.map((wheel) => (
+            <label key={wheel.code} className="option-card">
+              <input 
+                type="radio" 
+                name="wheels" 
+                checked={selectedWheels === wheel.code}
+                onChange={() => setSelectedWheels(wheel.code)} 
+              />
+              <span className="option-name">{wheel.name}</span>
+              <span className="option-price">${wheel.price.toLocaleString()}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {/* Interior Selector */}
+      {product.interiors && product.interiors.length > 0 && (
+        <div className="section">
+          <h2>Interior</h2>
+          {product.interiors.map((interior) => (
+            <label key={interior.code} className="option-card">
+              <input 
+                type="radio" 
+                name="interior" 
+                checked={selectedInterior === interior.code}
+                onChange={() => setSelectedInterior(interior.code)} 
+              />
+              <span className="option-name">{interior.name}</span>
+              <span className="option-price">${interior.price.toLocaleString()}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {/* Autopilot */}
+      {product.autopilot && product.autopilot.length > 0 && (
+        <div className="section">
+          <h2>Autopilot</h2>
+          {product.autopilot.map((pkg) => (
+            <label key={pkg.code} className="option-card autopilot-card">
+              <input 
+                type="radio" 
+                name="autopilot" 
+                checked={selectedAutopilot === pkg.code}
+                onChange={() => setSelectedAutopilot(pkg.code)} 
+              />
+              <div className="autopilot-info">
+                <div className="autopilot-name">{pkg.name}</div>
+                <ul className="autopilot-features">
+                  {pkg.features && pkg.features.map((feature, idx) => (
+                    <li key={idx}>{feature}</li>
+                  ))}
+                </ul>
+              </div>
+              <span className="option-price">${pkg.price.toLocaleString()}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {/* Extras */}
+      {product.extras && product.extras.length > 0 && (
+        <div className="section">
+          <h2>Extras</h2>
+          {product.extras.map((extra, i) => (
+            <label key={i} className="option-card extra-card">
+              <input 
+                type="checkbox" 
+                checked={selectedExtras.some(e => e.name === extra.name)}
+                onChange={() => {
+                  const isSelected = selectedExtras.some(e => e.name === extra.name);
+                  if (isSelected) {
+                    setSelectedExtras(selectedExtras.filter(e => e.name !== extra.name));
+                  } else {
+                    setSelectedExtras([...selectedExtras, extra]);
+                  }
+                }} 
+              />
+              <div className="extra-info">
+                <div className="extra-name">{extra.name}</div>
+                <div className="extra-desc">{extra.description}</div>
+              </div>
+              <span className="option-price">${extra.price.toLocaleString()}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {/* Configuration Summary and Total */}
+      <div className="section config-summary-section">
+        <div className="configuration-summary">
+          <h3>Your Configuration</h3>
+          <div className="config-details">
+            <div className="config-item">
+              <span>Color:</span>
+              <span>{product.colors?.find(c => c.code === selectedCarColor)?.name || 'Not selected'}</span>
+            </div>
+            {product.wheels && (
+              <div className="config-item">
+                <span>Wheels:</span>
+                <span>{product.wheels?.find(w => w.code === selectedWheels)?.name || 'Not selected'}</span>
+              </div>
+            )}
+            {product.interiors && (
+              <div className="config-item">
+                <span>Interior:</span>
+                <span>{product.interiors?.find(i => i.code === selectedInterior)?.name || 'Not selected'}</span>
+              </div>
+            )}
+            {product.autopilot && (
+              <div className="config-item">
+                <span>Autopilot:</span>
+                <span>{product.autopilot?.find(a => a.code === selectedAutopilot)?.name || 'Not selected'}</span>
+              </div>
+            )}
+            {selectedExtras.length > 0 && (
+              <div className="config-item">
+                <span>Extras:</span>
+                <span>{selectedExtras.map(e => e.name).join(', ')}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quantity and Total */}
+        <div className="quantity-total-section">
+          <label className="quantity-label">
+            Quantity:
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={quantity}
+              onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+              className="quantity-input"
+            />
+          </label>
+          <div className="total-price-display">
+            Total: ${(configPrice * quantity).toLocaleString()}
+          </div>
+        </div>
+
+        <button 
+          className="add-to-cart-btn car-config-btn"
+          onClick={() => handleCartButtonClick(product)}
+        >
+          Add to Cart - ${(configPrice * quantity).toLocaleString()}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 {/* Color Selection */}
 {product.avaibleColors?.colors && product.avaibleColors.colors.length > 0 && (
 <div className="config-section">
@@ -497,6 +748,10 @@ generateOriginalPrice(configPrice || product?.price || 0)
 {product.avaibleColors.colors.find(c => c.code === selectedColor)?.name || 'Select Color'}
 </span>
 </div>
+
+
+
+
                         
 <div className="color-options">
 {product.avaibleColors.colors.map((color) => (
@@ -558,6 +813,7 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 </div>
 </div>
 </div>
+
 <h3 className="description-title">About Product</h3>
 
 {/* Dynamic features based on product data */}
