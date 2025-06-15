@@ -221,9 +221,8 @@ return (
           onClick={() => handleProductClick(product.id)}
         >
           <div className="search-result-image">
-            {product.imgurl1 && (
+            {product.imgUrl && (
               <img  src={`/assets/images/${product.imgUrl}`}  alt={product.product_name} />
-
             )}
           </div>
           <div className="search-result-info">

@@ -9,7 +9,6 @@ import { auth } from '../db/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { Save } from 'lucide-react';
-import DeliveryInfo from './DeliveryInfo';
 
 export default function Cart() {
     const [loading, setLoading] = useState(true);
