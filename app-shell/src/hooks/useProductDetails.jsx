@@ -139,40 +139,52 @@ export const useProductDetails = (id) => {
       }
     }
     
-    // Handle car configuration pricing
-    if (isCarProduct && product.carConfig) {
-      const config = product.carConfig;
-      
-      const configOptions = [
-        { selected: selectedModel, options: config.models },
-        { selected: selectedTrim, options: config.trims },
-        { selected: selectedWheels, options: config.wheels },
-        { selected: selectedInterior, options: config.interiors },
-        { selected: selectedAutopilot, options: config.autopilot }
-      ];
-      
-      configOptions.forEach(({ selected, options }) => {
-        if (selected && options) {
-          const option = options.find(opt => opt.name === selected);
-          if (option?.price) {
-            totalPrice += option.price;
-          }
+    // Handle car configuration pricing - FIXED to match UI data structure
+    if (isCarProduct) {
+      // Handle colors from product.colors array (not carConfig.colors)
+      if (selectedColor && product.colors) {
+        const colorOption = product.colors.find(c => c.code === selectedColor);
+        if (colorOption?.price) {
+          totalPrice += colorOption.price;
         }
-      });
-      
-      // Add extras pricing
-      if (selectedExtras.length > 0 && config.extras) {
-        selectedExtras.forEach(extraName => {
-          const extra = config.extras.find(e => e.name === extraName);
-          if (extra?.price) {
-            totalPrice += extra.price;
-          }
-        });
       }
+
+      // Handle wheels from product.wheels array
+      if (selectedWheels && product.wheels) {
+        const wheelOption = product.wheels.find(w => w.code === selectedWheels);
+        if (wheelOption?.price) {
+          totalPrice += wheelOption.price;
+        }
+      }
+
+      // Handle interiors from product.interiors array
+      if (selectedInterior && product.interiors) {
+        const interiorOption = product.interiors.find(i => i.code === selectedInterior);
+        if (interiorOption?.price) {
+          totalPrice += interiorOption.price;
+        }
+      }
+
+      // Handle autopilot from product.autopilot array
+      if (selectedAutopilot && product.autopilot) {
+        const autopilotOption = product.autopilot.find(a => a.code === selectedAutopilot);
+        if (autopilotOption?.price) {
+          totalPrice += autopilotOption.price;
+        }
+      }
+
+      // Handle extras from product.extras array
+if (selectedExtras.length > 0 && product.extras) {
+  selectedExtras.forEach(selectedExtra => {
+    if (selectedExtra?.price) {
+      totalPrice += selectedExtra.price;
+    }
+  });
+}
     }
     
     return totalPrice;
-  }, [basePrice, product, isCarProduct, selectedStorage, selectedModel, selectedTrim, selectedWheels, selectedInterior, selectedAutopilot, selectedExtras]);
+  }, [basePrice, product, isCarProduct, selectedStorage, selectedColor, selectedWheels, selectedInterior, selectedAutopilot, selectedExtras]);
 
   // Calculate total price with quantity
   const totalPrice = useMemo(() => {
@@ -204,44 +216,45 @@ export const useProductDetails = (id) => {
     return modelData?.estimatedDelivery || '2-4 weeks';
   }, [isCarProduct, product, selectedModel]);
 
-  // Event handlers
-  const handleQuantityChange = useCallback((newQuantity) => {
-    setQuantity(Math.max(1, newQuantity));
-  }, []);
+  // Event handlers - FIXED to match UI expectations
+const handleQuantityChange = useCallback((newQuantity) => {
+  setQuantity(Math.max(1, newQuantity));
+}, []);
 
-  const handleStorageChange = useCallback((storageOption) => {
-    setSelectedStorage(storageOption.size);
-  }, []);
+const handleStorageChange = useCallback((storageOption) => {
+  setSelectedStorage(prev => prev === storageOption.size ? null : storageOption.size);
+}, []);
 
-  const handleModelChange = useCallback((model) => {
-    setSelectedModel(model.name);
-  }, []);
+// Car configuration handlers - FIXED with toggle functionality
+const handleColorChange = useCallback((colorCode) => {
+  setSelectedColor(prev => prev === colorCode ? null : colorCode);
+}, []);
 
-  const handleTrimChange = useCallback((trim) => {
-    setSelectedTrim(trim.name);
-  }, []);
+const handleWheelsChange = useCallback((wheelCode) => {
+  setSelectedWheels(prev => prev === wheelCode ? null : wheelCode);
+}, []);
 
-  const handleWheelsChange = useCallback((wheels) => {
-    setSelectedWheels(wheels.name);
-  }, []);
+const handleInteriorChange = useCallback((interiorCode) => {
+  setSelectedInterior(prev => prev === interiorCode ? null : interiorCode);
+}, []);
 
-  const handleInteriorChange = useCallback((interior) => {
-    setSelectedInterior(interior.name);
-  }, []);
+const handleAutopilotChange = useCallback((pkgCode) => {
+  setSelectedAutopilot(prev => prev === pkgCode ? null : pkgCode);
+}, []);
 
-  const handleAutopilotChange = useCallback((autopilot) => {
-    setSelectedAutopilot(autopilot.name);
-  }, []);
+const handleExtrasChange = useCallback((extra) => {
+  setSelectedExtras(prev => {
+    const isCurrentlySelected = prev.some(e => e.name === extra.name);
+    if (isCurrentlySelected) {
+      // If clicking the same item, deselect it
+      return [];
+    } else {
+      // Replace with new selection
+      return [extra];
+    }
+  });
+}, []);
 
-  const handleExtrasChange = useCallback((extra, isSelected) => {
-    setSelectedExtras(prev => {
-      if (isSelected) {
-        return [...prev, extra.name];
-      } else {
-        return prev.filter(name => name !== extra.name);
-      }
-    });
-  }, []);
 
   // Get current selections for cart
   const getCurrentSelections = useCallback(() => {
@@ -297,7 +310,7 @@ export const useProductDetails = (id) => {
       setError(null);
       
       try {
-        const collections = ['products', 'featuredProducts', 'cars'];
+        const collections = ['products', 'featuredProducts', 'automotive'];
         let productData = null;
         let foundCollection = null;
 
@@ -315,7 +328,7 @@ export const useProductDetails = (id) => {
         if (productData) {
           productData.sourceCollection = foundCollection;
           setProduct(productData);
-          resetSelections(); // Reset selections when new product loads
+          resetSelections();
         } else {
           setError(`Product "${decodedId}" not found`);
         }
@@ -330,15 +343,17 @@ export const useProductDetails = (id) => {
     fetchProduct();
   }, [id, searchInCollection, resetSelections]);
 
-  // Set default selections when product loads
+  // Set default selections when product loads - FIXED
   useEffect(() => {
     if (!product || basePrice <= 0) return;
 
-    // Set default color
-    const colorOptions = isCarProduct ? product.carConfig?.colors : product.avaibleColors?.colors;
-    if (colorOptions?.length > 0 && !selectedColor) {
-      const colorKey = isCarProduct ? 'code' : 'code';
-      setSelectedColor(colorOptions[0][colorKey]);
+    // Set default color for both regular and car products
+    if (!selectedColor) {
+      if (isCarProduct && product.colors?.length > 0) {
+        setSelectedColor(product.colors[0].code);
+      } else if (product.avaibleColors?.colors?.length > 0) {
+        setSelectedColor(product.avaibleColors.colors[0].code);
+      }
     }
     
     // Set default storage for regular products
@@ -347,27 +362,20 @@ export const useProductDetails = (id) => {
     }
 
     // Set default car configurations
-    if (isCarProduct && product.carConfig) {
-      const config = product.carConfig;
-      
-      if (config.models?.length > 0 && !selectedModel) {
-        setSelectedModel(config.models[0].name);
+    if (isCarProduct) {
+      if (product.wheels?.length > 0 && !selectedWheels) {
+        setSelectedWheels(product.wheels[0].code);
       }
       
-      if (config.trims?.length > 0 && !selectedTrim) {
-        setSelectedTrim(config.trims[0].name);
+      if (product.interiors?.length > 0 && !selectedInterior) {
+        setSelectedInterior(product.interiors[0].code);
       }
-      
-      if (config.wheels?.length > 0 && !selectedWheels) {
-        setSelectedWheels(config.wheels[0].name);
-      }
-      
-      if (config.interiors?.length > 0 && !selectedInterior) {
-        setSelectedInterior(config.interiors[0].name);
+
+      if (product.autopilot?.length > 0 && !selectedAutopilot) {
+        setSelectedAutopilot(product.autopilot[0].code);
       }
     }
-  }, [product, basePrice, isCarProduct, selectedColor, selectedStorage, selectedModel, 
-      selectedTrim, selectedWheels, selectedInterior]);
+  }, [product, basePrice, isCarProduct, selectedColor, selectedStorage, selectedWheels, selectedInterior, selectedAutopilot]);
 
   return {
     // State
@@ -398,12 +406,12 @@ export const useProductDetails = (id) => {
     setSelectedImage,
     setShowMore,
     setSelectedColor,
+    setSelectedWheels,
     
-    // Handlers
+    // Handlers - FIXED
     handleStorageChange,
     handleQuantityChange,
-    handleModelChange,
-    handleTrimChange,
+    handleColorChange,
     handleWheelsChange,
     handleInteriorChange,
     handleAutopilotChange,
