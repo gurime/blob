@@ -13,17 +13,7 @@ const firebaseConfig = {
   // messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ,
   // appId: import.meta.env.VITE_FIREBASE_APP_ID
 
-  apiKey: "AIzaSyC704ayjAVmcu_gALh8UQxXvcAMoWp7v1o",
 
-  authDomain: "portfolio-e4755.firebaseapp.com",
-
-  projectId: "portfolio-e4755",
-
-  storageBucket: "portfolio-e4755.firebasestorage.app",
-
-  messagingSenderId: "1032002771148",
-
-  appId: "1:1032002771148:web:957dec520e3327f0e88a69"
 
 
 };
