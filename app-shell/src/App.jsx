@@ -21,8 +21,11 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/product/:id" element={<Details />} />
-        
         {/* Specific category routes - these need to come BEFORE generic routes */}
+        <Route path="/electronics" element={<CategoryPage />} />
+        <Route path="/electronics/:subcategory" element={<CategoryPage />} />
+        <Route path="/electronics/:subcategory/:subsubcategory" element={<CategoryPage />} />
+
         <Route path="/books" element={<CategoryPage />} />
         <Route path="/books/:subcategory" element={<CategoryPage />} />
         <Route path="/books/:subcategory/:subsubcategory" element={<CategoryPage />} />
