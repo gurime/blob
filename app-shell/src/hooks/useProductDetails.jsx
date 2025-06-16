@@ -30,10 +30,23 @@ export const useProductDetails = (id) => {
     return isNaN(price) ? 0 : price;
   }, [product?.price]);
 
-  const isCarProduct = useMemo(() => {
-    return product?.category?.toLowerCase() === 'automotive' || !!product?.carConfig;
-  }, [product]);
+const isCarProduct = useMemo(() => {
+  return product?.category?.toLowerCase() === 'automotive' || !!product?.colors;
+}, [product]);
 
+const getVirtualCarConfig = useMemo(() => {
+  if (!product || !isCarProduct) return null;
+  
+  return {
+    colors: product.colors || [],
+    models: product.models || [],
+    trims: product.trims || [],
+    wheels: product.wheels || [],
+    interiors: product.interiors || [],
+    autopilot: product.autopilot || [],
+    extras: product.extras || []
+  };
+}, [product, isCarProduct]);
   // Helper function to format numbers with commas
   const formatPrice = useCallback((price) => {
     if (typeof price !== 'number' || isNaN(price)) return '0';
@@ -297,7 +310,7 @@ export const useProductDetails = (id) => {
       setError(null);
       
       try {
-        const collections = ['products', 'featuredProducts', 'cars'];
+        const collections = ['products', 'featuredProducts', 'automotive'];
         let productData = null;
         let foundCollection = null;
 

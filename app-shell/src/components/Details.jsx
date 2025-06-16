@@ -10,71 +10,20 @@ import { cartHandlers } from "../utils/cartHandlers";
 import { priceUtils } from "../utils/priceUtils";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "../db/firebase";
+import { auth} from "../db/firebase";
 import SecNav from "./SecNav";
-import { collection, getDocs } from "firebase/firestore";
 
 export default function Details() {   
   const [user, setUser] = useState(null);
 const [userLoading, setUserLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const [fetchedProduct, setFetchedProduct] = useState(null);
  const [toast, setToast] = useState({ show: false, message: '', type: '' });
-  const [Product, setProduct] = useState(null);
 const [selectedCarColor, setSelectedCarColor] = useState('');
-const [selectedWheels, setSelectedWheels] = useState('');
-const [selectedInterior, setSelectedInterior] = useState('');
-const [selectedAutopilot, setSelectedAutopilot] = useState('');
-const [selectedExtras, setSelectedExtras] = useState([]);
+
 let { id } = useParams();
 
-const fetchAllProducts = async () => {
-  try {
-    const allProducts = [];
-
-    const productCollections = [
-      "products",
-      "featuredProducts",
-      "automotive",
-    ];
-
-    for (const path of productCollections) {
-      try {
-        const colRef = collection(db, ...path.split("/"));
-        const snapshot = await getDocs(colRef);
-
-        snapshot.forEach((doc) => {
-          allProducts.push({
-            id: doc.id,
-            ...doc.data(),
-            sourceCollection: path,
-          });
-        });
-      } catch (err) {
-        console.warn(`Failed to fetch from ${path}:`, err.message);
-        // Continue to next collection
-      }
-    }
-
-    return allProducts;
-  } catch (error) {
-    console.error("Error fetching all products:", error);
-    return [];
-  }
-};
-
-useEffect(() => {
-  const loadProduct = async () => {
-    const allProducts = await fetchAllProducts();
-    const matched = allProducts.find((prod) => prod.id === id);
-    if (matched) {
-      setProduct(matched);
-    } else {
-      console.error("Product not found");
-    }
-  };
-
-  loadProduct();
-}, [id]);
-
+ // Recursively search for the product
 
  const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -96,30 +45,40 @@ const navigate = useNavigate();
   
 const {
   product,
-    loading,
-    error,
-    selectedImage,
-    basePrice,
-    configPrice,
-    totalPrice,
-    quantity,
-    showMore,
-    selectedColor,
-    selectedStorage,
-    displayStorageName,
-    setSelectedImage,
-    setShowMore,
-    setSelectedColor,
-    handleStorageChange,
-    handleQuantityChange,
-    getProductImages,
-    getCurrentSelections,
-    handleExtrasChange,
-    handleAutopilotChange,
-    handleInteriorChange,
-    handleModelChange,
-    handleTrimChange,
-    handleWheelsChange,
+  loading,
+  error,
+  selectedImage,
+  basePrice,
+  configPrice,
+  totalPrice,
+  quantity,
+  showMore,
+  selectedColor,
+  selectedStorage,
+  displayName,
+  isCarProduct,
+  selectedModel,
+  selectedTrim,
+  selectedWheels,
+  selectedInterior,
+  selectedAutopilot,
+  selectedExtras,
+  estimatedDelivery,
+      displayStorageName,
+  setSelectedImage,
+  setShowMore,
+  setSelectedColor,
+  handleStorageChange,
+  handleQuantityChange,
+  handleModelChange,
+  handleTrimChange,
+  handleWheelsChange,
+  handleInteriorChange,
+  handleAutopilotChange,
+  handleExtrasChange,
+  getProductImages,
+  getCarConfigImages,
+  getCurrentSelections
 } = useProductDetails(id);
 
 const { formatPrice, generateOriginalPrice, calculateSavings } = priceUtils;
@@ -403,13 +362,14 @@ return (
 );
 }
 
-if (error || !product) {
+if (fetchError || !product) {
 return (
 <>
 <Navbar />
+<SecNav/>
 <div className="error-message">
 <h2>Product Not Found</h2>
-<p>{error || "The requested product could not be found."}</p>
+<p>{fetchError || "The requested product could not be found."}</p>
           <button onClick={() => navigate(-1)} className="no-page-button">← Go Back</button>
 </div>
 <Footer />
@@ -420,7 +380,14 @@ return (
 const productImages = getProductImages();
 
 
-
+// Add this right before your return statement
+console.log('Debug Info:', {
+  product: product,
+  isCarProduct: isCarProduct,
+  hasCarConfig: !!product?.carConfig,
+  category: product?.category,
+  categoryLower: product?.category?.toLowerCase()
+});
 return (
 <>
 <Navbar />
@@ -555,82 +522,120 @@ generateOriginalPrice(configPrice || product?.price || 0)
 <div className="product-configuration">
 
 
-{/* Car Configuration Section - Only show for automotive products */}
-{product.category?.toLowerCase() === 'automotive' && product.colors && (
-  <div className="product-configuration">
+{isCarProduct && product.carConfig && (
     <div className="config-section">
-      <h1 className="product-title">{product.model || product.product_name}</h1>
+      <h1 className="product-title">{displayName}</h1>
 
       {/* Color Selector */}
-      <div className="section">
-        <h2>Color</h2>
-        <div className="color-options">
-          {product.colors.map((color) => (
-            <div
-              key={color.code}
-              className={`color-circle ${
-                selectedCarColor === color.code ? 'selected' : ''
-              }`}
-              style={{ backgroundColor: color.hex }}
-              onClick={() => setSelectedCarColor(color.code)}
-              title={color.name}
-            />
+      {product.carConfig.colors && (
+        <div className="section">
+          <h2>Color</h2>
+          <div className="color-options">
+            {product.carConfig.colors.map((color) => (
+              <div
+                key={color.code}
+                className={`color-circle ${
+                  selectedColor === color.code ? 'selected' : ''
+                }`}
+                style={{ backgroundColor: color.hex }}
+                onClick={() => setSelectedColor(color.code)}
+                title={color.name}
+              />
+            ))}
+          </div>
+          <p className="selected-color-name">
+            {product.carConfig.colors.find(c => c.code === selectedColor)?.name || 'Select a color'}
+          </p>
+        </div>
+      )}
+
+      {/* Model Selector */}
+      {product.carConfig.models && product.carConfig.models.length > 0 && (
+        <div className="section">
+          <h2>Model</h2>
+          {product.carConfig.models.map((model) => (
+            <label key={model.name} className="option-card">
+              <input 
+                type="radio" 
+                name="model" 
+                checked={selectedModel === model.name}
+                onChange={() => handleModelChange(model)} 
+              />
+              <span className="option-name">{model.name}</span>
+              <span className="option-price">${formatPrice(model.price || 0)}</span>
+            </label>
           ))}
         </div>
-        <p className="selected-color-name">
-          {product.colors.find(c => c.code === selectedCarColor)?.name || 'Select a color'}
-        </p>
-      </div>
+      )}
+
+      {/* Trim Selector */}
+      {product.carConfig.trims && product.carConfig.trims.length > 0 && (
+        <div className="section">
+          <h2>Trim</h2>
+          {product.carConfig.trims.map((trim) => (
+            <label key={trim.name} className="option-card">
+              <input 
+                type="radio" 
+                name="trim" 
+                checked={selectedTrim === trim.name}
+                onChange={() => handleTrimChange(trim)} 
+              />
+              <span className="option-name">{trim.name}</span>
+              <span className="option-price">${formatPrice(trim.price || 0)}</span>
+            </label>
+          ))}
+        </div>
+      )}
 
       {/* Wheels Selector */}
-      {product.wheels && product.wheels.length > 0 && (
+      {product.carConfig.wheels && product.carConfig.wheels.length > 0 && (
         <div className="section">
           <h2>Wheels</h2>
-          {product.wheels.map((wheel) => (
-            <label key={wheel.code} className="option-card">
+          {product.carConfig.wheels.map((wheel) => (
+            <label key={wheel.name} className="option-card">
               <input 
                 type="radio" 
                 name="wheels" 
-                checked={selectedWheels === wheel.code}
-                onChange={() => setSelectedWheels(wheel.code)} 
+                checked={selectedWheels === wheel.name}
+                onChange={() => handleWheelsChange(wheel)} 
               />
               <span className="option-name">{wheel.name}</span>
-              <span className="option-price">${wheel.price.toLocaleString()}</span>
+              <span className="option-price">${formatPrice(wheel.price || 0)}</span>
             </label>
           ))}
         </div>
       )}
 
       {/* Interior Selector */}
-      {product.interiors && product.interiors.length > 0 && (
+      {product.carConfig.interiors && product.carConfig.interiors.length > 0 && (
         <div className="section">
           <h2>Interior</h2>
-          {product.interiors.map((interior) => (
-            <label key={interior.code} className="option-card">
+          {product.carConfig.interiors.map((interior) => (
+            <label key={interior.name} className="option-card">
               <input 
                 type="radio" 
                 name="interior" 
-                checked={selectedInterior === interior.code}
-                onChange={() => setSelectedInterior(interior.code)} 
+                checked={selectedInterior === interior.name}
+                onChange={() => handleInteriorChange(interior)} 
               />
               <span className="option-name">{interior.name}</span>
-              <span className="option-price">${interior.price.toLocaleString()}</span>
+              <span className="option-price">${formatPrice(interior.price || 0)}</span>
             </label>
           ))}
         </div>
       )}
 
       {/* Autopilot */}
-      {product.autopilot && product.autopilot.length > 0 && (
+      {product.carConfig.autopilot && product.carConfig.autopilot.length > 0 && (
         <div className="section">
           <h2>Autopilot</h2>
-          {product.autopilot.map((pkg) => (
-            <label key={pkg.code} className="option-card autopilot-card">
+          {product.carConfig.autopilot.map((pkg) => (
+            <label key={pkg.name} className="option-card autopilot-card">
               <input 
                 type="radio" 
                 name="autopilot" 
-                checked={selectedAutopilot === pkg.code}
-                onChange={() => setSelectedAutopilot(pkg.code)} 
+                checked={selectedAutopilot === pkg.name}
+                onChange={() => handleAutopilotChange(pkg)} 
               />
               <div className="autopilot-info">
                 <div className="autopilot-name">{pkg.name}</div>
@@ -640,35 +645,28 @@ generateOriginalPrice(configPrice || product?.price || 0)
                   ))}
                 </ul>
               </div>
-              <span className="option-price">${pkg.price.toLocaleString()}</span>
+              <span className="option-price">${formatPrice(pkg.price || 0)}</span>
             </label>
           ))}
         </div>
       )}
 
       {/* Extras */}
-      {product.extras && product.extras.length > 0 && (
+      {product.carConfig.extras && product.carConfig.extras.length > 0 && (
         <div className="section">
           <h2>Extras</h2>
-          {product.extras.map((extra, i) => (
+          {product.carConfig.extras.map((extra, i) => (
             <label key={i} className="option-card extra-card">
               <input 
                 type="checkbox" 
-                checked={selectedExtras.some(e => e.name === extra.name)}
-                onChange={() => {
-                  const isSelected = selectedExtras.some(e => e.name === extra.name);
-                  if (isSelected) {
-                    setSelectedExtras(selectedExtras.filter(e => e.name !== extra.name));
-                  } else {
-                    setSelectedExtras([...selectedExtras, extra]);
-                  }
-                }} 
+                checked={selectedExtras.includes(extra.name)}
+                onChange={(e) => handleExtrasChange(extra, e.target.checked)} 
               />
               <div className="extra-info">
                 <div className="extra-name">{extra.name}</div>
                 <div className="extra-desc">{extra.description}</div>
               </div>
-              <span className="option-price">${extra.price.toLocaleString()}</span>
+              <span className="option-price">${formatPrice(extra.price || 0)}</span>
             </label>
           ))}
         </div>
@@ -679,32 +677,52 @@ generateOriginalPrice(configPrice || product?.price || 0)
         <div className="configuration-summary">
           <h3>Your Configuration</h3>
           <div className="config-details">
-            <div className="config-item">
-              <span>Color:</span>
-              <span>{product.colors?.find(c => c.code === selectedCarColor)?.name || 'Not selected'}</span>
-            </div>
-            {product.wheels && (
+            {selectedColor && (
+              <div className="config-item">
+                <span>Color:</span>
+                <span>{product.carConfig.colors?.find(c => c.code === selectedColor)?.name || 'Not selected'}</span>
+              </div>
+            )}
+            {selectedModel && (
+              <div className="config-item">
+                <span>Model:</span>
+                <span>{selectedModel}</span>
+              </div>
+            )}
+            {selectedTrim && (
+              <div className="config-item">
+                <span>Trim:</span>
+                <span>{selectedTrim}</span>
+              </div>
+            )}
+            {selectedWheels && (
               <div className="config-item">
                 <span>Wheels:</span>
-                <span>{product.wheels?.find(w => w.code === selectedWheels)?.name || 'Not selected'}</span>
+                <span>{selectedWheels}</span>
               </div>
             )}
-            {product.interiors && (
+            {selectedInterior && (
               <div className="config-item">
                 <span>Interior:</span>
-                <span>{product.interiors?.find(i => i.code === selectedInterior)?.name || 'Not selected'}</span>
+                <span>{selectedInterior}</span>
               </div>
             )}
-            {product.autopilot && (
+            {selectedAutopilot && (
               <div className="config-item">
                 <span>Autopilot:</span>
-                <span>{product.autopilot?.find(a => a.code === selectedAutopilot)?.name || 'Not selected'}</span>
+                <span>{selectedAutopilot}</span>
               </div>
             )}
             {selectedExtras.length > 0 && (
               <div className="config-item">
                 <span>Extras:</span>
-                <span>{selectedExtras.map(e => e.name).join(', ')}</span>
+                <span>{selectedExtras.join(', ')}</span>
+              </div>
+            )}
+            {estimatedDelivery && (
+              <div className="config-item">
+                <span>Estimated Delivery:</span>
+                <span>{estimatedDelivery}</span>
               </div>
             )}
           </div>
@@ -724,19 +742,25 @@ generateOriginalPrice(configPrice || product?.price || 0)
             />
           </label>
           <div className="total-price-display">
-            Total: ${(configPrice * quantity).toLocaleString()}
+            Total: ${formatPrice(totalPrice)}
           </div>
         </div>
 
         <button 
           className="add-to-cart-btn car-config-btn"
-          onClick={() => handleCartButtonClick(product)}
+          onClick={() => {
+            // You'll need to implement addToCart function
+            // It should use getCurrentSelections() to get all the configuration data
+            const selections = getCurrentSelections();
+            console.log('Adding to cart:', selections);
+            // addToCart(product, selections);
+          }}
         >
-          Add to Cart - ${(configPrice * quantity).toLocaleString()}
+          Add to Cart - ${formatPrice(totalPrice)}
         </button>
       </div>
     </div>
-  </div>
+
 )}
 
 {/* Color Selection */}

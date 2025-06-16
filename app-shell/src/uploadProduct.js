@@ -62,7 +62,7 @@ const teslaProducts = {
     product_name: "Model S",
     model: "Model S",
     category: "Automobiles",
-    SourceCategory: "Electric Vehicles",
+    SourceCategory: "Electric",
     origin: "USA",
     seller: "Gulime",
     stock: "In Stock",
@@ -78,8 +78,10 @@ const teslaProducts = {
     brand: "Tesla",
     product_name:"Model 3",
     model: "Model 3",
+        gpremium: "gulimepremium.png",
+
     category: "Automobiles",
-    SourceCategory: "Electric Vehicles",
+    SourceCategory: "Electric",
     origin: "USA",
     seller: "Gulime",
     stock: "In Stock",
@@ -95,8 +97,9 @@ const teslaProducts = {
     brand: "Tesla",
     product_name:'Model X',
     model: "Model X",
+    gpremium: "gulimepremium.png",
     category: "Automobiles",
-    SourceCategory: "Electric Vehicles",
+    SourceCategory: "Electric",
     origin: "USA",
     seller: "Gulime",
     stock: "In Stock",
@@ -110,10 +113,11 @@ const teslaProducts = {
   },
   model_y: {
     brand: "Tesla",
-    product_name:"ModelY",
+    product_name:"Model Y",
     model: "Model Y",
+    gpremium: "gulimepremium.png",
     category: "Automobiles",
-    SourceCategory: "Electric Vehicles",
+    SourceCategory: "Electric",
     origin: "USA",
     seller: "Gulime",
     stock: "In Stock",
@@ -135,7 +139,7 @@ async function uploadProducts() {
 
 
     for (const [id, product] of Object.entries(teslaProducts)) {
-      const productRef = doc(db, "featuredProducts", id);
+      const productRef = doc(db, "automotive/electric/products", id);
       await setDoc(productRef, product);
       console.log(`✅ Uploaded: ${product.model}`);
     }

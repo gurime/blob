@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React from 'react';
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../db/firebase";
@@ -106,7 +107,6 @@ useEffect(() => {
   };
 
   const productsPerPage = 16;
-const { handleAddToCart, handleBuyNow } = cartHandlers;
  const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -198,8 +198,7 @@ const { handleAddToCart, handleBuyNow } = cartHandlers;
                       ...subDoc.data(),
                     }));
                     productsData.push(...subProducts);
-                  } catch (subError) {
-                  }
+                  } catch (subError) { /* empty */ }
                 }
               }
             }
