@@ -418,7 +418,12 @@ className="cart-item-image"/>
                                         
 <div className="cart-item-details">
 <Link to={`/product/${item.productId}`} >
-<h3 className="cart-item-title">{item.productName || item.storage}GB</h3>
+<h3 className="cart-item-title">
+  {item.productName 
+    ? `${item.productName} - ${item.model ? ` ${item.model}` : ''}`
+    : `${item.storage}GB`
+  }
+</h3>
 </Link>
 
 <p className="cart-item-category">Category: {item.category}</p>

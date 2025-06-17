@@ -14,6 +14,7 @@ import { wishlistHandlers } from '../utils/wishlistHandler'; // Import wishlist 
 import { auth } from '../db/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import SecNav from './SecNav';
+import { useProductDetails } from '../hooks/useProductDetails';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -149,16 +150,79 @@ export default function Home() {
     }
   }, [featuredProducts.length]);
 
-  const handleCartButtonClick = async (product) => {
-  const result = await cartHandlers.handleAddToCart(product, 1, showToast);
-  
+ const handleCartButtonClick = async (product) => {
+  const selections = getCurrentSelections();
+  const quantity = 1;
+
+  const result = await cartHandlers.handleAddToCart(
+    product,
+    quantity,
+    showToast,
+    selections
+  );
+
   if (result.success && result.shouldNavigate) {
-    // Navigate to cart page after successful addition
+    showToast('Item added to cart!', 'success');
+
     setTimeout(() => {
       navigate('/cart');
-    }, 1000); // Small delay to show the toast first
+    }, 1000);
+  } else {
+    showToast('Failed to add to cart.', 'error');
   }
 };
+
+  
+const {
+     // State
+    product,
+    
+    selectedImage,
+    basePrice,
+    configPrice,
+    totalPrice,
+    quantity,
+    showMore,
+    selectedColor,
+    selectedStorage,
+          displayStorageName,
+    displayName,
+    isCarProduct,
+    
+    // Car-specific state
+    selectedModel,
+    selectedTrim,
+    selectedWheels,
+    selectedInterior,
+    selectedAutopilot,
+    selectedExtras,
+    estimatedDelivery,
+    
+    // Setters
+    setSelectedImage,
+    setShowMore,
+    setSelectedColor,
+    setSelectedWheels,
+    
+    // Handlers
+    handleStorageChange,
+    handleQuantityChange,
+    handleColorChange,
+    
+    handleModelChange,
+    handleTrimChange,
+    handleWheelsChange,
+    handleInteriorChange,
+    handleAutopilotChange,
+    handleExtrasChange,
+    
+    // Helpers
+    getProductImages,
+    getCarConfigImages,
+   
+    getCurrentSelections,
+    resetSelections
+} = useProductDetails();
 
   if (loading || userLoading) {
     return (

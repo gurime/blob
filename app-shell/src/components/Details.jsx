@@ -13,6 +13,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../db/firebase";
 import SecNav from "./SecNav";
 import { collection, getDocs } from "firebase/firestore";
+import { Battery, Car, Gauge, Rocket, Timer, Zap } from "lucide-react";
 
 export default function Details() {   
   const [user, setUser] = useState(null);
@@ -532,101 +533,145 @@ generateOriginalPrice(configPrice || product?.price || 0)
 {/* Car Configuration Section - FIXED VERSION */}
 {product.category?.toLowerCase() === 'automotive' && product.colors && (
   <div className="config-section">
- <div style={{
+<div style={{
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '24px 0',
-      gap: '32px',
-      fontFamily: "'Helvetica Neue', Arial, sans-serif",
-      maxWidth: '600px',
+      padding: '32px 24px',
+      gap: '48px',
+      fontFamily: "'Gotham', 'Helvetica Neue', Arial, sans-serif",
+      maxWidth: '700px',
       margin: '0 auto',
-      borderBottom:'1px solid #e3e3e3'
+      background: '#ffffff',
+      borderRadius: '8px',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      border: '1px solid #f4f4f4'
     }}>
       {/* Range */}
       <div style={{
         textAlign: 'center',
-        flex: 1
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '12px'
       }}>
+        <Battery 
+          size={32} 
+          color="#171a20" 
+          strokeWidth={1.5}
+          style={{
+            marginBottom: '4px'
+          }}
+        />
         <div style={{
-          fontSize: '24px',
-          fontWeight: '500',
+          fontSize: '28px',
+          fontWeight: '300',
           color: '#171a20',
-          lineHeight: '1.2',
-          marginBottom: '4px'
+          lineHeight: '1',
+          marginBottom: '2px',
+          letterSpacing: '-0.5px'
         }}>
           {product.range}
         </div>
         <div style={{
-          fontSize: '14px',
-          color: '#5c5e62',
-          fontWeight: '400',
+          fontSize: '12px',
+          color: '#393c41',
+          fontWeight: '500',
           textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          letterSpacing: '1px'
         }}>
-          Range (EPA est.)
+          Range
         </div>
       </div>
-
+      
       {/* Separator */}
       <div style={{
         width: '1px',
-        height: '60px',
-        backgroundColor: '#e3e3e3'
+        height: '80px',
+        background: 'linear-gradient(to bottom, transparent, #e8e8e8, transparent)',
+        opacity: 0.6
       }}></div>
-
+      
       {/* 0-60 mph */}
       <div style={{
         textAlign: 'center',
-        flex: 1
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '12px'
       }}>
+        <Timer 
+          size={32} 
+          color="#171a20" 
+          strokeWidth={1.5}
+          style={{
+            marginBottom: '4px'
+          }}
+        />
         <div style={{
-          fontSize: '24px',
-          fontWeight: '500',
+          fontSize: '28px',
+          fontWeight: '300',
           color: '#171a20',
-          lineHeight: '1.2',
-          marginBottom: '4px'
+          lineHeight: '1',
+          marginBottom: '2px',
+          letterSpacing: '-0.5px'
         }}>
           {product.acceleration}
         </div>
         <div style={{
-          fontSize: '14px',
-          color: '#5c5e62',
-          fontWeight: '400',
+          fontSize: '12px',
+          color: '#393c41',
+          fontWeight: '500',
           textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          letterSpacing: '1px'
         }}>
           0-60 mph
         </div>
       </div>
-
+      
       {/* Separator */}
       <div style={{
         width: '1px',
-        height: '60px',
-        backgroundColor: '#e3e3e3'
+        height: '80px',
+        background: 'linear-gradient(to bottom, transparent, #e8e8e8, transparent)',
+        opacity: 0.6
       }}></div>
-
+      
       {/* Top Speed */}
       <div style={{
         textAlign: 'center',
-        flex: 1
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '12px'
       }}>
+        <Gauge 
+          size={32} 
+          color="#171a20" 
+          strokeWidth={1.5}
+          style={{
+            marginBottom: '4px'
+          }}
+        />
         <div style={{
-          fontSize: '24px',
-          fontWeight: '500',
+          fontSize: '28px',
+          fontWeight: '300',
           color: '#171a20',
-          lineHeight: '1.2',
-          marginBottom: '4px'
+          lineHeight: '1',
+          marginBottom: '2px',
+          letterSpacing: '-0.5px'
         }}>
           {product.topSpeed}
         </div>
         <div style={{
-          fontSize: '14px',
-          color: '#5c5e62',
-          fontWeight: '400',
+          fontSize: '12px',
+          color: '#393c41',
+          fontWeight: '500',
           textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          letterSpacing: '1px'
         }}>
           Top Speed
         </div>
@@ -880,6 +925,16 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 <strong>Category:</strong> {product.category}
 </li>
 )}
+{product.range && (
+ <li>
+    <strong>Battery Range:</strong> {product.range} (EPA estimated)
+  </li>  
+)}
+ {product.acceleration && (
+    <li>
+    <strong>0–60 MPH:</strong> {product.acceleration} (Performance model)
+  </li>
+ )}
 
 {product.screen_size && (
 <li>
@@ -900,9 +955,7 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 )}
                   
 {/* Default features if specific data isn't available */}
-<li>
-<strong>Premium Quality:</strong> Built with high-grade materials for durability and performance
-</li>
+
                   
 <li>
 <strong>Fast Shipping:</strong> Ships quickly with secure packaging and tracking

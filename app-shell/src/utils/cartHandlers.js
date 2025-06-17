@@ -1,77 +1,44 @@
-import { setDoc, doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from '../db/firebase';
-import { auth } from '../db/firebase';
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../db/firebase";
 
+// Add this enhanced version with debugging
 export const cartHandlers = {
- handleAddToCart: async (product, quantity = 1, showToast, selectedOptions = {}) => {
+ handleAddToCart: async (product, quantity = 1, showToast, selectedOptions,actualSelectedOptions = {}) => {
     try {
         // Check if user is authenticated
         const user = auth.currentUser;
         if (!user) {
-            alert('Please log in to add items to cart');
+            showToast('Please log in to add items to cart');
             return { success: false, message: 'User not authenticated' };
         }
+
+        // Debug: Log what we're working with
+
 
         // Use the current price (which includes all configuration options)
         const currentPrice = selectedOptions.currentPrice || selectedOptions.configPrice || product.price;
         const totalPrice = currentPrice * quantity;
 
-        // Create cart item object - match the structure expected by Cart component
+        // Create cart item object
         const cartItem = {
             productId: product._id || product.id,
             productName: selectedOptions.displayName || product.product_name || product.name,
-            price: currentPrice, // Use the calculated price including all options
-            basePrice: product.price, // Store original base price
+            price: currentPrice,
+            basePrice: product.price,
             quantity: quantity,
+            accelration: product.accelration,
+            range: product.range,
+            model: product.model,
+            topSpeed: product.topSpeed,
             totalPrice: totalPrice,
             category: product.category || 'General',
             imgUrl: product.imgUrl || 'default-product.jpg',
             brand: product.brand || 'Unknown',
             
-            // Standard product options
-            color: selectedOptions.selectedColor || product.color || null,
+            // Standard product options - also use actualSelectedOptions
+            color: actualSelectedOptions.selectedColor || product.color || null,
             size: selectedOptions.selectedSize || product.size || null,
             storage: selectedOptions.selectedStorage || null,
-            
-            // Automotive-specific configuration
-            ...(product.category?.toLowerCase() === 'automotive' && {
-                automotiveConfig: {
-                    color: selectedOptions.selectedColor ? {
-                        code: selectedOptions.selectedColor,
-                        name: product.colors?.find(c => c.code === selectedOptions.selectedColor)?.name,
-                        hex: product.colors?.find(c => c.code === selectedOptions.selectedColor)?.hex
-                    } : null,
-                    
-                    wheels: selectedOptions.selectedWheels ? {
-                        code: selectedOptions.selectedWheels,
-                        name: product.wheels?.find(w => w.code === selectedOptions.selectedWheels)?.name,
-                        price: product.wheels?.find(w => w.code === selectedOptions.selectedWheels)?.price
-                    } : null,
-                    
-                    interior: selectedOptions.selectedInterior ? {
-                        code: selectedOptions.selectedInterior,
-                        name: product.interiors?.find(i => i.code === selectedOptions.selectedInterior)?.name,
-                        price: product.interiors?.find(i => i.code === selectedOptions.selectedInterior)?.price
-                    } : null,
-                    
-                    autopilot: selectedOptions.selectedAutopilot ? {
-                        code: selectedOptions.selectedAutopilot,
-                        name: product.autopilot?.find(a => a.code === selectedOptions.selectedAutopilot)?.name,
-                        price: product.autopilot?.find(a => a.code === selectedOptions.selectedAutopilot)?.price,
-                        features: product.autopilot?.find(a => a.code === selectedOptions.selectedAutopilot)?.features
-                    } : null,
-                    
-                    extras: selectedOptions.selectedExtras || [],
-                    
-                    configurationSummary: {
-                        colorName: product.colors?.find(c => c.code === selectedOptions.selectedColor)?.name || 'Not selected',
-                        wheelsName: product.wheels?.find(w => w.code === selectedOptions.selectedWheels)?.name || 'Not selected',
-                        interiorName: product.interiors?.find(i => i.code === selectedOptions.selectedInterior)?.name || 'Not selected',
-                        autopilotName: product.autopilot?.find(a => a.code === selectedOptions.selectedAutopilot)?.name || 'Not selected',
-                        extrasNames: selectedOptions.selectedExtras?.map(e => e.name).join(', ') || 'None'
-                    }
-                }
-            }),
             
             // Standard fields
             stock: product.stock || 'In Stock',
@@ -82,12 +49,79 @@ export const cartHandlers = {
             addedAt: new Date().toISOString()
         };
 
+        // Automotive-specific configuration - Enhanced with better validation
+        if (product.category?.toLowerCase() === 'automotive') {
+            
+            
+            // Extract configuration from carConfig if it exists
+            const carConfig = selectedOptions.carConfig || {};
+            const actualSelectedOptions = {
+                selectedColor: selectedOptions.selectedColor || carConfig.selectedColor,
+                selectedWheels: selectedOptions.selectedWheels || carConfig.selectedWheels,
+                selectedInterior: selectedOptions.selectedInterior || carConfig.selectedInterior,
+                selectedAutopilot: selectedOptions.selectedAutopilot || carConfig.selectedAutopilot,
+                selectedExtras: selectedOptions.selectedExtras || carConfig.selectedExtras || []
+            };
+            
+       
+            if (!product.colors || !product.wheels || !product.interiors) {
+                console.warn('Missing automotive configuration data in product:', {
+                    hasColors: !!product.colors,
+                    hasWheels: !!product.wheels,
+                    hasInteriors: !!product.interiors
+                });
+            }
+
+            const automotiveConfig = {
+                color: actualSelectedOptions.selectedColor ? {
+                    code: actualSelectedOptions.selectedColor,
+                    name: product.colors?.find(c => c.code === actualSelectedOptions.selectedColor)?.name || 'Unknown',
+                    hex: product.colors?.find(c => c.code === actualSelectedOptions.selectedColor)?.hex || '#000000'
+                } : null,
+                
+                wheels: actualSelectedOptions.selectedWheels ? {
+                    code: actualSelectedOptions.selectedWheels,
+                    name: product.wheels?.find(w => w.code === actualSelectedOptions.selectedWheels)?.name || 'Unknown',
+                    price: product.wheels?.find(w => w.code === actualSelectedOptions.selectedWheels)?.price || 0
+                } : null,
+                
+                interior: actualSelectedOptions.selectedInterior ? {
+                    code: actualSelectedOptions.selectedInterior,
+                    name: product.interiors?.find(i => i.code === actualSelectedOptions.selectedInterior)?.name || 'Unknown',
+                    price: product.interiors?.find(i => i.code === actualSelectedOptions.selectedInterior)?.price || 0
+                } : null,
+                
+                autopilot: actualSelectedOptions.selectedAutopilot ? {
+                    code: actualSelectedOptions.selectedAutopilot,
+                    name: product.autopilot?.find(a => a.code === actualSelectedOptions.selectedAutopilot)?.name || 'Unknown',
+                    price: product.autopilot?.find(a => a.code === actualSelectedOptions.selectedAutopilot)?.price || 0,
+                    features: product.autopilot?.find(a => a.code === actualSelectedOptions.selectedAutopilot)?.features || []
+                } : null,
+                
+                extras: actualSelectedOptions.selectedExtras || [],
+                
+                configurationSummary: {
+                    colorName: product.colors?.find(c => c.code === actualSelectedOptions.selectedColor)?.name || 'Not selected',
+                    wheelsName: product.wheels?.find(w => w.code === actualSelectedOptions.selectedWheels)?.name || 'Not selected',
+                    interiorName: product.interiors?.find(i => i.code === actualSelectedOptions.selectedInterior)?.name || 'Not selected',
+                    autopilotName: product.autopilot?.find(a => a.code === actualSelectedOptions.selectedAutopilot)?.name || 'Not selected',
+                    extrasNames: actualSelectedOptions.selectedExtras?.map(e => e.name).join(', ') || 'None'
+                }
+            };
+
+            // Debug: Log the automotive config
+            
+            cartItem.automotiveConfig = automotiveConfig;
+        }
+
         // Remove any undefined values to prevent Firestore errors
         Object.keys(cartItem).forEach(key => {
             if (cartItem[key] === undefined) {
                 delete cartItem[key];
             }
         });
+
+        // Debug: Log final cart item
 
         // Reference to user's cart document
         const cartRef = doc(db, 'carts', user.uid);
@@ -109,12 +143,15 @@ export const cartHandlers = {
                 
                 // For automotive products, also check configuration
                 if (product.category?.toLowerCase() === 'automotive' && cartItem.automotiveConfig) {
-                    return baseMatch &&
+                    const configMatch = 
                            item.automotiveConfig?.color?.code === cartItem.automotiveConfig?.color?.code &&
                            item.automotiveConfig?.wheels?.code === cartItem.automotiveConfig?.wheels?.code &&
                            item.automotiveConfig?.interior?.code === cartItem.automotiveConfig?.interior?.code &&
                            item.automotiveConfig?.autopilot?.code === cartItem.automotiveConfig?.autopilot?.code &&
                            JSON.stringify(item.automotiveConfig?.extras) === JSON.stringify(cartItem.automotiveConfig?.extras);
+                    
+               
+                    return baseMatch && configMatch;
                 }
                 
                 return baseMatch;
@@ -182,5 +219,4 @@ export const cartHandlers = {
         };
     }
 }
-
 };
