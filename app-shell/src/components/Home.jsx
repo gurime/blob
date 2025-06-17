@@ -283,7 +283,7 @@ const {
                             {calculateSavings(product.price, generateOriginalPrice(product.price).replace(/,/g, '')).percentage}% off
                           </span>
                           <Link to={`/product/${product._id}`} className="view-details">
-                            View Details
+                            View Product
                           </Link>
                         </div>
                         <span className="category-tag">{product.category}</span>
@@ -371,18 +371,14 @@ className={`wishlist-btn ${wishlistItems.has(product.id) ? 'wishlisted' : ''}`}
                   <div className="product-actions">
                     <button 
   className="add-to-cart-btn" 
-  onClick={() => handleCartButtonClick(product)}
+  // onClick={() => handleCartButtonClick(product)}
+  onClick={() => navigate(`/product/${product.id}`)}
 >
-  Add to Cart
-</button>
-                    {/* <button className="buy-now-btn" onClick={handleBuyNow}>
-                      Buy Now 
-                    </button> */}
+View Product</button>
+          
                   </div>
                   
-                  <Link to={`/product/${product.id}`} className="view-details">
-                    View Details
-                  </Link>
+                
                 </div>
               </div>
             ))}

@@ -142,32 +142,32 @@ const performSearch = async (searchQuery) => {
 
   try {
     const searchLower = searchQuery.toLowerCase();
+    const collections = ['products', 'categories', 'brands','automotive']; // Add your collection names
     
-    // Get all products since Firestore doesn't support complex OR queries easily
-    const productsRef = collection(db, "products");
-    const snapshot = await getDocs(productsRef);
-    
-    const allProducts = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    // Filter products based on multiple fields
-    const filteredResults = allProducts.filter(product => {
-      const searchFields = [
-        product.product_name || '',
-        product.brand || '',
-        product.category || '',
-        product.description || '',
-        product.sourceCategory || ''
-      ];
-
-      // Check if any field contains the search term
-      return searchFields.some(field => 
-        field.toLowerCase().includes(searchLower)
-      );
+    const searchPromises = collections.map(async (collectionName) => {
+      const collectionRef = collection(db, collectionName);
+      const snapshot = await getDocs(collectionRef);
+      
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        collection: collectionName,
+        ...doc.data()
+      })).filter(item => {
+        const searchFields = [
+          item.product_name || item.name || '',
+          item.brand || '',
+          item.category || '',
+          item.description || ''
+        ];
+        return searchFields.some(field => 
+          field.toLowerCase().includes(searchLower)
+        );
+      });
     });
 
+    const allResults = await Promise.all(searchPromises);
+    const filteredResults = allResults.flat();
+    
     setSearchResults(filteredResults);
     setShowSearchResults(true);
   } catch (error) {
@@ -230,7 +230,7 @@ return (
               {product.product_name || 'Unnamed Product'}
             </div>
             <div className="search-result-price">
-              ${product.price ? Number(product.price).toFixed(2) : 'N/A'}
+              ${product.price ? Number(product.price).toLocaleString(2) : 'N/A'}
             </div>
             {product.brand && (
               <div className="search-result-brand">{product.brand}</div>

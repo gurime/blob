@@ -5,56 +5,7 @@ dotenv.config();
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "./db/firebase.js";
 
-// const sharedOptions = {
-//   colors: [
-//     { name: 'Pearl White Multi-Coat', code: 'pearl-white', price: 0, hex: '#FFFFFF' },
-//     { name: 'Solid Black', code: 'solid-black', price: 1000, hex: '#000000' },
-//     { name: 'Midnight Silver Metallic', code: 'midnight-silver', price: 1000, hex: '#5C5C5C' },
-//     { name: 'Deep Blue Metallic', code: 'deep-blue', price: 1000, hex: '#1E3A8A' },
-//     { name: 'Red Multi-Coat', code: 'red-multi', price: 2000, hex: '#DC2626' }
-//   ],
-//   wheels: [
-//     { name: '19" Tempest Wheels', code: '19-tempest', price: 0 },
-//     { name: '21" Arachnid Wheels', code: '21-arachnid', price: 4500 }
-//   ],
-//   interiors: [
-//     { name: 'All Black', code: 'black', price: 0 },
-//     { name: 'Black and White', code: 'black-white', price: 1000 },
-//     { name: 'Cream', code: 'cream', price: 1000 }
-//   ],
-//   autopilot: [
-//     {
-//       name: 'Basic Autopilot',
-//       code: 'basic',
-//       price: 0,
-//       features: ['Traffic-Aware Cruise Control', 'Autosteer']
-//     },
-//     {
-//       name: 'Enhanced Autopilot',
-//       code: 'enhanced',
-//       price: 6000,
-//       features: ['Navigate on Autopilot', 'Auto Lane Change', 'Autopark', 'Summon']
-//     },
-//     {
-//       name: 'Full Self-Driving',
-//       code: 'fsd',
-//       price: 12000,
-//       features: ['All Enhanced Autopilot features', 'Traffic Light Recognition', 'Stop Sign Recognition']
-//     }
-//   ],
-//   extras: [
-//     {
-//       name: 'Premium Connectivity',
-//       price: 99,
-//       description: 'Streaming media & live traffic visualization'
-//     },
-//     {
-//       name: 'Extended Service Agreement',
-//       price: 5000,
-//       description: '4 years or 50,000 miles coverage'
-//     }
-//   ]
-// };
+
 const teslaProducts = {
   model_3: {
     brand: "Tesla",

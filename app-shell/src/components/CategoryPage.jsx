@@ -575,11 +575,18 @@ className={`wishlist-btn ${wishlistItems.has(product.id) ? 'wishlisted' : ''}`}
 <DeliveryInfo  hasPremium={!!product?.gpremium} />
                   
                   <div className="product-actions">
-                    <button className="add-to-cart-btn" 
+                    {/* <button className="add-to-cart-btn" 
                      onClick={() => handleCartButtonClick(product)}
 >
                       Add to Cart
-                    </button>
+                    </button> */}
+
+                                       <button 
+  className="add-to-cart-btn" 
+  // onClick={() => handleCartButtonClick(product)}
+  onClick={() => navigate(`/product/${product.id}`)}
+>
+View Product</button>
 
 <button style={{ width: '100%' }}
 onClick={() => navigate('/')} 
@@ -589,9 +596,7 @@ Continue Shopping
 </button> 
                   </div>
                   
-                  <Link to={`/product/${product.id}`} className="view-details">
-                    View Details
-                  </Link>
+               
                 </div>
               </div>
             ))}

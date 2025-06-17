@@ -20,7 +20,7 @@ export default function Help() {
             <ul className="help-topics">
               <li><Link to="/faq" className="help-nav-link">FAQs</Link></li>
               <li><Link to="/contact" className="help-nav-link">Contact Support</Link></li>
-              <li><Link to="/shipping" className="help-nav-link">Shipping Information</Link></li>
+              <li><Link to="/shippinginfo" className="help-nav-link">Shipping Information</Link></li>
               <li><Link to="/returns" className="help-nav-link">Returns & Refunds</Link></li>
             </ul>
           </div>

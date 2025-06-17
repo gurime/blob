@@ -24,7 +24,6 @@ export const cartHandlers = {
             productId: product._id || product.id,
             productName: selectedOptions.displayName || product.product_name || product.name,
             price: currentPrice,
-            basePrice: product.price,
             quantity: quantity,
             accelration: product.accelration,
             range: product.range,
