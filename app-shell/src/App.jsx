@@ -16,6 +16,10 @@ import Profile from "./auth/Profile"
 import Cart from "./components/Cart"
 import ShippingInfo from "./components/ShippingInfo"
 import Returns from "./components/Returns"
+import Careers from "./components/Careers"
+import Press from "./components/Press"
+import Investor from "./components/Investor"
+import Sustainablility from "./components/Sustainablility"
 
 function App() {
 return (
@@ -46,9 +50,11 @@ return (
 <Route path="/home" element={<CategoryPage />} />
 <Route path="/home/:subcategory" element={<CategoryPage />} />
 <Route path="/home/:subcategory/:subsubcategory" element={<CategoryPage />} />
+
 <Route path="/office" element={<CategoryPage />} />
 <Route path="/office/:subcategory" element={<CategoryPage />} />
 <Route path="/office/:subcategory/:subsubcategory" element={<CategoryPage />} />
+
 <Route path="/health" element={<CategoryPage />} />
 <Route path="/health/:subcategory" element={<CategoryPage />} />
 <Route path="/health/:subcategory/:subsubcategory" element={<CategoryPage />} />
@@ -72,15 +78,19 @@ return (
 <Route path="/garden" element={<CategoryPage />} />
 <Route path="/garden/:subcategory" element={<CategoryPage />} />
 <Route path="/garden/:subcategory/:subsubcategory" element={<CategoryPage />} />
+
 <Route path="/sports" element={<CategoryPage />} />
 <Route path="/sports/:subcategory" element={<CategoryPage />} />
 <Route path="/sports/:subcategory/:subsubcategory" element={<CategoryPage />} />
+
 <Route path="/fashion" element={<CategoryPage />} />
 <Route path="/fashion/:subcategory" element={<CategoryPage />} />
 <Route path="/fashion/:subcategory/:subsubcategory" element={<CategoryPage />} />
+
 <Route path="/music" element={<CategoryPage />} />
 <Route path="/music/:subcategory" element={<CategoryPage />} />
 <Route path="/music/:subcategory/:subsubcategory" element={<CategoryPage />} />
+
 <Route path="/games" element={<CategoryPage />} />
 <Route path="/games/:subcategory" element={<CategoryPage />} />
 <Route path="/games/:subcategory/:subsubcategory" element={<CategoryPage />} />
@@ -98,6 +108,10 @@ return (
 <Route path="/returns" element={<Returns/>}/>
 <Route path="/help" element={<Help />} />
 <Route path="/terms" element={<Terms />} />
+<Route path="/careers" element={<Careers/>}/>
+<Route path="/investors" element={<Investor/>}/>
+<Route path="/sustainability" element={<Sustainablility/>}/>
+<Route path="/press" element={<Press/>}/>
 <Route path="/privacy" element={<Privacy />} />
 <Route path="/cookie" element={<Cookie />} />
 <Route path="/signup" element={<Signup />} />

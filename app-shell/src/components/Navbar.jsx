@@ -142,7 +142,7 @@ const performSearch = async (searchQuery) => {
 
   try {
     const searchLower = searchQuery.toLowerCase();
-    const collections = ['products', 'categories', 'brands','automotive']; // Add your collection names
+    const collections = ['products', 'categories','automotive']; // Add your collection names
     
     const searchPromises = collections.map(async (collectionName) => {
       const collectionRef = collection(db, collectionName);
