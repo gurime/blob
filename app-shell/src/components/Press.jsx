@@ -1,6 +1,13 @@
-
+import Footer from "./Footer";
+import Navbar from "./Navbar";
+import SecNav from "./SecNav";
 export default function Press() {
   return (
-    <div>Press</div>
+    <>
+    <Navbar/>
+    <SecNav/>
+    press
+    <Footer/>
+    </>
   )
 }

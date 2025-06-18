@@ -380,32 +380,32 @@ export default function Cart() {
 
     return (
         <>
-            <Navbar />
-            <SecNav />
-            <div className="cart-main-container">
-                <div className="cart-content">
-                    {/* Left Column - Cart Items */}
-                    <div className="cart-left-column">
-                        <div className="cart-header">
-                            <h1>Shopping Cart</h1>
+<Navbar />
+<SecNav />
+<div className="cart-main-container">
+<div className="cart-content">
+{/* Left Column - Cart Items */}
+<div className="cart-left-column">
+<div className="cart-header">
+<h1>Shopping Cart</h1>
 {cartItems.length > 0 && (
 <p className="cart-item-count">{cartSummary.totalItems} item(s) in your cart</p>
 )}
 </div>
 
-                        {cartItems.length === 0 ? (
-                            <div className="empty-cart">
-                                <div className="empty-cart-icon">🛒</div>
-                                <h2>Your Gulime cart is empty</h2>
-                                <p>Add some amazing products to get started!</p>
-                                <button 
-                                    onClick={() => navigate('/')} 
-                                    className="continue-shopping-btn"
-                                >
-                                    Continue Shopping
-                                </button>
-                            </div>
-                        ) : (
+{cartItems.length === 0 ? (
+<div className="empty-cart">
+<div className="empty-cart-icon">🛒</div>
+<h2>Your Gulime cart is empty</h2>
+<p>Add some amazing products to get started!</p>
+<button 
+onClick={() => navigate('/')} 
+className="continue-shopping-btn"
+>
+Continue Shopping
+</button>
+</div>
+) : (
 <div className="cart-items-container">
 {cartItems.map((item) => (
 <div key={item.productId} className="cart-item">
@@ -480,7 +480,7 @@ Subtotal ({cartSummary.totalItems} items):
 </div>
 )}
 
-                        {/* Saved for Later Section */}
+{/* Saved for Later Section */}
 <div className="saved-items-section">
 <h2>Saved for later ({savedItems.length})</h2>
 {savedItems.length === 0 ? (
@@ -573,15 +573,14 @@ Proceed to checkout
                                 
 <button 
 onClick={() => navigate('/')}
-className="continue-shopping-link"
->
-                                    Continue shopping
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
+className="continue-shopping-link">
+Continue shopping
+</button>
+</div>
+</div>
+)}
+</div>
+</div>
 
             <Footer />
 

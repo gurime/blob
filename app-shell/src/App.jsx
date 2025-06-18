@@ -20,6 +20,7 @@ import Careers from "./components/Careers"
 import Press from "./components/Press"
 import Investor from "./components/Investor"
 import Sustainablility from "./components/Sustainablility"
+import NewsLetter from "./components/NewsLetter"
 
 function App() {
 return (
@@ -101,6 +102,7 @@ return (
 <Route path="/category/:category/:subcategory/:subsubcategory" element={<CategoryPage />} />
 
 {/* Other routes */}
+<Route path="/newsletter" element={<NewsLetter/>}/>
 <Route path="/about" element={<About />} />
 <Route path="/contact" element={<Contact />} />
 <Route path="/faq" element={<Faq />} />

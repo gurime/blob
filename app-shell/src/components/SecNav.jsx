@@ -123,11 +123,11 @@ useEffect(() => {
               )}
             </li>
           ))}
-      
+          <NavLink onClick={toggleFooter} className="nav-link more-button">
+  More {isFooterVisible ? '▲' : '▼'}
+</NavLink> 
         </ul>  
-            <button onClick={toggleFooter} className="nav-link more-button">
-  More: {isFooterVisible ? '▲' : '▼'}
-</button> 
+        
       </nav>  
       
  

@@ -2,28 +2,15 @@
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import navlogo from '../img/gulime.png';
 import navlogos from '../img/gulime_g.png'
-import { useEffect, useState } from 'react';
-import { auth, db } from '../db/firebase';
-import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
+
 
 export default function Footer() { 
-  const [isSignedIn, setIsSignedIn] = useState(false);
-  const [names, setNames] = useState('');
-  const [userEmail, setUserEmail] = useState('');
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState('');
-  const [toast, setToast] = useState({ show: false, message: '', type: '' });
-  
+
+    const location = useLocation();
   const navigate = useNavigate();
-  const location = useLocation();
+  const iSNewsLetterPage = location.pathname === '/newsletter';
 
   // Check if current route is /contact
-  const isContactPage = location.pathname === '/contact';
 
   const scrollToTopNav = () => {
     const nav = document.getElementById('top-navbar');
@@ -36,173 +23,19 @@ export default function Footer() {
     textDecoration: 'none'
   });
 
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast({ show: false, message: '', type: '' });
-    }, 4000);
-  };
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        try {
-          const userDocRef = doc(db, "users", user.uid);
-          const userDocSnapshot = await getDoc(userDocRef);
-          if (userDocSnapshot.exists()) {
-            const userData = userDocSnapshot.data();
-            // Get the full name from fname and lname
-            const fullName = `${userData.fname || ''} ${userData.lname || ''}`.trim();
-            const userName = fullName || userData.email || 'User';
-            setNames(userName);
-            setUserEmail(userData.email || user.email);
-            
-            // Pre-fill form with user data
-            setFormData(prev => ({
-              ...prev,
-              name: userName,
-              email: userData.email || user.email
-            }));
-          } else {
-            setNames('User');
-            setUserEmail(user.email);
-            setFormData(prev => ({
-              ...prev,
-              name: 'User',
-              email: user.email
-            }));
-          }
-          setIsSignedIn(true);
-        } catch (error) {
-          setIsSignedIn(true);
-          setNames('User');
-          setUserEmail(user.email);
-          setFormData(prev => ({
-            ...prev,
-            name: 'User',
-            email: user.email
-          }));
-        }
-      } else {
-        setIsSignedIn(false);
-        setNames('');
-        setUserEmail('');
-        setFormData({
-          name: '',
-          email: '',
-          message: ''
-        });
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitMessage('');
-
-    try {
-      // Add the newsletter signup to Firestore
-      await addDoc(collection(db, 'News Letter'), {
-        name: formData.name,
-        email: formData.email,
-        message: formData.message,
-        timestamp: new Date(),
-        userId: auth.currentUser?.uid || null,
-        isRegisteredUser: isSignedIn
-      });
-
-      showToast('Thank you for your message! We\'ll get back to you soon.');
-      
-      // Clear message field but keep name/email for registered users
-      if (isSignedIn) {
-        setFormData(prev => ({
-          ...prev,
-          message: ''
-        }));
-      } else {
-        setFormData({
-          name: '',
-          email: '',
-          message: ''
-        });
-      }
-    } catch (error) {
-      showToast('Sorry, there was an error sending your message. Please try again.', 'error');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
   return(
 <>
-<footer className="footer">
-    {!isContactPage && (
-          <div
-          style={{
-            width: '100%',
-  borderBottom: '1px solid #fff',
-  paddingBottom: '10px',
-  paddingTop: '10px',
-          }}
-          >
-            <form className="contact-form" onSubmit={handleSubmit}>
-              <h1>Gulime Newsletter</h1>
-              <div className="form-row">
-                <input 
-                  type="text" 
-                  name="name"
-                  placeholder="Your Name" 
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required 
-                  className="form-input"
-                />
-                <input 
-                  type="email" 
-                  name="email"
-                  placeholder="Your Email" 
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required 
-                  className="form-input"
-                />
-              </div>
-              
-              <textarea 
-                name="message"
-                placeholder="Your Message (Optional)" 
-                value={formData.message}
-                onChange={handleInputChange}
-                className="form-textarea"
-                rows="6"
-              ></textarea>
-              
-              <button 
-                type="submit" 
-                className="contact-button" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Signing Up...' : 'Subscribe to Newsletter'}
-              </button>
-            </form>
 
-            {submitMessage && (
-              <div className={`submit-message ${submitMessage.includes('error') ? 'error' : 'success'}`}>
-                {submitMessage}
-              </div>
-            )}
-          </div> 
-        )}
+ <footer className='footer'>{!iSNewsLetterPage &&(
+  <div className='footer-headline'>
+    
+       <button className='footer-newsletterbtn' onClick={() => navigate('/newsletter')}>
+  Sign-Up for our Newsletter
+</button>
+   
  
+</div> )}
 <div className="flex-footer">
 <div className="footer-tablebox"> 
 <div className="footer-headline">Make Money With Us</div>
@@ -262,10 +95,10 @@ export default function Footer() {
 
 
 <div className="navlinks sm-navlink" >
-<NavLink to='/contact' style={activeStyle} > Contact Us</NavLink>
-<NavLink to='/about' style={activeStyle}>About Us</NavLink>
+<NavLink to='/contact' style={activeStyle} > Contact Gulime</NavLink>
 <NavLink to='/help' style={activeStyle}>Help</NavLink>
 <NavLink to='/faq' style={activeStyle}>FAQ</NavLink> 
+<NavLink to='/about' style={activeStyle}>About Gulime</NavLink>
 <NavLink  to='/terms' style={activeStyle}> Terms of Use</NavLink> 
 <NavLink  to='/privacy' style={activeStyle}>Privacy Policies</NavLink>
 <NavLink style={activeStyle} to="/shippinginfo" >Shipping Information</NavLink>
@@ -308,22 +141,7 @@ textAlign:'center'
 </footer>
 
 
-      {toast.show && (
-        <div className={`toast ${toast.type}`}>
-          <div className="toast-content">
-            <span className="toast-icon">
-              {toast.type === 'success' ? '✓' : '✕'}
-            </span>
-            <span className="toast-message">{toast.message}</span>
-            <button 
-              className="toast-close"
-              onClick={() => setToast({ show: false, message: '', type: '' })}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+
 </>
 )
 }
