@@ -258,7 +258,7 @@ export default function Careers() {
         <div className="careers-container">
           <div className="cta-content">
             <h2>Ready to Join Gulime?</h2>
-            <p>Don't see a role that fits? We're always looking for talented individuals to join our growing team.</p>
+            <p>Don&apos;t see a role that fits? We&apos;re always looking for talented individuals to join our growing team.</p>
             <a href="mailto:careers@gulime.com" className="cta-btn">Send Us Your Resume</a>
           </div>
         </div>

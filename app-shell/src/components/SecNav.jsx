@@ -93,7 +93,9 @@ useEffect(() => {
 
   return (
     <>
-      <nav className="navbar secnav" ref={dropdownRef}>
+      <nav style={{
+        background: "linear-gradient(135deg, rgb(99, 116, 196) 0%, rgb(99, 116, 196) 100%)"
+      }} className="navbar secnav" ref={dropdownRef}>
         <ul className="navlinks secnavlinks">
           {navItems.map((item) => (
             <li key={item.key} className="nav-item">

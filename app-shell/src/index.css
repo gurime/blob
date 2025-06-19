@@ -12,7 +12,7 @@ letter-spacing: 1px;
 display: flex;
 justify-content: space-between;
 align-items: center;
-background-color: #1651d2;
+background: linear-gradient(135deg, rgb(102, 126, 234) 0%, rgb(118, 75, 162) 100%);
 }
 
 .navlinks .profilecss[href="/login"]:hover,
@@ -143,7 +143,6 @@ background-color: #1651d2;
 
 .navbar.secnav {
   position: relative;
-  background-color: #66adbd;
   border-bottom: 1px solid #e0e0e0;
   padding: 0;
   justify-content: center;
@@ -6402,6 +6401,519 @@ background-color: #f4f4f4;
 }
 /* privacy css */
 /* susyainbility css */
+
+/* investor css */
+.investor-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.investor-hero-section {
+  padding: 4rem 2rem;
+  text-align: center;
+  color: white;
+}
+
+.investor-hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.investor-hero-subtitle {
+  font-size: 1.3rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.investor-main-content {
+  background: white;
+  margin: 0 2rem;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+}
+
+.investor-content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}
+
+.investor-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.investor-stat-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 2rem;
+  border-radius: 15px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.investor-stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.investor-stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 0.5rem;
+}
+
+.investor-stat-label {
+  color: #4a5568;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.investor-section {
+  margin-bottom: 4rem;
+}
+
+.investor-section-title {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.investor-section-content {
+  color: #4a5568;
+  line-height: 1.8;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.investor-highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.investor-highlight-card {
+  background: #f8fafc;
+  padding: 2rem;
+  border-radius: 12px;
+  border-left: 4px solid #667eea;
+}
+
+.investor-highlight-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.investor-highlight-text {
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.investor-cta-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 3rem 2rem;
+  border-radius: 15px;
+  text-align: center;
+  color: white;
+  margin-top: 3rem;
+}
+
+.investor-cta-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.investor-cta-text {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.investor-cta-button {
+  background: white;
+  color: #667eea;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.investor-cta-button:hover {
+  transform: translateY(-2px);
+}
+
+.investor-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.investor-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #667eea;
+}
+
+.investor-timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+  padding-left: 2rem;
+}
+
+.investor-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -2rem;
+  top: 0.5rem;
+  width: 12px;
+  height: 12px;
+  background: #667eea;
+  border-radius: 50%;
+  transform: translateX(-5px);
+}
+
+.investor-timeline-year {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+.investor-timeline-text {
+  color: #4a5568;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .investor-hero-title {
+    font-size: 2.2rem;
+  }
+  
+  .investor-hero-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .investor-main-content {
+    margin: 0 1rem;
+  }
+  
+  .investor-content-wrapper {
+    padding: 2rem 1rem;
+  }
+}
+/* investor css */
+
+/* press release css */
+.press-container {
+          min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .press-hero {
+          padding: 80px 20px 60px;
+          text-align: center;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .press-hero-content {
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .press-hero-title {
+          font-size: 3.5rem;
+          font-weight: 700;
+          color: white;
+          margin-bottom: 20px;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .press-hero-subtitle {
+          font-size: 1.25rem;
+          color: rgba(255,255,255,0.9);
+          max-width: 600px;
+          margin: 0 auto;
+          line-height: 1.6;
+        }
+
+        .press-content-wrapper {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 20px;
+        }
+
+        .press-section-title {
+          font-size: 2.5rem;
+          font-weight: 700;
+          color: #333;
+          margin-bottom: 40px;
+          text-align: center;
+        }
+
+        .press-featured-section {
+          background: white;
+          padding: 80px 20px;
+        }
+
+        .press-featured-card {
+          background: white;
+          border-radius: 12px;
+          padding: 40px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+          border: 1px solid #e5e7eb;
+        }
+
+        .press-featured-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .press-category {
+          background: #f3f4f6;
+          color: #6b7280;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 0.875rem;
+          font-weight: 600;
+        }
+
+        .press-category-featured {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+
+        .press-date {
+          color: #6b7280;
+          font-size: 0.875rem;
+        }
+
+        .press-featured-title {
+          font-size: 2rem;
+          font-weight: 700;
+          color: #111827;
+          margin-bottom: 16px;
+          line-height: 1.3;
+        }
+
+        .press-featured-excerpt {
+          font-size: 1.125rem;
+          color: #6b7280;
+          margin-bottom: 24px;
+          line-height: 1.6;
+        }
+
+        .press-featured-content {
+          margin-bottom: 32px;
+        }
+
+        .press-featured-content p {
+          font-size: 1rem;
+          color: #374151;
+          line-height: 1.7;
+        }
+
+        .press-read-more {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 12px 24px;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .press-read-more:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .press-releases-section {
+          background: #f9fafb;
+          padding: 80px 20px;
+        }
+
+        .press-releases-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+          gap: 30px;
+        }
+
+        .press-release-card {
+          background: white;
+          border-radius: 12px;
+          padding: 30px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+          border: 1px solid #e5e7eb;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .press-release-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .press-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .press-card-title {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #111827;
+          margin-bottom: 12px;
+          line-height: 1.4;
+        }
+
+        .press-card-excerpt {
+          color: #6b7280;
+          margin-bottom: 20px;
+          line-height: 1.6;
+        }
+
+        .press-card-link {
+          color: #667eea;
+          background: none;
+          border: none;
+          font-weight: 600;
+          cursor: pointer;
+          text-decoration: underline;
+          transition: color 0.2s ease;
+        }
+
+        .press-card-link:hover {
+          color: #764ba2;
+        }
+
+        .press-media-kit {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          padding: 80px 20px;
+        }
+
+        .press-media-kit-content {
+          text-align: center;
+          color: white;
+        }
+
+        .press-media-kit .press-section-title {
+          color: white;
+        }
+
+        .press-media-kit-description {
+          font-size: 1.125rem;
+          margin-bottom: 40px;
+          opacity: 0.9;
+        }
+
+        .press-media-kit-actions {
+          display: flex;
+          gap: 20px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .press-media-kit-button {
+          padding: 14px 28px;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border: 2px solid white;
+          background: white;
+          color: #667eea;
+        }
+
+        .press-media-kit-secondary {
+          background: transparent;
+          color: white;
+        }
+
+        .press-media-kit-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(255,255,255,0.3);
+        }
+
+        .press-contact-section {
+          background: white;
+          padding: 80px 20px;
+        }
+
+        .press-contact-content {
+          text-align: center;
+        }
+
+        .press-contact-info {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 40px;
+          margin-top: 40px;
+        }
+
+        .press-contact-item h4 {
+          font-size: 1.125rem;
+          font-weight: 700;
+          color: #111827;
+          margin-bottom: 8px;
+        }
+
+        .press-contact-item p {
+          color: #667eea;
+          font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+          .press-hero-title {
+            font-size: 2.5rem;
+          }
+
+          .press-featured-title {
+            font-size: 1.5rem;
+          }
+
+          .press-featured-card {
+            padding: 30px 20px;
+          }
+
+          .press-release-card {
+            padding: 20px;
+          }
+
+          .press-media-kit-actions {
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .press-media-kit-button {
+            width: 100%;
+            max-width: 280px;
+          }
+        }
+/* press release css */
 /* Reset and Base Styles */
 
 
@@ -8688,7 +9200,7 @@ text-align: center;
 /*footer css*/
 .footer{
 padding: 3px;
-background: #1651d2;
+background: rgb(45, 55, 72);
 text-align: center;}
   
 .flex-footer{

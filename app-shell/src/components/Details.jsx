@@ -19,7 +19,7 @@ export default function Details() {
   const [user, setUser] = useState(null);
 const [userLoading, setUserLoading] = useState(true);
  const [toast, setToast] = useState({ show: false, message: '', type: '' });
-  const [Product, setProduct] = useState(null);
+ 
 
 let { id } = useParams();
 
@@ -139,7 +139,7 @@ return (
 <div className="error-message">
 <h2>Product Not Found</h2>
 <p>{error || "The requested product could not be found."}</p>
-          <button onClick={() => navigate(-1)} className="no-page-button">← Go Back</button>
+<button onClick={() => navigate(-1)} className="no-page-button">← Go Back</button>
 </div>
 <Footer />
 </>

@@ -21,6 +21,7 @@ import Press from "./components/Press"
 import Investor from "./components/Investor"
 import Sustainablility from "./components/Sustainablility"
 import NewsLetter from "./components/NewsLetter"
+import BlogDetails from "./components/BlogDetails"
 
 function App() {
 return (
@@ -28,10 +29,12 @@ return (
 <Routes>
 <Route path="/" element={<Home />} />
 <Route path="/product/:id" element={<Details />} />
+<Route path="/blog/:id" element={<BlogDetails />} />
 {/* Specific category routes - these need to come BEFORE generic routes */}
 <Route path="/electronics" element={<CategoryPage />} />
 <Route path="/electronics/:subcategory" element={<CategoryPage />} />
 <Route path="/electronics/:subcategory/:subsubcategory" element={<CategoryPage />} />
+
 <Route path="/books" element={<CategoryPage />} />
 <Route path="/books/:subcategory" element={<CategoryPage />} />
 <Route path="/books/:subcategory/:subsubcategory" element={<CategoryPage />} />
@@ -95,11 +98,6 @@ return (
 <Route path="/games" element={<CategoryPage />} />
 <Route path="/games/:subcategory" element={<CategoryPage />} />
 <Route path="/games/:subcategory/:subsubcategory" element={<CategoryPage />} />
-
-{/* Generic category routes - these come AFTER specific routes */}
-<Route path="/category/:category" element={<CategoryPage />} />
-<Route path="/category/:category/:subcategory" element={<CategoryPage />} />
-<Route path="/category/:category/:subcategory/:subsubcategory" element={<CategoryPage />} />
 
 {/* Other routes */}
 <Route path="/newsletter" element={<NewsLetter/>}/>

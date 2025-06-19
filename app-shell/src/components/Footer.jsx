@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars */
+ 
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import navlogo from '../img/gulime.png';
 import navlogos from '../img/gulime_g.png'
@@ -71,7 +71,7 @@ export default function Footer() {
 </div>
 {/*third tablebox stops here*/}
 <div className="footer-tablebox" style={{borderRight:'none' ,borderBottom:'none'}}> 
-<div className="footer-headline">Text</div>
+<div className="footer-headline">Health & Care</div>
 <ul className="footer-navlink">
 <li><Link to="/health/skincare">Skincare</Link></li>
 <li><Link to="/health/makeup">Makeup</Link></li>
