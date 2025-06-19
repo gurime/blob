@@ -22,6 +22,7 @@ import Investor from "./components/Investor"
 import Sustainablility from "./components/Sustainablility"
 import NewsLetter from "./components/NewsLetter"
 import BlogDetails from "./components/BlogDetails"
+import Blogdmin from "./Admin/Blogdmin"
 
 function App() {
 return (
@@ -117,6 +118,7 @@ return (
 <Route path="/signup" element={<Signup />} />
 <Route path="/login" element={<Login />} />
 <Route path="/profile" element={<Profile />} />
+<Route path="/BlogAdmin" element={<Blogdmin/>}/>
 <Route path="/cart" element={<Cart />} />
 
 {/* Catch all route */}

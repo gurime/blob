@@ -5,6 +5,7 @@ import SecNav from "./SecNav";
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../db/firebase";
+import ClipLoader from "react-spinners/ClipLoader";
 
 export default function Press() {
   const [blog, setBlog] = useState(null);
@@ -73,9 +74,12 @@ export default function Press() {
 
         {/* Loading and Error States */}
         {loading && (
-          <section className="press-loading">
+          <section className="loading-container">
             <div className="press-content-wrapper">
-              <div className="loading-message">Loading latest content...</div>
+              <div className="loading-message">
+                          <ClipLoader color="#FFF" size={50} />
+
+               <p>Loading latest content...</p> </div>
             </div>
           </section>
         )}
@@ -90,9 +94,10 @@ export default function Press() {
 
         {/* Featured Content Section */}
         {!loading && featuredContent.length > 0 && (
-          <section className="press-featured-section">
+          <section className="press-featured-section">  
+                  <h2 className="press-section-title">Latest News</h2>
             <div className="press-content-wrapper">
-              <h2 className="press-section-title">Latest News</h2>
+    
               {featuredContent.map(item => (
                 <article key={`featured-${item.source}-${item.id}`} className="press-featured-card">
                   <div className="press-featured-header">
@@ -103,11 +108,9 @@ export default function Press() {
                   </div>
                   <h3 className="press-featured-title">{item.title}</h3>
                   <p className="press-featured-excerpt">
-                    {item.excerpt || 'No excerpt available'}
+                    {item.content.slice(0,100)  || 'No excerpt available'}...
                   </p>
-                  <div className="press-featured-content">
-                    <p>{item.content || item.description || 'No content available'}</p>
-                  </div>
+                
                   <button 
                     className="press-read-more"   
                     onClick={() => navigate(`/blog/${item.id}`)}
@@ -122,11 +125,11 @@ export default function Press() {
 
         {/* All Content Grid */}
         {!loading && (
-          <section className="press-releases-section">
-            <div className="press-content-wrapper">
-              <h2 className="press-section-title">
+          <section className="press-releases-section"><h2 className="press-section-title">
                 {blog && blog.length > 0 ? 'Recent Posts & Press Releases' : 'Recent Press Releases'}
               </h2>
+            <div className="press-content-wrapper">
+              
               
               {regularContent.length > 0 ? (
                 <div className="press-releases-grid">
@@ -140,8 +143,8 @@ export default function Press() {
                       </div>
                       <h3 className="press-card-title">{item.title}</h3>
                       <p className="press-card-excerpt">
-                        {item.excerpt 
-                          ? (item.excerpt.length > 100 ? item.excerpt.slice(0,100) + '...' : item.excerpt)
+                        {item.content 
+                          ? (item.content.length > 100 ? item.content.slice(0,100) + '...' : item.content)
                           : 'No excerpt available'
                         }
                       </p>

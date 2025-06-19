@@ -73,17 +73,89 @@ return (
 <Navbar/>
 <SecNav/>
 
-  <div className="blog-details">
-        <h1>{blog.title}</h1>
-        <div className="blog-meta">
-          {blog.date && <time className="blog-date">{blog.date}</time>}
-          {blog.category && <span className="blog-category">{blog.category}</span>}
-        </div>
+ <div className="blog-container">
+        <div className="blog-details">
+            <header className="blog-header">
+                <h1 className="blog-title">{blog.title}</h1>
+                <div className="blog-meta">
+                    {blog.date && <time className="blog-date">{blog.date}</time>}
+                    {blog.category && <span className="blog-category">{blog.category}</span>}
+                    {blog.readTime && <span className="read-time">{blog.readTime}</span>}
+                </div>
+            </header>
+
+        
         <div className="blog-content">
-          {blog.excerpt && <p className="blog-excerpt">{blog.excerpt}</p>}
-          {blog.content && <div className="blog-body">{blog.content}</div>}
+            {blog.content && (
+                <div className="blog-body">
+                    {blog.contentTitle && <h2>{blog.contentTitle}</h2>}
+                    <p>{blog.content}</p>
+                </div>
+            )}
+            {blog.content1 && (
+                <div className="blog-body">
+                    {blog.contentTitle1 && <h2>{blog.contentTitle1}</h2>}
+                    <p>{blog.content1}</p>
+                </div>
+            )}
+            {blog.content2 && (
+                <div className="blog-body">
+                    {blog.contentTitle2 && <h2>{blog.contentTitle2}</h2>}
+                    <p>{blog.content2}</p>
+                </div>
+            )}
+            {blog.content3 && (
+                <div className="blog-body">
+                    {blog.contentTitle3 && <h2>{blog.contentTitle3}</h2>}
+                    <p>{blog.content3}</p>
+                </div>
+            )}
+            {blog.content4 && (
+                <div className="blog-body">
+                    {blog.contentTitle4 && <h2>{blog.contentTitle4}</h2>}
+                    <p>{blog.content4}</p>
+                </div>
+            )}
+            {blog.content5 && (
+                <div className="blog-body">
+                    {blog.contentTitle5 && <h2>{blog.contentTitle5}</h2>}
+                    <p>{blog.content5}</p>
+                </div>
+            )}
+            {blog.content6 && (
+                <div className="blog-body">
+                    {blog.contentTitle6 && <h2>{blog.contentTitle6}</h2>}
+                    <p>{blog.content6}</p>
+                </div>
+            )}
+            {blog.content7 && (
+                <div className="blog-body">
+                    {blog.contentTitle7 && <h2>{blog.contentTitle7}</h2>}
+                    <p>{blog.content7}</p>
+                </div>
+            )}
         </div>
-      </div>
+            {(blog.authorName || blog.authorBio || blog.tags) && (
+                <footer className="blog-footer">
+                    {(blog.authorName || blog.authorBio) && (
+                        <div className="author-info">
+                            <div className="author-details">
+                                {blog.authorName && <h4>{blog.authorName}</h4>}
+                                {blog.authorBio && <p>{blog.authorBio}</p>}
+                            </div>
+                        </div>
+                    )}
+                    {blog.tags && blog.tags.length > 0 && (
+                        <div className="blog-tags">
+                            {blog.tags.map((tag, index) => (
+                                <span key={index} className="tag">{tag}</span>
+                            ))}
+                        </div>
+                    )}
+                </footer>
+            )}
+        </div>
+    </div>
 <Footer/>
 </>
 )
