@@ -1,40 +1,72 @@
+/* eslint-disable no-unused-vars */
  
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import navlogo from '../img/gulime.png';
 import navlogos from '../img/gulime_g.png'
+import gpremium from '../img/gulimepremium2.png';
+import { useEffect, useState } from 'react';
+import { auth, db } from '../db/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 
 export default function Footer() { 
-
-    const location = useLocation();
-  const navigate = useNavigate();
-  const iSNewsLetterPage = location.pathname === '/newsletter';
-
-  // Check if current route is /contact
-
-  const scrollToTopNav = () => {
-    const nav = document.getElementById('top-navbar');
-    if (nav) nav.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const activeStyle = ({ isActive }) => ({
-    backgroundColor: isActive ? 'blue' : '',
-    color: isActive ? 'white' : '',
-    textDecoration: 'none'
-  });
+const location = useLocation();
+const navigate = useNavigate();
+const iSNewsLetterPage = location.pathname === '/newsletter';
+const [isSignedIn, setIsSignedIn] = useState(false);
+const [names, setNames] = useState('');
 
 
-  return(
+// Check if current route is /contact
+const scrollToTopNav = () => {
+const nav = document.getElementById('top-navbar');
+if (nav) nav.scrollIntoView({ behavior: 'smooth' });
+};
+
+const activeStyle = ({ isActive }) => ({
+backgroundColor: isActive ? 'blue' : '',
+color: isActive ? 'white' : '',
+textDecoration: 'none'
+});
+
+
+useEffect(() => {
+const unsubscribe = auth.onAuthStateChanged(async (user) => {
+if (user) {
+try {
+const userDocRef = doc(db, "users", user.uid);
+const userDocSnapshot = await getDoc(userDocRef);
+if (userDocSnapshot.exists()) {
+const userData = userDocSnapshot.data();
+// Get the full name from fname and lname
+const fullName = `${userData.fname || ''} `.trim();
+setNames(fullName || userData.email || 'User');
+} else {
+setNames('User');
+}
+setIsSignedIn(true);
+} catch (error) {
+setIsSignedIn(true); // Still signed in even if we can't fetch user data
+setNames('User');
+}
+} else {
+setIsSignedIn(false);
+setNames('');
+}
+}); 
+return () => unsubscribe();
+}, []);
+
+
+return(
 <>
 
- <footer className='footer'>{!iSNewsLetterPage &&(
-  <div className='footer-headline'>
-    
-       <button className='footer-newsletterbtn' onClick={() => navigate('/newsletter')}>
-  Sign-Up for our Newsletter
+<footer className='footer'>
+{!iSNewsLetterPage &&(
+<div className='footer-headline'>
+<button className='footer-newsletterbtn' onClick={() => navigate('/newsletter')}>
+Sign-Up for our Newsletter
 </button>
-   
- 
 </div> )}
 <div className="flex-footer">
 <div className="footer-tablebox"> 
@@ -87,7 +119,12 @@ export default function Footer() {
 <hr style={{color:'#fff',border:'solid 1px'}}/>
 
 <div  className="nav logo-footer">
-<img  title='Home Page' style={{marginRight:'auto '}} onClick={() => navigate('/')} src={navlogo}  alt='...'  />
+ {isSignedIn ? (  
+ <img src={gpremium} alt="" />
+ ) : (
+  <img  title='Home Page' style={{marginRight:'auto '}} onClick={() => navigate('/')} src={navlogo}  alt='...'  />
+
+ )}
 
 
 

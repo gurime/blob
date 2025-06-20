@@ -100,6 +100,12 @@ return (
 <Route path="/games/:subcategory" element={<CategoryPage />} />
 <Route path="/games/:subcategory/:subsubcategory" element={<CategoryPage />} />
 
+<Route path="/category/:category" element={<CategoryPage />} />
+<Route path="/category/:category/:subcategory" element={<CategoryPage />} />
+<Route path="/category/:category/:subcategory/:subsubcategory" element={<CategoryPage />} />
+
+
+
 {/* Other routes */}
 <Route path="/newsletter" element={<NewsLetter/>}/>
 <Route path="/about" element={<About />} />
