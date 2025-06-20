@@ -157,20 +157,27 @@ return (
 <div className="product-container">
 {/* Breadcrumb Navigation */}
 <div className="breadcrumb">
-<Link to="/">Home</Link>
-
-<div className="breadcrumbs">
-<Link to={`/category/${encodeURIComponent(product.SourceCategory.toLowerCase())}`}>
-{product.SourceCategory}
-</Link>
-
-<Link to={`/category/${encodeURIComponent(product.SourceCategory.toLowerCase())}/${encodeURIComponent(product.category.toLowerCase())}`}>
-{product.category}
-</Link>
-
-<span className="current-product">{product.brand}</span>
+  <Link to="/">Home</Link>
+  <span className="breadcrumb-separator">›</span>
+  
+  {/* Main category (automotive) */}
+  <Link to={`/category/${product.category}`}>
+    {product.category}
+  </Link>
+  <span className="breadcrumb-separator">›</span>
+  
+  {/* Subcategory (electric) */}
+  <Link to={`/category/${product.SourceCategory}`}>
+    {product.SourceCategory}
+  </Link>
+  <span className="breadcrumb-separator">›</span>
+  
+  {/* Current product */}
+  <span className="current-product">{product.brand}</span>
 </div>
-</div>
+
+
+
 
 <div id="product-details" className="product-details">
 <div className="left-column">

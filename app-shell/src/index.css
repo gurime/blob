@@ -1993,7 +1993,7 @@ text-decoration:none;
 }
 
 .breadcrumb a::after {
-  content: "›";
+  /* content: "›"; */
   color: #565959;
   margin: 0 4px;
 }
@@ -3489,9 +3489,8 @@ height: 16px;
   margin: auto;
   padding: 1rem;
   text-decoration: none;
-  border-radius: 0.25rem;
   transition: all 0.3s ease;
-  place-items: center;
+  align-items: center;
   color: #fff;
   font-weight: lighter;
 }
