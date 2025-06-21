@@ -544,9 +544,12 @@ Delete
 </div>
 </div>
                                 
-<button className="checkout-btn">
-Proceed to checkout
+<button
+showToast={showToast}
+className="checkout-btn">
+    Checkout
 </button>
+            
                                 
 <button 
 onClick={() => navigate('/')}
@@ -561,23 +564,22 @@ Continue shopping
 
             <Footer />
 
-            {/* Toast Notification */}
-            {toast.show && (
-                <div className={`toast ${toast.type}`}>
-                    <div className="toast-content">
-                        <span className="toast-icon">
-                            {toast.type === 'success' ? '✓' : '✕'}
-                        </span>
-                        <span className="toast-message">{toast.message}</span>
-                        <button 
-                            className="toast-close"
-                            onClick={() => setToast({ show: false, message: '', type: '' })}
-                        >
-                            ×
-                        </button>
-                    </div>
-                </div>
-            )}
-        </>
-    );
+{/* Toast Notification */}
+{toast.show && (
+<div className={`toast ${toast.type}`}>
+<div className="toast-content">
+<span className="toast-icon">
+{toast.type === 'success' ? '✓' : '✕'}
+</span>
+<span className="toast-message">{toast.message}</span>
+<button 
+className="toast-close"
+onClick={() => setToast({ show: false, message: '', type: '' })}>
+×
+</button>
+</div>
+</div>
+)}
+</>
+);
 }
