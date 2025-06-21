@@ -23,6 +23,7 @@ import Sustainablility from "./components/Sustainablility"
 import NewsLetter from "./components/NewsLetter"
 import BlogDetails from "./components/BlogDetails"
 import Blogdmin from "./Admin/Blogdmin"
+import CheckOut from "./components/CheckOut"
 
 function App() {
 return (
@@ -31,6 +32,7 @@ return (
 <Route path="/" element={<Home />} />
 <Route path="/product/:id" element={<Details />} />
 <Route path="/blog/:id" element={<BlogDetails />} />
+<Route path='/checkout/:id' element={<CheckOut />} />
 {/* Specific category routes - these need to come BEFORE generic routes */}
 <Route path="/electronics" element={<CategoryPage />} />
 <Route path="/electronics/:subcategory" element={<CategoryPage />} />

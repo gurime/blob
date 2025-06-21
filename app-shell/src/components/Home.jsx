@@ -287,7 +287,7 @@ const {
                           </Link>
                         </div>
                         <span className="category-tag">{product.category}</span>
-                        <div className="product-description">{product.description}</div>
+                        <div className="product-description">{product.description.slice(0,200)}...</div>
                         
                         <div className="prime-badge">
                           <img className="prime-logo" src={`/assets/images/${product.gpremium}`} alt="Prime" />
@@ -354,7 +354,7 @@ className={`wishlist-btn ${wishlistItems.has(product.id) ? 'wishlisted' : ''}`}
                   <Link className="product-category" to={`/category/${encodeURIComponent(product.category)}`}>
                     {product.category}
                   </Link>
-                  <p className="product-description">{product.description}</p>
+                  <p className="product-description">{product.description.slice(0,100)}...</p>
 
                   <div className="price-container">
                     <span className="product-price">${formatPrice(product.price)}</span>

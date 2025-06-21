@@ -11,375 +11,352 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import { Save } from 'lucide-react';
 
 export default function Cart() {
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [cartItems, setCartItems] = useState([]);
-    const [savedItems, setSavedItems] = useState([]);
-    const [user, setUser] = useState(null);
-    const [userLoading, setUserLoading] = useState(true);
-    const [cartSummary, setCartSummary] = useState({
-        totalItems: 0,
-        totalValue: 0
-    });
-    const [toast, setToast] = useState({ show: false, message: '', type: '' });
-    const navigate = useNavigate();
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState(null);
+const [cartItems, setCartItems] = useState([]);
+const [savedItems, setSavedItems] = useState([]);
+const [user, setUser] = useState(null);
+const [userLoading, setUserLoading] = useState(true);
+const [cartSummary, setCartSummary] = useState({
+totalItems: 0,
+totalValue: 0
+});
+const [toast, setToast] = useState({ show: false, message: '', type: '' });
+const navigate = useNavigate();
+const showToast = (message, type = 'success') => {
+setToast({ show: true, message, type });
+setTimeout(() => {
+setToast({ show: false, message: '', type: '' });
+}, 4000);
+};
 
-    const showToast = (message, type = 'success') => {
-        setToast({ show: true, message, type });
-        setTimeout(() => {
-            setToast({ show: false, message: '', type: '' });
-        }, 4000);
-    };
-
-    // Monitor authentication state
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-            setUserLoading(false);
+// Monitor authentication state
+useEffect(() => {
+const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+setUser(currentUser);
+setUserLoading(false);
             
-            if (currentUser) {
-                fetchUserCart(currentUser.uid);
-                fetchSavedItems(currentUser.uid);
-            } else {
-                setCartItems([]);
-                setSavedItems([]);
-                setLoading(false);
-            }
-        });
-        return () => unsubscribe();
-    }, []);
+if (currentUser) {
+fetchUserCart(currentUser.uid);
+fetchSavedItems(currentUser.uid);
+} else {
+setCartItems([]);
+setSavedItems([]);
+setLoading(false);
+}
+});
+return () => unsubscribe();
+}, []);
 
-    // Fetch user's cart from Firestore
-    const fetchUserCart = async (userId) => {
-        try {
-            setLoading(true);
-            setError(null);
+// Fetch user's cart from Firestore
+const fetchUserCart = async (userId) => {
+try {
+setLoading(true);
+setError(null);
             
-            const cartRef = doc(db, 'carts', userId);
-            const cartDoc = await getDoc(cartRef);
+const cartRef = doc(db, 'carts', userId);
+const cartDoc = await getDoc(cartRef);
             
-            if (cartDoc.exists()) {
-                const cartData = cartDoc.data();
-                setCartItems(cartData.items || []);
-                setCartSummary({
-                    totalItems: cartData.totalItems || 0,
-                    totalValue: cartData.totalValue || 0
-                });
-            } else {
-                setCartItems([]);
-                setCartSummary({ totalItems: 0, totalValue: 0 });
-            }
-        } catch (error) {
-            console.error('Error fetching cart:', error);
-            setError('Failed to load cart items. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
+if (cartDoc.exists()) {
+const cartData = cartDoc.data();
+setCartItems(cartData.items || []);
+setCartSummary({
+totalItems: cartData.totalItems || 0,
+totalValue: cartData.totalValue || 0
+});
+} else {
+setCartItems([]);
+setCartSummary({ totalItems: 0, totalValue: 0 });
+}
+} catch (error) {
+setError('Failed to load cart items. Please try again.');
+} finally {
+setLoading(false);
+}
+};
 
-    // Fetch saved items from Firestore
-    const fetchSavedItems = async (userId) => {
-        try {
-            const savedRef = doc(db, 'savedItems', userId);
-            const savedDoc = await getDoc(savedRef);
+// Fetch saved items from Firestore
+const fetchSavedItems = async (userId) => {
+try {
+const savedRef = doc(db, 'savedItems', userId);
+const savedDoc = await getDoc(savedRef);
+if (savedDoc.exists()) {
+const savedData = savedDoc.data();
+setSavedItems(savedData.items || []);
+} else {
+setSavedItems([]);
+}
+} catch (error) {
+}
+};
+
+// Update item quantity
+const updateQuantity = async (productId, newQuantity) => {
+if (!user || newQuantity < 1) return;
+try {
+const updatedItems = cartItems.map(item => {
+if (item.productId === productId) {
+return {
+...item,
+quantity: newQuantity,
+totalPrice: item.price * newQuantity
+};
+}
+return item;
+});
+const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
+const newTotalValue = updatedItems.reduce((sum, item) => sum + item.totalPrice,0);
+
+// Update Firestore
+const cartRef = doc(db, 'carts', user.uid);
+await updateDoc(cartRef, {
+items: updatedItems,
+totalItems: newTotalItems,
+totalValue: newTotalValue,
+updatedAt: new Date().toISOString()
+});
+
+// Update local state
+setCartItems(updatedItems);
+setCartSummary({
+totalItems: newTotalItems,
+totalValue: newTotalValue
+});
+
+showToast('Cart updated successfully!', 'success');
+} catch (error) {
+showToast('Failed to update item quantity', 'error');
+}
+};
+
+// Remove item from cart
+const removeItem = async (productId) => {
+if (!user) return;
+try {
+const updatedItems = cartItems.filter(item => item.productId !== productId);
+if (updatedItems.length === 0) {
+// If cart is empty, delete the document
+const cartRef = doc(db, 'carts', user.uid);
+await deleteDoc(cartRef);
+setCartItems([]);
+setCartSummary({ totalItems: 0, totalValue: 0 });
+} else {
+const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
+const newTotalValue = updatedItems.reduce((sum, item) => sum + item.totalPrice, 0);
+
+// Update Firestore
+const cartRef = doc(db, 'carts', user.uid);
+await updateDoc(cartRef, {
+items: updatedItems,
+totalItems: newTotalItems,
+totalValue: newTotalValue,
+updatedAt: new Date().toISOString()
+});
+
+// Update local state
+setCartItems(updatedItems);
+setCartSummary({
+totalItems: newTotalItems,
+totalValue: newTotalValue
+});
+}
+
+showToast('Item removed from cart', 'success');
+} catch (error) {
+showToast('Failed to remove item', 'error');
+}
+};
+
+// Save item for later
+const saveForLater = async (productId) => {
+if (!user) return;
+try {
+// Find the item in cart
+const itemToSave = cartItems.find(item => item.productId === productId);
+if (!itemToSave) return;
+// Remove from cart
+const updatedCartItems = cartItems.filter(item => item.productId !== productId);
+
+// Add to saved items (reset quantity to 1)
+const savedItem = {
+ ...itemToSave,
+ quantity: 1,
+ totalPrice: itemToSave.price,
+ savedAt: new Date().toISOString()
+};
             
-            if (savedDoc.exists()) {
-                const savedData = savedDoc.data();
-                setSavedItems(savedData.items || []);
-            } else {
-                setSavedItems([]);
-            }
-        } catch (error) {
-            console.error('Error fetching saved items:', error);
-        }
-    };
+const updatedSavedItems = [...savedItems, savedItem];
+// Update cart in Firestore
+if (updatedCartItems.length === 0) {
+const cartRef = doc(db, 'carts', user.uid);
+await deleteDoc(cartRef);
+setCartItems([]);
+setCartSummary({ totalItems: 0, totalValue: 0 });
+} else {
+const newTotalItems = updatedCartItems.reduce((sum, item) => sum + item.quantity, 0);
+const newTotalValue = updatedCartItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
-    // Update item quantity
-    const updateQuantity = async (productId, newQuantity) => {
-        if (!user || newQuantity < 1) return;
+const cartRef = doc(db, 'carts', user.uid);
+await updateDoc(cartRef, {
+items: updatedCartItems,
+totalItems: newTotalItems,
+totalValue: newTotalValue,
+updatedAt: new Date().toISOString()
+});
 
-        try {
-            const updatedItems = cartItems.map(item => {
-                if (item.productId === productId) {
-                    return {
-                        ...item,
-                        quantity: newQuantity,
-                        totalPrice: item.price * newQuantity
-                    };
-                }
-                return item;
-            });
+setCartItems(updatedCartItems);
+setCartSummary({
+totalItems: newTotalItems,
+totalValue: newTotalValue
+});
+}
 
-            const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
-            const newTotalValue = updatedItems.reduce((sum, item) => sum + item.totalPrice, 0);
+// Update saved items in Firestore
+const savedRef = doc(db, 'savedItems', user.uid);
+await setDoc(savedRef, {
+items: updatedSavedItems,
+updatedAt: new Date().toISOString()
+});
+setSavedItems(updatedSavedItems);
+showToast('Item saved for later!', 'success');
+} catch (error) {
+showToast('Failed to save item for later', 'error');
+}
+};
 
-            // Update Firestore
-            const cartRef = doc(db, 'carts', user.uid);
-            await updateDoc(cartRef, {
-                items: updatedItems,
-                totalItems: newTotalItems,
-                totalValue: newTotalValue,
-                updatedAt: new Date().toISOString()
-            });
+// Move saved item back to cart
+const moveToCart = async (productId) => {
+if (!user) return;
+try {
+// Find the item in saved items
+const itemToMove = savedItems.find(item => item.productId === productId);
+if (!itemToMove) return;
+// Remove from saved items
+const updatedSavedItems = savedItems.filter(item => item.productId !== productId);
+// Add to cart
+const cartItem = {
+...itemToMove,
+quantity: 1,
+totalPrice: itemToMove.price,
+addedAt: new Date().toISOString()
+};
 
-            // Update local state
-            setCartItems(updatedItems);
-            setCartSummary({
-                totalItems: newTotalItems,
-                totalValue: newTotalValue
-            });
+const updatedCartItems = [...cartItems, cartItem];
+const newTotalItems = updatedCartItems.reduce((sum, item) => sum + item.quantity, 0);
+const newTotalValue = updatedCartItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
-            showToast('Cart updated successfully!', 'success');
-        } catch (error) {
-            console.error('Error updating quantity:', error);
-            showToast('Failed to update item quantity', 'error');
-        }
-    };
+// Update cart in Firestore
+const cartRef = doc(db, 'carts', user.uid);
+await setDoc(cartRef, {
+items: updatedCartItems,
+totalItems: newTotalItems,
+totalValue: newTotalValue,
+updatedAt: new Date().toISOString()
+});
 
-    // Remove item from cart
-    const removeItem = async (productId) => {
-        if (!user) return;
+// Update saved items in Firestore
+if (updatedSavedItems.length === 0) {
+const savedRef = doc(db, 'savedItems', user.uid);
+await deleteDoc(savedRef);
+setSavedItems([]);
+} else {
+const savedRef = doc(db, 'savedItems', user.uid);
+await updateDoc(savedRef, {
+items: updatedSavedItems,
+updatedAt: new Date().toISOString()
+});
+setSavedItems(updatedSavedItems);
+}
 
-        try {
-            const updatedItems = cartItems.filter(item => item.productId !== productId);
-            
-            if (updatedItems.length === 0) {
-                // If cart is empty, delete the document
-                const cartRef = doc(db, 'carts', user.uid);
-                await deleteDoc(cartRef);
-                setCartItems([]);
-                setCartSummary({ totalItems: 0, totalValue: 0 });
-            } else {
-                const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
-                const newTotalValue = updatedItems.reduce((sum, item) => sum + item.totalPrice, 0);
+setCartItems(updatedCartItems);
+setCartSummary({
+totalItems: newTotalItems,
+totalValue: newTotalValue
+});
 
-                // Update Firestore
-                const cartRef = doc(db, 'carts', user.uid);
-                await updateDoc(cartRef, {
-                    items: updatedItems,
-                    totalItems: newTotalItems,
-                    totalValue: newTotalValue,
-                    updatedAt: new Date().toISOString()
-                });
+showToast('Item moved to cart!', 'success');
+} catch (error) {
+showToast('Failed to move item to cart', 'error');
+}
+};
 
-                // Update local state
-                setCartItems(updatedItems);
-                setCartSummary({
-                    totalItems: newTotalItems,
-                    totalValue: newTotalValue
-                });
-            }
+// Delete saved item
+const deleteSavedItem = async (productId) => {
+if (!user) return;
+try {
+const updatedSavedItems = savedItems.filter(item => item.productId !== productId);
+if (updatedSavedItems.length === 0) {
+const savedRef = doc(db, 'savedItems', user.uid);
+await deleteDoc(savedRef);
+setSavedItems([]);
+} else {
+const savedRef = doc(db, 'savedItems', user.uid);
+await updateDoc(savedRef, {
+items: updatedSavedItems,
+updatedAt: new Date().toISOString()
+});
+setSavedItems(updatedSavedItems);
+}
 
-            showToast('Item removed from cart', 'success');
-        } catch (error) {
-            console.error('Error removing item:', error);
-            showToast('Failed to remove item', 'error');
-        }
-    };
+showToast('Item removed from saved items', 'success');
+} catch (error) {
+showToast('Failed to remove saved item', 'error');
+}
+};
 
-    // Save item for later
-    const saveForLater = async (productId) => {
-        if (!user) return;
+// Loading state
+if (loading || userLoading) {
+return (
+<>
+<Navbar />
+<SecNav />
+<div className="loading-container">
+<ClipLoader color="#FF9900" size={50} />
+<p>Loading your cart...</p>
+</div>
+<Footer />
+</>
+);
+}
 
-        try {
-            // Find the item in cart
-            const itemToSave = cartItems.find(item => item.productId === productId);
-            if (!itemToSave) return;
+// Not logged in
+if (!user) {
+return (
+<>
+<Navbar />
+<SecNav />
+<div className="cart-container">
+<h1>Shopping Cart</h1>
+<p>Please log in to view your cart items.</p>
+<button onClick={() => navigate('/login')} className="login-button">
+Log In
+</button>
+</div>
+<Footer />
+</>
+);
+}
 
-            // Remove from cart
-            const updatedCartItems = cartItems.filter(item => item.productId !== productId);
-            
-            // Add to saved items (reset quantity to 1)
-            const savedItem = {
-                ...itemToSave,
-                quantity: 1,
-                totalPrice: itemToSave.price,
-                savedAt: new Date().toISOString()
-            };
-            
-            const updatedSavedItems = [...savedItems, savedItem];
+// Error state
+if (error) {
+return (
+<>
+<Navbar />
+<SecNav />
+<div className="cart-container">
+<h1>Shopping Cart</h1>
+<p className="error-message">{error}</p>
+<button onClick={() => fetchUserCart(user.uid)} className="retry-button">
+Try Again
+</button>
+</div>
+<Footer />
+</>
+);
+}
 
-            // Update cart in Firestore
-            if (updatedCartItems.length === 0) {
-                const cartRef = doc(db, 'carts', user.uid);
-                await deleteDoc(cartRef);
-                setCartItems([]);
-                setCartSummary({ totalItems: 0, totalValue: 0 });
-            } else {
-                const newTotalItems = updatedCartItems.reduce((sum, item) => sum + item.quantity, 0);
-                const newTotalValue = updatedCartItems.reduce((sum, item) => sum + item.totalPrice, 0);
-
-                const cartRef = doc(db, 'carts', user.uid);
-                await updateDoc(cartRef, {
-                    items: updatedCartItems,
-                    totalItems: newTotalItems,
-                    totalValue: newTotalValue,
-                    updatedAt: new Date().toISOString()
-                });
-
-                setCartItems(updatedCartItems);
-                setCartSummary({
-                    totalItems: newTotalItems,
-                    totalValue: newTotalValue
-                });
-            }
-
-            // Update saved items in Firestore
-            const savedRef = doc(db, 'savedItems', user.uid);
-            await setDoc(savedRef, {
-                items: updatedSavedItems,
-                updatedAt: new Date().toISOString()
-            });
-
-            setSavedItems(updatedSavedItems);
-            showToast('Item saved for later!', 'success');
-        } catch (error) {
-            console.error('Error saving item:', error);
-            showToast('Failed to save item for later', 'error');
-        }
-    };
-
-    // Move saved item back to cart
-    const moveToCart = async (productId) => {
-        if (!user) return;
-
-        try {
-            // Find the item in saved items
-            const itemToMove = savedItems.find(item => item.productId === productId);
-            if (!itemToMove) return;
-
-            // Remove from saved items
-            const updatedSavedItems = savedItems.filter(item => item.productId !== productId);
-
-            // Add to cart
-            const cartItem = {
-                ...itemToMove,
-                quantity: 1,
-                totalPrice: itemToMove.price,
-                addedAt: new Date().toISOString()
-                
-            };
-
-            const updatedCartItems = [...cartItems, cartItem];
-            const newTotalItems = updatedCartItems.reduce((sum, item) => sum + item.quantity, 0);
-            const newTotalValue = updatedCartItems.reduce((sum, item) => sum + item.totalPrice, 0);
-
-            // Update cart in Firestore
-            const cartRef = doc(db, 'carts', user.uid);
-            await setDoc(cartRef, {
-                items: updatedCartItems,
-                totalItems: newTotalItems,
-                totalValue: newTotalValue,
-                updatedAt: new Date().toISOString()
-            });
-
-            // Update saved items in Firestore
-            if (updatedSavedItems.length === 0) {
-                const savedRef = doc(db, 'savedItems', user.uid);
-                await deleteDoc(savedRef);
-                setSavedItems([]);
-            } else {
-                const savedRef = doc(db, 'savedItems', user.uid);
-                await updateDoc(savedRef, {
-                    items: updatedSavedItems,
-                    updatedAt: new Date().toISOString()
-                });
-                setSavedItems(updatedSavedItems);
-            }
-
-            setCartItems(updatedCartItems);
-            setCartSummary({
-                totalItems: newTotalItems,
-                totalValue: newTotalValue
-            });
-
-            showToast('Item moved to cart!', 'success');
-        } catch (error) {
-            console.error('Error moving item to cart:', error);
-            showToast('Failed to move item to cart', 'error');
-        }
-    };
-
-    // Delete saved item
-    const deleteSavedItem = async (productId) => {
-        if (!user) return;
-
-        try {
-            const updatedSavedItems = savedItems.filter(item => item.productId !== productId);
-
-            if (updatedSavedItems.length === 0) {
-                const savedRef = doc(db, 'savedItems', user.uid);
-                await deleteDoc(savedRef);
-                setSavedItems([]);
-            } else {
-                const savedRef = doc(db, 'savedItems', user.uid);
-                await updateDoc(savedRef, {
-                    items: updatedSavedItems,
-                    updatedAt: new Date().toISOString()
-                });
-                setSavedItems(updatedSavedItems);
-            }
-
-            showToast('Item removed from saved items', 'success');
-        } catch (error) {
-            console.error('Error deleting saved item:', error);
-            showToast('Failed to remove saved item', 'error');
-        }
-    };
-
-    // Loading state
-    if (loading || userLoading) {
-        return (
-            <>
-                <Navbar />
-                <SecNav />
-                <div className="loading-container">
-                    <ClipLoader color="#FF9900" size={50} />
-                    <p>Loading your cart...</p>
-                </div>
-                <Footer />
-            </>
-        );
-    }
-
-    // Not logged in
-    if (!user) {
-        return (
-            <>
-                <Navbar />
-                <SecNav />
-                <div className="cart-container">
-                    <h1>Shopping Cart</h1>
-                    <p>Please log in to view your cart items.</p>
-                    <button onClick={() => navigate('/login')} className="login-button">
-                        Log In
-                    </button>
-                </div>
-                <Footer />
-            </>
-        );
-    }
-
-    // Error state
-    if (error) {
-        return (
-            <>
-                <Navbar />
-                <SecNav />
-                <div className="cart-container">
-                    <h1>Shopping Cart</h1>
-                    <p className="error-message">{error}</p>
-                    <button onClick={() => fetchUserCart(user.uid)} className="retry-button">
-                        Try Again
-                    </button>
-                </div>
-                <Footer />
-            </>
-        );
-    }
-
-    return (
-        <>
+return (
+<>
 <Navbar />
 <SecNav />
 <div className="cart-main-container">

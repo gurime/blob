@@ -4302,7 +4302,7 @@ background-color: #f4f4f4;
 
 .signup-container {
   width: 100%;
-  max-width: 450px;
+  max-width: 600px;
   margin: 0 auto;
 }
 
@@ -4477,7 +4477,7 @@ background-color: #f4f4f4;
 
 .login-container {
   width: 100%;
-  max-width: 450px;
+  max-width: 600px;
   margin: 0 auto;
 }
 
@@ -9155,7 +9155,9 @@ text-align: center;
 
 }
 /* error css */
+/* checkout css */
 
+/* checkout css */
 /* cart css */
 /* Cart Main Container */
 .cart-main-container {
