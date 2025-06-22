@@ -3,7 +3,7 @@ import SecNav from './SecNav';
 import Footer from './Footer';
 import { useState, useEffect } from 'react';
 import { db } from '../db/firebase';
-import { doc, getDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, setDoc, collection, addDoc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../db/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -304,6 +304,48 @@ showToast('Failed to remove saved item', 'error');
 }
 };
 
+// Handle checkout process
+const handleCheckout = () => {
+  // Create order data structure that matches what your Order component expects
+const orderData = {
+id: `${Date.now()}`, // Temporary ID until order is saved to Firebase
+items: cartItems.map(item => ({
+productId: item.id || item.productId,
+productName: item.name || item.productName,
+category: item.category,
+condition: item.condition || 'New',
+quantity: item.quantity,
+seller: item.seller || 'Gulime',
+model: item.model || '',
+stock: item.stock || 'In Stock',
+description: item.description || '',
+premium: item.premium || item.hasPrime || false,
+automotive: item.automotive || false,
+hasPrime: item.hasPrime || false,
+totalPrice: item.price * item.quantity,
+imgUrl: item.imgUrl || item.image,
+image: item.image || item.imgUrl,
+storage: item.storage, // if applicable
+automotiveConfig: item.automotiveConfig // if applicable
+})),
+summary: {
+totalItems: cartItems.reduce((total, item) => total + item.quantity, 0),
+totalValue: cartItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+},
+createdAt: new Date().toISOString(),
+status: 'pending'
+};
+// Navigate to order page with the order data
+navigate('/order/temp', { 
+state: { 
+orderData: orderData 
+} 
+});
+};
+
+
+
+
 // Loading state
 if (loading || userLoading) {
 return (
@@ -546,8 +588,10 @@ Delete
                                 
 <button
 showToast={showToast}
+onClick={handleCheckout}
+disabled={cartItems.length === 0}
 className="checkout-btn">
-    Checkout
+Proceed to Checkout
 </button>
             
                                 
@@ -561,8 +605,7 @@ Continue shopping
 )}
 </div>
 </div>
-
-            <Footer />
+<Footer />
 
 {/* Toast Notification */}
 {toast.show && (

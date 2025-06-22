@@ -4,7 +4,15 @@
     <meta charset="UTF-8" />
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gulime</title>
+<!-- Add this to your HTML head or update your server CSP headers -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com;
+  style-src 'self' 'unsafe-inline' https://checkout.stripe.com;
+  img-src 'self' data: https://checkout.stripe.com https://q.stripe.com;
+  connect-src 'self' https://api.stripe.com https://checkout.stripe.com;
+  frame-src https://checkout.stripe.com https://js.stripe.com;
+">    <title>Gulime</title>
   </head>
   <body>
     <div id="root"></div>
