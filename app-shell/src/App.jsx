@@ -24,6 +24,7 @@ import NewsLetter from "./components/NewsLetter"
 import BlogDetails from "./components/BlogDetails"
 import Blogdmin from "./Admin/Blogdmin"
 import Order from "./components/Order"
+import PaymentSuccess from "./components/PaymentSuccess"
 
 function App() {
 return (
@@ -33,6 +34,7 @@ return (
 <Route path="/product/:id" element={<Details />} />
 <Route path="/blog/:id" element={<BlogDetails />} />
 <Route path='/order/:id' element={<Order />} />
+<Route path="/PaymentSuccess" element={<PaymentSuccess />} />
 {/* Specific category routes - these need to come BEFORE generic routes */}
 <Route path="/electronics" element={<CategoryPage />} />
 <Route path="/electronics/:subcategory" element={<CategoryPage />} />
