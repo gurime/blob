@@ -1,5 +1,5 @@
 import  { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import { useSearchParams } from "react-router-dom";
 import { auth, db } from '../db/firebase';
 import { User, Edit3, Save, X, Package, MapPin, CreditCard, Bell, Shield, Heart, Trash2, ShoppingCart, ExternalLink,Settings  } from 'lucide-react';
@@ -13,6 +13,12 @@ import { priceUtils } from '../utils/priceUtils';
 export default function Profile() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [orderHistory, setOrderHistory] = useState([]);
+  const [addresses, setAddresses] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [securitySettings, setSecuritySettings] = useState({});
+  const [isSignedIn, setIsSignedIn] = useState(false);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({});
 const [searchParams] = useSearchParams();
@@ -20,8 +26,7 @@ const defaultTab = searchParams.get("tab") || "account";
 const [activeTab, setActiveTab] = useState(defaultTab);  
 const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
-  const implementedTabs = ['account', 'wishlist','cookies'];
-  const [cookieSettings, setCookieSettings] = useState({
+const implementedTabs = ['account', 'wishlist', 'orders', 'cookies'];  const [cookieSettings, setCookieSettings] = useState({
   necessary: true, // Always true, can't be disabled
   analytics: true,
   marketing: false,
@@ -79,11 +84,13 @@ const [saving, setSaving] = useState(false);
       setRemovingItem(null);
     }
   };
-
-  useEffect(() => {
+ useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      setLoading(true);
+
       if (user) {
         try {
+          // Load user profile data
           const userDocRef = doc(db, "users", user.uid);
           const userDocSnapshot = await getDoc(userDocRef);
           if (userDocSnapshot.exists()) {
@@ -91,7 +98,6 @@ const [saving, setSaving] = useState(false);
             setUserData(data);
             setFormData(data);
           } else {
-            // Create default user data if document doesn't exist
             const defaultData = {
               fname: '',
               lname: '',
@@ -108,19 +114,35 @@ const [saving, setSaving] = useState(false);
             setUserData(defaultData);
             setFormData(defaultData);
           }
-          
-          // Load wishlist when user data is loaded
+
+          // Load wishlist
           await loadWishlist(user.uid);
-                  await loadCookieSettings(user.uid);
+
+          // Load cookie settings
+          await loadCookieSettings(user.uid);
+
+          // Load orders using the new method
+          await loadUserOrders(user.uid);
+
+          setIsSignedIn(true);
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.error("Error loading user data:", error);
+          setOrderHistory([]);
+          setIsSignedIn(true); // still signed in
         }
+      } else {
+        setUserData(null);
+        setOrderHistory([]);
+        setIsSignedIn(false);
       }
+
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
+
+  
 
   // Reload wishlist when switching to wishlist tab
   useEffect(() => {
@@ -249,6 +271,44 @@ const handleCookieToggle = (cookieType) => {
     [cookieType]: !prev[cookieType]
   }));
 };
+
+const loadUserOrders = async (userId) => {
+    try {
+      // Query orders collection where customer.uid matches the user ID
+      const ordersQuery = query(
+        collection(db, "orders"), 
+        where("customer.uid", "==", userId)
+      );
+      
+      const querySnapshot = await getDocs(ordersQuery);
+      const orders = [];
+      
+      querySnapshot.forEach((doc) => {
+        const orderData = doc.data();
+        orders.push({
+          orderId: doc.id, // This will be the document ID like "1750636623877"
+          ...orderData
+        });
+      });
+      
+      // Sort orders by creation date (newest first)
+      orders.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+        return dateB - dateA;
+      });
+      
+      setOrderHistory(orders);
+      console.log('Loaded orders:', orders); // Debug log
+      
+    } catch (error) {
+      console.error("Error loading orders:", error);
+      setOrderHistory([]);
+    }
+  };
+
+
+
 
   if (loading) {
     return (
@@ -485,6 +545,170 @@ const handleCookieToggle = (cookieType) => {
               </div>
             </div>
           )}
+          {/* accoint tab stops here */}
+
+        {/* orders tab begins here */}
+{activeTab === 'orders' && (
+  <div className="orders-section">
+    <div className="section-header">
+      <h2>Order History</h2>
+      <p className="section-subtitle">
+        {orderHistory.length} {orderHistory.length === 1 ? 'order' : 'orders'} placed
+      </p>
+    </div>
+
+    {orderHistory.length === 0 ? (
+      <div className="empty-orders">
+        <Package size={64} className="empty-icon" />
+        <h3>No orders yet</h3>
+        <p>When you place your first order, it will appear here.</p>
+        <Link to="/" className="btn btn-primary">
+          Start Shopping
+        </Link>
+      </div>
+    ) : (
+      <div className="orders-list">
+        {orderHistory
+          .sort((a, b) => {
+            // Handle Firebase serverTimestamp objects
+            const dateA = a.createdAt?._methodName ? new Date() : new Date(a.createdAt || a.orderDate);
+            const dateB = b.createdAt?._methodName ? new Date() : new Date(b.createdAt || b.orderDate);
+            return dateB - dateA;
+          })
+          .map((order) => (
+            <div key={order.id} className="order-card">
+              <div className="order-header">
+                <div className="order-info">
+                  <h3>Order #{order.id}</h3>
+                  <p className="order-date">
+                    Placed on {(() => {
+                      // Handle Firebase serverTimestamp
+                      if (order.createdAt?._methodName) {
+                        return new Date().toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        });
+                      }
+                      const orderDate = order.createdAt || order.orderDate;
+                      return new Date(orderDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      });
+                    })()}
+                  </p>
+                </div>
+                <div className="order-status">
+                  <span className={`status-badge ${order.status?.toLowerCase() || 'pending'}`}>
+                    {order.status || 'Pending'}
+                  </span>
+                  <span className="order-total">
+                    ${formatPrice(order.summary?.grandTotal || order.totalPrice || order.paidAmount)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="order-items">
+                {order.items && order.items.length > 0 ? (
+                  order.items.map((item, index) => (
+                    <div key={index} className="order-item">
+                      <div className="item-image">
+                        <img 
+                          src={`/assets/images/${item.imgUrl || item.image || 'placeholder.jpg'}`}
+                          alt={item.productName || item.name || item.title}
+                          onError={(e) => {
+                            e.target.src = '/assets/images/placeholder.jpg';
+                          }}
+                        />
+                      </div>
+                      <div className="item-details">
+      <Link to={`/product/${item.productId || item.id}`}>
+                          <h4>{(() => {
+                            const productName = item.productName || item.name || item.title;
+                            
+                            // Check if product name ends with a number (likely storage size)
+                            // and doesn't already contain storage units (GB, TB, MB)
+                            const hasStorageUnits = /\b(GB|TB|MB|gb|tb|mb)\b/i.test(productName);
+                            const endsWithNumber = /\d+$/.test(productName?.trim());
+                            
+                            // Categories that typically have storage
+                            const storageCategories = ['tablets', 'phones', 'laptops', 'computers', 'storage', 'memory'];
+                            const isStorageProduct = storageCategories.some(cat => 
+                              item.category?.toLowerCase().includes(cat.toLowerCase())
+                            );
+                            
+                            // Append GB if it's a storage product, ends with a number, and doesn't already have storage units
+                            if (isStorageProduct && endsWithNumber && !hasStorageUnits) {
+                              return `${productName}GB`;
+                            }
+                            
+                            return productName;
+                          })()}</h4>
+                        </Link>
+
+<p className="item-price">${formatPrice(item.price)} × {item.quantity || 1}</p>
+{item.size && <p className="item-size">Size: {item.size}</p>}
+{item.color && <p className="item-color">Color: {item.color}</p>}
+{item.condition && <p className="item-condition">Condition: {item.condition}</p>}
+                        {item.category && <p className="item-category">Category: {item.category}</p>}
+                        {item.seller && <p className="item-seller">Sold by: {item.seller}</p>}
+                      </div>
+
+                   
+                    </div>
+                  ))
+                ) : (
+                  <p className="no-items">No items found for this order</p>
+                )}
+              </div>
+
+              <div className="order-footer">
+                <div className="order-details">
+                  {order.customer?.address && (
+                    <div className="shipping-info">
+                      <strong>Shipped to:</strong>
+                      <p>{order.customer.name}</p>
+                      <p>{order.customer.address}</p>
+                      {/* Note: Firebase structure doesn't have separate city/state/zip fields */}
+                    </div>
+                  )}
+                  
+                  {/* Firebase doesn't have trackingNumber field - you may need to add this */}
+                  {order.trackingNumber && (
+                    <div className="tracking-info">
+                      <strong>Tracking:</strong>
+                      <p>{order.trackingNumber}</p>
+                    </div>
+                  )}
+
+                  {/* Payment details from Firebase */}
+                  {order.paymentDetails && (
+                    <div className="payment-info">
+                      <strong>Payment:</strong>
+                      <p>Card ending in {order.paymentDetails.cardLast4}</p>
+                      <p>Status: {order.status}</p>
+                    </div>
+                  )}
+
+                  {/* Delivery information */}
+                  {order.deliveryOption && (
+                    <div className="delivery-info">
+                      <strong>Delivery:</strong>
+                      <p>{order.deliveryOption} (${order.deliveryFee || 0})</p>
+                    </div>
+                  )}
+                </div>
+                
+             
+              </div>
+            </div>
+          ))}
+      </div>
+    )}
+  </div>
+)}
+          {/* orders tab stops here */}
 
           {activeTab === 'wishlist' && (
             <div className="wishlist-section">

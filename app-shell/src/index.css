@@ -3732,6 +3732,227 @@ height: 16px;
   color: #999;
 }
 
+.orders-section {
+  padding: 2rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.orders-section .section-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.orders-section .section-header h2 {
+  color: #1f2937;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.orders-section .section-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.empty-orders {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.empty-orders .empty-icon {
+  color: #d1d5db;
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+}
+
+.empty-orders h3 {
+  color: #374151;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.empty-orders p {
+  color: #6b7280;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+.empty-orders .btn {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.empty-orders .btn-primary {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  text-decoration: none;
+}
+
+.empty-orders .btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0;
+}
+
+.orders-list .order-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.orders-list .order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
+}
+
+.orders-list .order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.orders-list .order-info h3 {
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.orders-list .order-date {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.orders-list .order-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.orders-list .order-total {
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .orders-section {
+    padding: 1rem 0;
+  }
+  
+  .orders-section .section-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .empty-orders {
+    padding: 3rem 1rem;
+  }
+  
+  .empty-orders h3 {
+    font-size: 1.25rem;
+  }
+  
+  .orders-list .order-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .orders-list .order-status {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .orders-list .order-total {
+    font-size: 1.125rem;
+  }
+}
+.order-card {
+  /* Individual order card styling */
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background: white;
+}
+
+.order-header {
+  /* Header with order info and status */
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.status-badge {
+  /* Status styling with different colors */
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-badge.delivered { background: #d1fae5; color: #065f46; }
+.status-badge.processing { background: #fef3c7; color: #92400e; }
+.status-badge.shipped { background: #dbeafe; color: #1e40af; }
+.status-badge.cancelled { background: #fee2e2; color: #991b1b; }
+
+.order-items{
+  /* List of items in the order */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.order-item {
+  /* Individual item styling */
+  display: flex;
+  padding: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.order-footer {
+  /* Footer with actions */
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
 /* Coming Soon Section */
 .coming-soon {
   text-align: center;
@@ -9674,6 +9895,8 @@ text-align: center;
           }
         }
 /* payment success */
+
+
 
 /* Action Buttons */
 .order-actions {
