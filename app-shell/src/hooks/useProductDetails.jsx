@@ -276,7 +276,9 @@ const handleExtrasChange = useCallback((extra) => {
       selectedStorage,
       currentPrice: configPrice,
       displayName,
-      quantity
+      quantity,
+       totalPrice: totalPrice, // ✅ Add total price
+    unitPrice: configPrice  // ✅ Add unit price
     };
 
     if (isCarProduct) {

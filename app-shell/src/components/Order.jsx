@@ -1,4 +1,4 @@
-import { doc, getDoc } from 'firebase/firestore';
+import { deleteDoc, doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { auth, db } from '../db/firebase';
@@ -202,162 +202,194 @@ export default function Order() {
   }, [orderData, stripeLoaded]);
 
   const handleSubmit = async (event) => {
-    event.preventDefault();
+  event.preventDefault();
+  
+  if (!stripe || !elements || !cardElement) {
+    showToast('Payment system not ready. Please try again.', 'error');
+    return;
+  }
+
+  if (!orderData) {
+    showToast('Order data not available', 'error');
+    return;
+  }
+
+  setLoading(true);
+  setCardErrors(null);
+
+  try {
+    // First, create a payment method to validate the card
+    const { error: paymentMethodError, paymentMethod } = await stripe.createPaymentMethod({
+      type: 'card',
+      card: cardElement,
+      billing_details: {
+        name: names || 'Customer',
+      },
+    });
+
+    if (paymentMethodError) {
+      setCardErrors(paymentMethodError.message);
+      showToast(paymentMethodError.message, 'error');
+      setLoading(false);
+      return;
+    }
+
+    // Calculate total including delivery fee
+    const totalAmount = Math.round((orderData.summary.totalValue + deliveryFee) * 100);
     
-    if (!stripe || !elements || !cardElement) {
-      showToast('Payment system not ready. Please try again.', 'error');
-      return;
-    }
-
-    if (!orderData) {
-      showToast('Order data not available', 'error');
-      return;
-    }
-
-    setLoading(true);
-    setCardErrors(null);
-
+    // FIXED: Correct API endpoint URL
+    let clientSecret;
     try {
-      // First, create a payment method to validate the card
-      const { error: paymentMethodError, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: cardElement,
-        billing_details: {
-          name: names || 'Customer',
+      const response = await fetch('http://localhost:3000/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      });
-
-      if (paymentMethodError) {
-        setCardErrors(paymentMethodError.message);
-        showToast(paymentMethodError.message, 'error');
-        setLoading(false);
-        return;
-      }
-
-      // Calculate total including delivery fee
-      const totalAmount = Math.round((orderData.summary.totalValue + deliveryFee) * 100);
-      
-      // FIXED: Correct API endpoint URL
-      let clientSecret;
-      try {
-        const response = await fetch('http://localhost:3000/api/create-payment-intent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount: totalAmount,
-            currency: 'usd',
-            orderData: {
-              ...orderData,
-              deliveryOption: selectedDeliveryOption,
-              deliveryFee: deliveryFee
-            },
+        body: JSON.stringify({
+          amount: totalAmount,
+          currency: 'usd',
+          orderData: {
+            ...orderData,
             deliveryOption: selectedDeliveryOption,
-            deliveryFee: deliveryFee,
-            zip: orderData.zip || '',
-            state: orderData.state || '',
-            city: orderData.city || '',
-            address: orderData.address || '',
-            payment_method: paymentMethod.id,
-            customer_name: names || 'Customer',
-            customer_email: auth.currentUser?.email || '',
-            customer_id: auth.currentUser?.uid || '',
-            order_id: orderData.id || '',
-            total_items: orderData.summary?.totalItems || orderData.items?.length || 0,
-            description: `Order #${orderData.id} - ${orderData.summary?.totalItems || orderData.items?.length || 0} items`,
-            receipt_email: auth.currentUser?.email || '',
-            metadata: {
-              orderId: orderData.id || '',
-              deliveryOption: selectedDeliveryOption,
-              deliveryFee: deliveryFee.toString(),
-              totalItems: (orderData.summary?.totalItems || orderData.items?.length || 0).toString(),
-            },
-          }),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-
-        const data = await response.json();
-        
-        if (!data.client_secret) {
-          throw new Error('No client secret returned from server');
-        }
-        
-        clientSecret = data.client_secret;
-        
-      } catch (apiError) {
-        console.warn('Payment API error:', apiError);
-        
-        // Check if it's a network error or server is down
-        if (apiError.message.includes('Failed to fetch') || 
-            apiError.message.includes('NetworkError') ||
-            apiError.message.includes('HTTP 404') ||
-            apiError.message.includes('HTTP 500')) {
-          
-          // Mock payment for development/testing when API is not available
-          console.log('Using mock payment flow');
-          showToast('Payment processed successfully! (Development mode)', 'success');
-          
-          // Simulate processing delay
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          navigate('/PaymentSuccess', { 
-            state: { 
-              mockPayment: true,
-              orderData: {
-                ...orderData,
-                deliveryOption: selectedDeliveryOption,
-                deliveryFee: deliveryFee
-              },
-              amount: totalAmount / 100,
-              paymentMethod: paymentMethod
-            }
-          });
-          return;
-        } else {
-          // Re-throw other errors
-          throw apiError;
-        }
-      }
-
-      // Confirm payment with the client secret
-      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: paymentMethod.id
+            deliveryFee: deliveryFee
+          },
+          deliveryOption: selectedDeliveryOption,
+          deliveryFee: deliveryFee,
+          zip: orderData.zip || '',
+          state: orderData.state || '',
+          city: orderData.city || '',
+          address: orderData.address || '',
+          payment_method: paymentMethod.id,
+          customer_name: names || 'Customer',
+          customer_email: auth.currentUser?.email || '',
+          customer_id: auth.currentUser?.uid || '',
+          order_id: orderData.id || '',
+          total_items: orderData.summary?.totalItems || orderData.items?.length || 0,
+          description: `Order #${orderData.id} - ${orderData.summary?.totalItems || orderData.items?.length || 0} items`,
+          receipt_email: auth.currentUser?.email || '',
+          metadata: {
+            orderId: orderData.id || '',
+            deliveryOption: selectedDeliveryOption,
+            deliveryFee: deliveryFee.toString(),
+            totalItems: (orderData.summary?.totalItems || orderData.items?.length || 0).toString(),
+          },
+        }),
       });
 
-      if (error) {
-        setCardErrors(error.message);
-        showToast(error.message, 'error');
-      } else if (paymentIntent.status === 'succeeded') {
-        showToast('Payment successful!', 'success');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.client_secret) {
+        throw new Error('No client secret returned from server');
+      }
+      
+      clientSecret = data.client_secret;
+      
+    } catch (apiError) {
+      console.warn('Payment API error:', apiError);
+      
+      // Check if it's a network error or server is down
+      if (apiError.message.includes('Failed to fetch') || 
+          apiError.message.includes('NetworkError') ||
+          apiError.message.includes('HTTP 404') ||
+          apiError.message.includes('HTTP 500')) {
+        
+        // Mock payment for development/testing when API is not available
+        console.log('Using mock payment flow');
+        showToast('Payment processed successfully! (Development mode)', 'success');
+        
+        // Simulate processing delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Clear cart/products after successful mock payment
+        await clearCart();
+        
         navigate('/PaymentSuccess', { 
           state: { 
-            paymentIntent: paymentIntent,
+            mockPayment: true,
             orderData: {
               ...orderData,
               deliveryOption: selectedDeliveryOption,
               deliveryFee: deliveryFee
-            }
+            },
+            amount: totalAmount / 100,
+            paymentMethod: paymentMethod
           }
         });
+        return;
       } else {
-        setCardErrors('Payment was not completed successfully');
-        showToast('Payment was not completed successfully', 'error');
+        // Re-throw other errors
+        throw apiError;
       }
-      
-    } catch (error) {
-      console.error('Payment error:', error);
-      const errorMessage = error.message || 'Payment failed. Please try again.';
-      setCardErrors(errorMessage);
-      showToast(errorMessage, 'error');
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // Confirm payment with the client secret
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: paymentMethod.id
+    });
+
+    if (error) {
+      setCardErrors(error.message);
+      showToast(error.message, 'error');
+    } else if (paymentIntent.status === 'succeeded') {
+      showToast('Payment successful!', 'success');
+      
+      // Clear cart/products after successful payment
+      await clearCart();
+      
+      navigate('/PaymentSuccess', { 
+        state: { 
+          paymentIntent: paymentIntent,
+          orderData: {
+            ...orderData,
+            deliveryOption: selectedDeliveryOption,
+            deliveryFee: deliveryFee
+          }
+        }
+      });
+    } else {
+      setCardErrors('Payment was not completed successfully');
+      showToast('Payment was not completed successfully', 'error');
+    }
+    
+  } catch (error) {
+    console.error('Payment error:', error);
+    const errorMessage = error.message || 'Payment failed. Please try again.';
+    setCardErrors(errorMessage);
+    showToast(errorMessage, 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+// Add this helper function to clear the cart
+const clearCart = async () => {
+  try {
+    if (auth.currentUser) {
+      // If using Firebase/Firestore for cart storage
+      const cartRef = doc(db, 'carts', auth.currentUser.uid);
+      await deleteDoc(cartRef);
+      
+
+    }
+    
+    // If using local storage
+    localStorage.removeItem('cart');
+    localStorage.removeItem('cartItems');
+    
+ 
+    
+    console.log('Cart cleared successfully');
+  } catch (error) {
+    console.error('Error clearing cart:', error);
+    // Don't throw error here as payment was successful
+  }
+};
+
 
   const handleDeliveryChange = (e) => {
     const selectedOption = e.target.value;

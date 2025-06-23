@@ -97,13 +97,19 @@ const {
 const { formatPrice, generateOriginalPrice, calculateSavings } = priceUtils;
  const handleCartButtonClick = async (product) => {
   const selections = getCurrentSelections();
-  const quantity = 1;
+   const cartData = {
+    ...selections,
+    quantity: quantity, // Use the state quantity
+    totalPrice: totalPrice, // Use the calculated total price
+    unitPrice: configPrice || product?.price || 0
+  };
 
   const result = await cartHandlers.handleAddToCart(
     product,
     quantity,
     showToast,
-    selections
+    selections,
+    cartData
   );
 
   if (result.success && result.shouldNavigate) {

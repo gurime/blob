@@ -2,7 +2,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import navlogo from '../img/gulime.png'
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, CircleUserRound, Settings, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { ChevronDown, CircleUserRound, Heart, Settings, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { auth } from '../db/firebase';
 // Add these imports for Firestore
 import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
@@ -255,17 +255,33 @@ Account & Lists <ChevronDown size={12} style={{ marginLeft: 4 }} />
 
 {/* Dropdown */}
 <div className="account-dropdown">
+
 <Link style={{color:'#000'}} to="/profile?tab=account"className="dropdown-link">
-<div style={{display:'flex',alignItems:'center'}}><CircleUserRound style={{padding: '0 5px 0px 0'}}/>Your Account</div>
+
+<div style={{display:'flex',alignItems:'center'}}>
+<CircleUserRound style={{padding: '0 5px 0px 0'}}/>
+Your Account
+</div>
 </Link>
 
 <div style={{display:'flex',alignItems:'center'}}>  
+
 <Link style={{color:'#000'}} to="/profile?tab=orders" className="dropdown-link">  <ShoppingBag style={{padding: '0 5px 0px 0'}}/>
-Your Orders</Link>
+Your Orders
+</Link>
 </div>
    
 <div style={{display:'flex',alignItems:'center'}}>  
-<Link style={{color:'#000'}} to="/profile?tab=cookies" className="dropdown-link">  <Settings style={{padding: '0 5px 0px 0'}}/>
+  
+<Link style={{color:'#000'}} to="/profile?tab=wishlist" className="dropdown-link">  
+<Heart style={{padding: '0 5px 0px 0'}}/>
+Wishlist</Link>
+</div>
+
+<div style={{display:'flex',alignItems:'center'}}>  
+
+<Link style={{color:'#000'}} to="/profile?tab=cookies" className="dropdown-link">  
+<Settings style={{padding: '0 5px 0px 0'}}/>
 Cookie Settings</Link>
 </div>
    

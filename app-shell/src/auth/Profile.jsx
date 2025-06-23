@@ -1,6 +1,6 @@
 import  { useState, useEffect } from 'react';
 import { collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { auth, db } from '../db/firebase';
 import { User, Edit3, Save, X, Package, MapPin, CreditCard, Bell, Shield, Heart, Trash2, ShoppingCart, ExternalLink,Settings  } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -10,7 +10,11 @@ import SecNav from '../components/SecNav';
 import { wishlistHandlers } from '../utils/wishlistHandler'; 
 import { priceUtils } from '../utils/priceUtils'; 
 
+
 export default function Profile() {
+ 
+  const navigate = useNavigate();
+
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [orderHistory, setOrderHistory] = useState([]);
@@ -65,10 +69,33 @@ const implementedTabs = ['account', 'wishlist', 'orders', 'cookies'];  const [co
   };
 
   // Remove item from wishlist
+const handleClearWishlist = async () => {
+  if (!auth.currentUser) return;
+  if (window.confirm('Are you sure you want to clear your entire wishlist?')) {
+    setWishlistLoading(true);
+    try {
+      const result = await wishlistHandlers.clearWishlist(auth.currentUser.uid);
+      if (result.success) {
+        setWishlistItems([]);
+        showToast('Wishlist cleared successfully', 'success');
+      } else {
+        showToast('Error clearing wishlist', 'error');
+      }
+    } catch (error) {
+      console.error('Error clearing wishlist:', error);
+      showToast('Error clearing wishlist', 'error');
+    } finally {
+      setWishlistLoading(false);
+    }
+  }
+};
+
+
   const handleRemoveFromWishlist = async (productId) => {
     if (!auth.currentUser) return;
     
     setRemovingItem(productId);
+      if (window.confirm('Are you sure you want to clear your entire wishlist?')) {
     try {
       const result = await wishlistHandlers.removeFromWishlist(auth.currentUser.uid, productId);
       if (result.success) {
@@ -83,6 +110,7 @@ const implementedTabs = ['account', 'wishlist', 'orders', 'cookies'];  const [co
     } finally {
       setRemovingItem(null);
     }
+  }
   };
  useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -306,8 +334,6 @@ const loadUserOrders = async (userId) => {
       setOrderHistory([]);
     }
   };
-
-
 
 
   if (loading) {
@@ -545,7 +571,7 @@ const loadUserOrders = async (userId) => {
               </div>
             </div>
           )}
-          {/* accoint tab stops here */}
+          {/* account tab stops here */}
 
         {/* orders tab begins here */}
 {activeTab === 'orders' && (
@@ -556,270 +582,456 @@ const loadUserOrders = async (userId) => {
         {orderHistory.length} {orderHistory.length === 1 ? 'order' : 'orders'} placed
       </p>
     </div>
-
-    {orderHistory.length === 0 ? (
-      <div className="empty-orders">
-        <Package size={64} className="empty-icon" />
-        <h3>No orders yet</h3>
-        <p>When you place your first order, it will appear here.</p>
-        <Link to="/" className="btn btn-primary">
-          Start Shopping
-        </Link>
-      </div>
-    ) : (
-      <div className="orders-list">
-        {orderHistory
-          .sort((a, b) => {
-            // Handle Firebase serverTimestamp objects
-            const dateA = a.createdAt?._methodName ? new Date() : new Date(a.createdAt || a.orderDate);
-            const dateB = b.createdAt?._methodName ? new Date() : new Date(b.createdAt || b.orderDate);
-            return dateB - dateA;
-          })
-          .map((order) => (
-            <div key={order.id} className="order-card">
-              <div className="order-header">
-                <div className="order-info">
-                  <h3>Order #{order.id}</h3>
-                  <p className="order-date">
-                    Placed on {(() => {
-                      // Handle Firebase serverTimestamp
-                      if (order.createdAt?._methodName) {
-                        return new Date().toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        });
-                      }
-                      const orderDate = order.createdAt || order.orderDate;
-                      return new Date(orderDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      });
-                    })()}
-                  </p>
-                </div>
-                <div className="order-status">
-                  <span className={`status-badge ${order.status?.toLowerCase() || 'pending'}`}>
-                    {order.status || 'Pending'}
-                  </span>
-                  <span className="order-total">
-                    ${formatPrice(order.summary?.grandTotal || order.totalPrice || order.paidAmount)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="order-items">
-                {order.items && order.items.length > 0 ? (
-                  order.items.map((item, index) => (
-                    <div key={index} className="order-item">
-                      <div className="item-image">
-                        <img 
-                          src={`/assets/images/${item.imgUrl || item.image || 'placeholder.jpg'}`}
-                          alt={item.productName || item.name || item.title}
-                          onError={(e) => {
-                            e.target.src = '/assets/images/placeholder.jpg';
-                          }}
-                        />
-                      </div>
-                      <div className="item-details">
-      <Link to={`/product/${item.productId || item.id}`}>
-                          <h4>{(() => {
-                            const productName = item.productName || item.name || item.title;
-                            
-                            // Check if product name ends with a number (likely storage size)
-                            // and doesn't already contain storage units (GB, TB, MB)
-                            const hasStorageUnits = /\b(GB|TB|MB|gb|tb|mb)\b/i.test(productName);
-                            const endsWithNumber = /\d+$/.test(productName?.trim());
-                            
-                            // Categories that typically have storage
-                            const storageCategories = ['tablets', 'phones', 'laptops', 'computers', 'storage', 'memory'];
-                            const isStorageProduct = storageCategories.some(cat => 
-                              item.category?.toLowerCase().includes(cat.toLowerCase())
-                            );
-                            
-                            // Append GB if it's a storage product, ends with a number, and doesn't already have storage units
-                            if (isStorageProduct && endsWithNumber && !hasStorageUnits) {
-                              return `${productName}GB`;
-                            }
-                            
-                            return productName;
-                          })()}</h4>
-                        </Link>
-
-<p className="item-price">${formatPrice(item.price)} × {item.quantity || 1}</p>
-{item.size && <p className="item-size">Size: {item.size}</p>}
-{item.color && <p className="item-color">Color: {item.color}</p>}
-{item.condition && <p className="item-condition">Condition: {item.condition}</p>}
-                        {item.category && <p className="item-category">Category: {item.category}</p>}
-                        {item.seller && <p className="item-seller">Sold by: {item.seller}</p>}
-                      </div>
-
-                   
-                    </div>
-                  ))
-                ) : (
-                  <p className="no-items">No items found for this order</p>
-                )}
-              </div>
-
-              <div className="order-footer">
-                <div className="order-details">
-                  {order.customer?.address && (
-                    <div className="shipping-info">
-                      <strong>Shipped to:</strong>
-                      <p>{order.customer.name}</p>
-                      <p>{order.customer.address}</p>
-                      {/* Note: Firebase structure doesn't have separate city/state/zip fields */}
-                    </div>
-                  )}
-                  
-                  {/* Firebase doesn't have trackingNumber field - you may need to add this */}
-                  {order.trackingNumber && (
-                    <div className="tracking-info">
-                      <strong>Tracking:</strong>
-                      <p>{order.trackingNumber}</p>
-                    </div>
-                  )}
-
-                  {/* Payment details from Firebase */}
-                  {order.paymentDetails && (
-                    <div className="payment-info">
-                      <strong>Payment:</strong>
-                      <p>Card ending in {order.paymentDetails.cardLast4}</p>
-                      <p>Status: {order.status}</p>
-                    </div>
-                  )}
-
-                  {/* Delivery information */}
-                  {order.deliveryOption && (
-                    <div className="delivery-info">
-                      <strong>Delivery:</strong>
-                      <p>{order.deliveryOption} (${order.deliveryFee || 0})</p>
-                    </div>
-                  )}
-                </div>
-                
-             
-              </div>
+{orderHistory.length === 0 ? (
+  <div className="empty-orders">
+    <Package size={64} className="empty-icon" />
+    <h3>No orders yet</h3>
+    <p>When you place your first order, it will appear here.</p>
+    <Link to="/" className="btn btn-primary">
+      Start Shopping
+    </Link>
+  </div>
+) : (
+  <div className="orders-list">
+    {orderHistory
+      .sort((a, b) => {
+        // Handle Firebase serverTimestamp objects
+        const dateA = a.createdAt?._methodName ? new Date() : new Date(a.createdAt || a.orderDate);
+        const dateB = b.createdAt?._methodName ? new Date() : new Date(b.createdAt || b.orderDate);
+        return dateB - dateA;
+      })
+      .map((order) => (
+        <div key={order.id} className="order-card">
+          <div className="order-header">
+            <div className="order-info">
+              <h3>Order #{order.id}</h3>
+              <p className="order-date">
+                Placed on {(() => {
+                  // Handle Firebase serverTimestamp
+                  if (order.createdAt?._methodName) {
+                    return new Date().toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    });
+                  }
+                  const orderDate = order.createdAt || order.orderDate;
+                  return new Date(orderDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  });
+                })()}
+              </p>
+              {/* Add last updated timestamp */}
+              <p className="order-updated">
+                Last updated: {(() => {
+                  if (order.updatedAt?._methodName) {
+                    return new Date().toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    });
+                  }
+                  return order.updatedAt ? new Date(order.updatedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  }) : 'N/A';
+                })()}
+              </p>
             </div>
-          ))}
-      </div>
-    )}
+            <div className="order-status">
+              <span className={`status-badge ${order.status?.toLowerCase() || 'pending'}`}>
+                {order.status || 'Pending'}
+              </span>
+              <span className="order-total">
+                ${formatPrice(order.summary?.grandTotal || order.totalPrice || order.paidAmount)}
+              </span>
+            </div>
+          </div>
+
+          <div className="order-items">
+            {order.items && order.items.length > 0 ? (
+              order.items.map((item, index) => (
+                <div key={index} className="order-item">
+                  <div className="item-image">
+                    <img 
+                      src={`/assets/images/${item.imgUrl || item.image || 'placeholder.jpg'}`}
+                      alt={item.productName || item.name || item.title}
+                      onError={(e) => {
+                        e.target.src = '/assets/images/placeholder.jpg';
+                      }}
+                    />
+                  </div>
+                  <div className="item-details">
+                    <Link to={`/product/${item.productId || item.id}`}>
+                      <h4 className='cart-item-title'>{(() => {
+                        const productName = item.productName || item.name || item.title;
+                        
+                        // Check if product name ends with a number (likely storage size)
+                        // and doesn't already contain storage units (GB, TB, MB)
+                        const hasStorageUnits = /\b(GB|TB|MB|gb|tb|mb)\b/i.test(productName);
+                        const endsWithNumber = /\d+$/.test(productName?.trim());
+                        
+                        // Categories that typically have storage
+                        const storageCategories = ['tablets', 'phones', 'laptops', 'computers', 'storage', 'memory'];
+                        const isStorageProduct = storageCategories.some(cat => 
+                          item.category?.toLowerCase().includes(cat.toLowerCase())
+                        );
+                        
+                        // Append GB if it's a storage product, ends with a number, and doesn't already have storage units
+                        if (isStorageProduct && endsWithNumber && !hasStorageUnits) {
+                          return `${productName}GB`;
+                        }
+                        
+                        return productName;
+                      })()}</h4>
+                    </Link>
+                    <Link className='cart-item-title' to="/">Keep Shopping</Link>
+                    <p className="item-price">${formatPrice(item.price)} × {item.quantity || 1}</p>
+                    {item.size && <p className="item-size">Size: {item.size}</p>}
+                    {item.color && <p className="item-color">Color: {item.color}</p>}
+                    {item.condition && <p className="item-condition">Condition: {item.condition}</p>}
+                    {item.category && <p className="item-category">Category: {item.category}</p>}
+                    {item.seller && <p className="item-seller">Sold by: {item.seller}</p>}
+                    {item.brand && <p className="item-brand">Brand: {item.brand}</p>}
+                    {item.hasPrime && <p className="item-prime">Gulime Premium</p>}
+                    {item.automotiveConfig && <p className="item-auto-config">Config: {item.automotiveConfig}</p>}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="no-items">No items found for this order</p>
+            )}
+          </div>
+
+          <div className="order-footer">
+            <div className="order-details">
+              {/* Customer Information */}
+              {order.customer && (
+                <div className="customer-info">
+                  <strong>Customer Details:</strong>
+                  <p>Name: {order.customer.name}</p>
+                  <p>Email: {order.customer.email}</p>
+                  {order.customer.phone && <p>Phone: {order.customer.phone}</p>}
+                  {order.customer.address && (
+                    <div className="shipping-info">
+                      <strong>Shipping Address:</strong>
+                      <p>{order.customer.address}</p>
+                    </div>
+                  )}
+                  {order.customer.city && <p>City: {order.customer.city}</p>}
+                  {order.customer.state && <p>State: {order.customer.state}</p>}
+                  {order.customer.zip && <p>ZIP: {order.customer.zip}</p>}
+                  {order.customer.country && <p>Country: {order.customer.country}</p>}
+                  <p>User ID: {order.customer.uid}</p>
+                </div>
+              )}
+
+              {/* Order Summary */}
+              {order.summary && (
+                <div className="order-summary">
+                  <strong>Order Summary:</strong>
+                  <p>Total Items: {order.summary.totalItems}</p>
+                  <p>Subtotal: ${formatPrice(order.summary.totalPrice)}</p>
+                  <p>Total Value: ${formatPrice(order.summary.totalValue)}</p>
+                  {order.summary.totalTax > 0 && <p>Tax: ${formatPrice(order.summary.totalTax)}</p>}
+                  {order.summary.totalDiscount > 0 && <p>Discount: -${formatPrice(order.summary.totalDiscount)}</p>}
+                  <p><strong>Grand Total: ${formatPrice(order.summary.grandTotal)}</strong></p>
+                </div>
+              )}
+
+              {/* Payment Details */}
+              {order.paymentDetails && (
+                <div className="payment-info">
+                  <strong>Payment Details:</strong>
+                  <p>Card: {order.paymentDetails.cardBrand} ending in {order.paymentDetails.cardLast4}</p>
+                  <p>Amount Paid: ${formatPrice(order.paymentDetails.amount)}</p>
+                  <p>Currency: {order.paymentDetails.currency?.toUpperCase()}</p>
+                  <p>Payment Status: {order.paymentDetails.paymentStatus}</p>
+                  <p>Customer Email: {order.paymentDetails.customerEmail}</p>
+                
+
+                </div>
+              )}
+
+              {/* Delivery Information */}
+              {order.deliveryOption && (
+                <div className="delivery-info">
+                  <strong>Delivery Details:</strong>
+                  <p>Option: {order.deliveryOption}</p>
+                  <p>Fee: ${formatPrice(order.deliveryFee || 0)}</p>
+                </div>
+              )}
+
+              {/* Additional Order Information */}
+            
+
+              {/* Tracking Information (if available) */}
+              {order.trackingNumber && (
+                <div className="tracking-info">
+                  <strong>Tracking:</strong>
+                  <p>Tracking Number: {order.trackingNumber}</p>
+                </div>
+              )}
+            </div>
+      
+            <div className="order-actions"> 
+              <Link to="/" className="continue-shopping-link">
+                Keep Shopping
+              </Link>
+            </div>
+          </div>
+        </div>
+      ))}
   </div>
 )}
-          {/* orders tab stops here */}
 
-          {activeTab === 'wishlist' && (
-            <div className="wishlist-section">
-              <div className="section-header">
-                <h2>My Wishlist</h2>
-                <p className="section-subtitle">
-                  {wishlistItems.length} {wishlistItems.length === 1 ? 'item' : 'items'} saved for later
-                </p>
-              </div>
-
-              {wishlistLoading ? (
-                <div className="wishlist-loading">
-                  <div className="loading-spinner"></div>
-                  <p>Loading your wishlist...</p>
-                </div>
-              ) : wishlistItems.length === 0 ? (
-                <div className="empty-wishlist">
-                  <Heart size={64} className="empty-icon" />
-                  <h3>Your wishlist is empty</h3>
-                  <p>Start adding items you love to your wishlist!</p>
-                  <Link to="/" className="btn btn-primary">
-                    Continue Shopping
-                  </Link>
-                </div>
-              ) : (
-                <div className="wishlist-grid">
-                  {wishlistItems.map((item) => (
-                    <div key={item.id} className="wishlist-card">
-                      <div className="wishlist-item-image">
-                        <img 
-                          src={`/assets/images/${item.productData?.imgUrl || item.productImage}`} 
-                          alt={item.productName}
-                          onError={(e) => {
-                            e.target.src = '/assets/images/placeholder.jpg';
-                          }}
-                        />
-                        <button
-                          className="remove-wishlist-btn"
-                          onClick={() => handleRemoveFromWishlist(item.productId)}
-                          disabled={removingItem === item.productId}
-                          title="Remove from wishlist"
-                        >
-                          {removingItem === item.productId ? (
-                            <div className="btn-spinner"></div>
-                          ) : (
-                            <Trash2 size={16} />
-                          )}
-                        </button>
-                      </div>
-                      
-                      <div className="wishlist-item-content">
-                        <h3 className="wishlist-item-title">{item.productName}</h3>
-                        
-                        {item.productData?.category && (
-                          <p className="wishlist-item-category">{item.productData.category}</p>
-                        )}
-                        
-                        <div className="wishlist-item-price">
-                          <span className="current-price">
-                            ${formatPrice(item.productPrice)}
-                          </span>
-                          {item.productData?.originalPrice && (
-                            <span className="original-price">
-                              ${formatPrice(item.productData.originalPrice)}
-                            </span>
-                          )}
-                        </div>
-                        
-                        {item.productData?.description && (
-                          <p className="wishlist-item-description">
-                            {item.productData.description.length > 100 
-                              ? `${item.productData.description.substring(0, 100)}...`
-                              : item.productData.description
-                            }
-                          </p>
-                        )}
-                        
-                        <div className="wishlist-item-meta">
-                          <span className="added-date">
-                            Added {new Date(item.addedAt).toLocaleDateString()}
-                          </span>
-                          {item.productData?.prime && (
-                            <span className="prime-badge-small">Prime</span>
-                          )}
-                        </div>
-                        
-                        <div className="wishlist-item-actions">
-                          <button className="btn btn-primary">
-                            <ShoppingCart size={14} />
-                            Add to Cart
-                          </button>
-                          <Link 
-                            to={`/product/${item.productId}`}
-                            className="btn btn-secondary"
-                          >
-                            <ExternalLink size={14} />
-                            View Details
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-              )}
             </div>
           )}
 
 
 
-          
+          {/* wishlist tab */}
+          {activeTab === 'wishlist' && (
+  <div className="wishlist-section">
+    <div className="section-header">
+      <h2>My Wishlist</h2>
+      <p className="section-subtitle">
+        {wishlistItems.length} {wishlistItems.length === 1 ? 'item' : 'items'} saved
+      </p>
+    </div>
+
+    {wishlistLoading ? (
+      <div className="wishlist-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading your wishlist...</p>
+      </div>
+    ) : wishlistItems.length === 0 ? (
+      <div className="empty-wishlist">
+        <Heart size={64} className="empty-icon" />
+        <h3>Your wishlist is empty</h3>
+        <p>Save items you love to your wishlist and they'll appear here.</p>
+        <Link to="/" className="btn btn-primary">
+          Start Shopping
+        </Link>
+      </div>
+    ) : (
+      <div className="wishlist-grid">
+        {wishlistItems.map((item) => (
+          <div key={item.productId} className="wishlist-item-card">
+            {/* Product Image */}
+            <div className="wishlist-item-image">
+              <img 
+                src={`/assets/images/${item.productImage || item.productData?.imgUrl || 'placeholder.jpg'}`}
+                alt={item.productName || item.productData?.product_name}
+                onError={(e) => {
+                  e.target.src = '/assets/images/placeholder.jpg';
+                }}
+              />
+           
+              {item.productData?.condition && (
+                <span className={`condition-badge ${item.productData.condition.toLowerCase()}`}>
+                  {item.productData.condition}
+                </span>
+              )}
+            </div>
+
+            {/* Product Details */}
+            <div className="wishlist-item-details">
+              <Link to={`/product/${item.productId}`} className="product-link">
+                <h4 className="product-title">
+                  {item.productName || item.productData?.product_name}
+                </h4>
+              </Link>
+              
+              <p className="product-description">
+                {item.productData?.description && item.productData.description.length > 100 
+                  ? `${item.productData.description.substring(0, 100)}...`
+                  : item.productData?.description
+                }
+              </p>
+
+              <div className="product-meta">
+                <span className="product-category">
+                  {item.productCategory || item.productData?.category}
+                </span>
+                {item.productData?.brand && (
+                  <span className="product-brand">
+                    {item.productData.brand}
+                  </span>
+                )}
+              </div>
+
+              {/* Product Specifications Preview */}
+              {item.productData?.specifications && (
+                <div className="product-specs-preview">
+                  {item.productData.screen_size && (
+                    <span className="spec-item">
+                      📱 {item.productData.screen_size}
+                    </span>
+                  )}
+                  {item.productData.specifications.chip?.model && (
+                    <span className="spec-item">
+                      🔧 {item.productData.specifications.chip.model}
+                    </span>
+                  )}
+                  {item.productData.storageDetails && (
+                    <span className="spec-item">
+                      💾 {item.productData.storageDetails}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Available Colors */}
+              {item.productData?.availableColors?.colors && (
+                <div className="available-colors">
+                  <span className="colors-label">Colors:</span>
+                  <div className="color-options">
+                    {item.productData.availableColors.colors
+                      .filter(color => color.available)
+                      .slice(0, 4)
+                      .map((color, index) => (
+                        <div 
+                          key={index}
+                          className="color-swatch"
+                          style={{ backgroundColor: color.hex }}
+                          title={color.name}
+                        ></div>
+                      ))}
+                    {item.productData.availableColors.colors.filter(c => c.available).length > 4 && (
+                      <span className="more-colors">
+                        +{item.productData.availableColors.colors.filter(c => c.available).length - 4}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Storage Options */}
+              {item.productData?.storageOptions?.storage && (
+                <div className="storage-options">
+                  <span className="storage-label">Storage:</span>
+                  <div className="storage-variants">
+                    {item.productData.storageOptions.storage
+                      .filter(storage => storage.available)
+                      .slice(0, 3)
+                      .map((storage, index) => (
+                        <span key={index} className="storage-option">
+                          {storage.size}GB
+                          {storage.popular && <span className="popular-tag">Popular</span>}
+                        </span>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Rating */}
+              {item.productData?.rating && (
+                <div className="product-rating">
+                  <div className="stars">
+                    {[...Array(5)].map((_, i) => (
+                      <span 
+                        key={i} 
+                        className={`star ${i < item.productData.rating ? 'filled' : ''}`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <span className="rating-text">
+                    {item.productData.rating}/5
+                    {item.productData.totalReviews && (
+                      <span className="review-count">
+                        ({item.productData.totalReviews} {item.productData.totalReviews === 1 ? 'review' : 'reviews'})
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+
+              {/* Price and Actions */}
+              <div className="wishlist-item-footer">
+                <div className="price-section">
+                  <span className="current-price">
+                    ${formatPrice(item.productData?.price || 0)}
+                  </span>
+                  {item.productData?.seller && (
+                    <span className="seller-info">
+                      by {item.productData.seller}
+                    </span>
+                  )}
+                </div>
+
+                <div className="item-actions">
+                  <Link 
+                    to={`/product/${item.productId}`}
+                    className="btn btn-primary btn-sm"
+                  >
+                    <ExternalLink size={14} />
+                    View Details
+                  </Link>
+                  
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => handleAddToCart(item)}
+                    disabled={item.productData?.stock === 'Out of Stock'}
+                  >
+                    <ShoppingCart size={14} />
+                    {item.productData?.stock === 'Out of Stock' ? 'Out of Stock' : 'Add to Cart'}
+                  </button>
+                  
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleRemoveFromWishlist(item.productId)}
+                    disabled={removingItem === item.productId}
+                  >
+                    {removingItem === item.productId ? (
+                      <div className="btn-loading"></div>
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
+                    Remove
+                  </button>
+                </div>
+              </div>
+
+              {/* Added Date */}
+              <div className="wishlist-meta">
+                <span className="added-date">
+                  Added on {new Date(item.addedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* Wishlist Actions */}
+    {wishlistItems.length > 0 && (
+      <div className="wishlist-actions">
+        <button 
+          className="btn btn-secondary"
+          onClick={() => handleClearWishlist()}
+        >
+          Clear All Items
+        </button>
+        <Link to="/" className="btn btn-primary">
+          Continue Shopping
+        </Link>
+      </div>
+    )}
+  </div>
+)}
+
+          {/* wishlist tab */}
 
        
 

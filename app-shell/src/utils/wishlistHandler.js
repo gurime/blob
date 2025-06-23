@@ -1,4 +1,4 @@
-import { doc, setDoc, deleteDoc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, getDoc, collection, getDocs, where, query } from 'firebase/firestore';
 import { db } from '../db/firebase';
 
 export const wishlistHandlers = {
@@ -91,6 +91,31 @@ export const wishlistHandlers = {
       return { success: false, message: error.message, wishlist: [] };
     }
   },
+
+  // clear all wishlist items for a user
+clearWishlist: async (userId) => {
+  try {
+    if (!userId) {
+      throw new Error('User must be logged in');
+    }
+    
+    const wishlistCollection = collection(db, 'wishlist');
+    const q = query(wishlistCollection, where('userId', '==', userId));
+    const querySnapshot = await getDocs(q);
+    
+    // Delete each document individually
+    const deletePromises = [];
+    querySnapshot.forEach((doc) => {
+      deletePromises.push(deleteDoc(doc.ref));
+    });
+    
+    await Promise.all(deletePromises);
+    return { success: true, message: 'Wishlist cleared!' };
+  } catch (error) {
+    console.error('Error clearing wishlist:', error);
+    return { success: false, message: error.message };
+  }
+},
 
   // Toggle wishlist status (add if not present, remove if present)
   toggleWishlist: async (userId, product) => {

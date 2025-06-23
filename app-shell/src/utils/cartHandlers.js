@@ -3,7 +3,7 @@ import { auth, db } from "../db/firebase";
 
 // Add this enhanced version with debugging
 export const cartHandlers = {
- handleAddToCart: async (product, quantity = 1, showToast, selectedOptions,actualSelectedOptions = {}) => {
+handleAddToCart: async (product, quantity = 1, showToast, selectedOptions, actualSelectedOptions = {}) => {
     try {
         // Check if user is authenticated
         const user = auth.currentUser;
@@ -12,29 +12,28 @@ export const cartHandlers = {
             return { success: false, message: 'User not authenticated' };
         }
 
-        // Debug: Log what we're working with
-
-
         // Use the current price (which includes all configuration options)
         const currentPrice = selectedOptions.currentPrice || selectedOptions.configPrice || product.price;
-        const totalPrice = currentPrice * quantity;
+        const totalPrice = currentPrice * quantity; // ✅ Correct calculation
 
         // Create cart item object
         const cartItem = {
             productId: product._id || product.id,
             productName: selectedOptions.displayName || product.product_name || product.name,
             price: currentPrice,
-            quantity: quantity,
+            quantity: quantity, // ✅ This is correct
+            totalPrice: totalPrice, // ✅ Remove the duplicate and use correct calculation
+            description: product.description || 'No description available',
+            brandName: product.brand_name || product.brand || 'Unknown',
             accelration: product.accelration,
             range: product.range,
             model: product.model,
             topSpeed: product.topSpeed,
-            totalPrice: totalPrice,
             category: product.category || 'General',
             imgUrl: product.imgUrl || 'default-product.jpg',
             brand: product.brand || 'Unknown',
             
-            // Standard product options - also use actualSelectedOptions
+            // Standard product options
             color: actualSelectedOptions.selectedColor || product.color || null,
             size: selectedOptions.selectedSize || product.size || null,
             storage: selectedOptions.selectedStorage || null,
