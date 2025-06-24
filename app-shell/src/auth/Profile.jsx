@@ -31,7 +31,8 @@ const defaultTab = searchParams.get("tab") || "account";
 const [activeTab, setActiveTab] = useState(defaultTab);  
 const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
-const implementedTabs = ['account', 'wishlist', 'orders', 'cookies'];  const [cookieSettings, setCookieSettings] = useState({
+const implementedTabs = ['account', 'wishlist', 'orders', 'cookies','security','notifications'];  
+const [cookieSettings, setCookieSettings] = useState({
   necessary: true, // Always true, can't be disabled
   analytics: true,
   marketing: false,
@@ -1149,6 +1150,681 @@ const handleAddToCart = async (productId, quantity = 1, productData = {}) => {
 )}
 
           {/* wishlist tab stops */}
+          {/* security tab starts here */}
+{/* Security Tab - Add this inside the tab content section */}
+{activeTab === 'security' && (
+  <div className="security-section">
+    <div className="section-header">
+      <h2>Security Settings</h2>
+      <p className="section-subtitle">
+        Keep your account secure with these security features
+      </p>
+    </div>
+
+    <div className="security-content">
+      {/* Password Section */}
+      <div className="security-card">
+        <div className="security-card-header">
+          <div className="security-card-icon">
+            <Shield size={24} />
+          </div>
+          <div className="security-card-info">
+            <h3>Password</h3>
+            <p>Last changed: 2 months ago</p>
+          </div>
+          <button className="security-action-btn">
+            Change Password
+          </button>
+        </div>
+        <div className="security-card-details">
+          <div className="password-strength">
+            <span className="strength-label">Password Strength:</span>
+            <div className="strength-indicator strong">
+              <div className="strength-bar"></div>
+            </div>
+            <span className="strength-text">Strong</span>
+          </div>
+          <p className="security-tip">
+            Use a strong password with at least 8 characters, including uppercase, lowercase, numbers, and symbols.
+          </p>
+        </div>
+      </div>
+
+      {/* Two-Factor Authentication */}
+      <div className="security-card">
+        <div className="security-card-header">
+          <div className="security-card-icon">
+            <Shield size={24} />
+          </div>
+          <div className="security-card-info">
+            <h3>Two-Factor Authentication</h3>
+            <p>Add an extra layer of security to your account</p>
+          </div>
+          <div className="security-toggle">
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={securitySettings.twoFactorEnabled || false}
+                onChange={() => setSecuritySettings(prev => ({
+                  ...prev,
+                  twoFactorEnabled: !prev.twoFactorEnabled
+                }))}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div className="security-card-details">
+          {securitySettings.twoFactorEnabled ? (
+            <div className="two-factor-enabled">
+              <p className="security-status enabled">✓ Two-factor authentication is enabled</p>
+              <div className="backup-codes">
+                <h4>Backup Codes</h4>
+                <p>Save these backup codes in case you lose access to your authenticator app:</p>
+                <div className="backup-codes-list">
+                  <code>1234-5678</code>
+                  <code>8765-4321</code>
+                  <code>2468-1357</code>
+                  <code>9753-8642</code>
+                </div>
+                <button className="security-action-btn secondary">
+                  Generate New Codes
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="two-factor-disabled">
+              <p className="security-status disabled">Two-factor authentication is disabled</p>
+              <p>Enable 2FA to secure your account with your phone or authenticator app.</p>
+              <button className="security-action-btn">
+                Enable 2FA
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Login Activity */}
+      <div className="security-card">
+        <div className="security-card-header">
+          <div className="security-card-icon">
+            <User size={24} />
+          </div>
+          <div className="security-card-info">
+            <h3>Recent Login Activity</h3>
+            <p>Monitor your account access</p>
+          </div>
+          <button className="security-action-btn secondary">
+            View All Activity
+          </button>
+        </div>
+        <div className="security-card-details">
+          <div className="login-activity-list">
+            <div className="login-activity-item current">
+              <div className="activity-info">
+                <div className="activity-location">
+                  <strong>Current Session</strong>
+                  <span className="activity-device">Chrome on Windows</span>
+                </div>
+                <div className="activity-details">
+                  <span className="activity-ip">192.168.1.100</span>
+                  <span className="activity-time">Active now</span>
+                </div>
+              </div>
+              <div className="activity-status current-session">Current</div>
+            </div>
+            
+            <div className="login-activity-item">
+              <div className="activity-info">
+                <div className="activity-location">
+                  <strong>Chattanooga, TN</strong>
+                  <span className="activity-device">Safari on iPhone</span>
+                </div>
+                <div className="activity-details">
+                  <span className="activity-ip">192.168.1.105</span>
+                  <span className="activity-time">2 hours ago</span>
+                </div>
+              </div>
+              <button className="activity-action">Sign Out</button>
+            </div>
+
+            <div className="login-activity-item">
+              <div className="activity-info">
+                <div className="activity-location">
+                  <strong>Nashville, TN</strong>
+                  <span className="activity-device">Chrome on Android</span>
+                </div>
+                <div className="activity-details">
+                  <span className="activity-ip">10.0.0.45</span>
+                  <span className="activity-time">Yesterday</span>
+                </div>
+              </div>
+              <div className="activity-status">Signed out</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Privacy Settings */}
+      <div className="security-card">
+        <div className="security-card-header">
+          <div className="security-card-icon">
+            <Shield size={24} />
+          </div>
+          <div className="security-card-info">
+            <h3>Privacy Settings</h3>
+            <p>Control how your data is used</p>
+          </div>
+        </div>
+        <div className="security-card-details">
+          <div className="privacy-settings">
+            <div className="privacy-option">
+              <div className="privacy-option-info">
+                <h4>Profile Visibility</h4>
+                <p>Control who can see your profile information</p>
+              </div>
+              <select className="privacy-select">
+                <option value="private">Private</option>
+                <option value="friends">Friends Only</option>
+                <option value="public">Public</option>
+              </select>
+            </div>
+
+            <div className="privacy-option">
+              <div className="privacy-option-info">
+                <h4>Order History Visibility</h4>
+                <p>Who can see your purchase history</p>
+              </div>
+              <select className="privacy-select">
+                <option value="private">Only Me</option>
+                <option value="family">Family Members</option>
+              </select>
+            </div>
+
+            <div className="privacy-option">
+              <div className="privacy-option-info">
+                <h4>Activity Status</h4>
+                <p>Show when you were last active</p>
+              </div>
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={securitySettings.showActivityStatus || false}
+                  onChange={() => setSecuritySettings(prev => ({
+                    ...prev,
+                    showActivityStatus: !prev.showActivityStatus
+                  }))}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Account Deletion */}
+      <div className="security-card danger">
+        <div className="security-card-header">
+          <div className="security-card-icon danger">
+            <Trash2 size={24} />
+          </div>
+          <div className="security-card-info">
+            <h3>Delete Account</h3>
+            <p>Permanently delete your account and all data</p>
+          </div>
+          <button className="security-action-btn danger">
+            Delete Account
+          </button>
+        </div>
+        <div className="security-card-details">
+          <p className="danger-warning">
+            ⚠️ This action cannot be undone. All your data, orders, and account information will be permanently deleted.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+          {/* security tab stops here */}
+
+          {/* notifications tab starts here */}
+{/* Notifications Tab - Add this inside the tab content section */}
+{activeTab === 'notifications' && (
+  <div className="notifications-section">
+    <div className="section-header">
+      <h2>Notification Settings</h2>
+      <p className="section-subtitle">
+        Choose how you want to be notified about orders, deals, and account activity
+      </p>
+    </div>
+
+    <div className="notifications-content">
+      {/* Email Notifications */}
+      <div className="notification-category">
+        <div className="notification-category-header">
+          <div className="notification-category-icon">
+            <Bell size={24} />
+          </div>
+          <div className="notification-category-info">
+            <h3>Email Notifications</h3>
+            <p>Receive updates via email</p>
+          </div>
+        </div>
+
+        <div className="notification-options">
+          <div className="notification-option">
+            <div className="notification-option-info">
+              <h4>Order Updates</h4>
+              <p>Get notified about order confirmations, shipping, and delivery</p>
+            </div>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications.email?.orderUpdates ?? true}
+                onChange={() => setNotifications(prev => ({
+                  ...prev,
+                  email: {
+                    ...prev.email,
+                    orderUpdates: !prev.email?.orderUpdates
+                  }
+                }))}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div className="notification-option">
+            <div className="notification-option-info">
+              <h4>Promotions & Deals</h4>
+              <p>Special offers, discounts, and promotional campaigns</p>
+            </div>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications.email?.promotions ?? false}
+                onChange={() => setNotifications(prev => ({
+                  ...prev,
+                  email: {
+                    ...prev.email,
+                    promotions: !prev.email?.promotions
+                  }
+                }))}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div className="notification-option">
+            <div className="notification-option-info">
+              <h4>Price Drops</h4>
+              <p>When items in your wishlist go on sale</p>
+            </div>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications.email?.priceDrops ?? true}
+                onChange={() => setNotifications(prev => ({
+                  ...prev,
+                  email: {
+                    ...prev.email,
+                    priceDrops: !prev.email?.priceDrops
+                  }
+                }))}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div className="notification-option">
+            <div className="notification-option-info">
+              <h4>Security Alerts</h4>
+              <p>Important security notifications and login alerts</p>
+            </div>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications.email?.security ?? true}
+                onChange={() => setNotifications(prev => ({
+                  ...prev,
+                  email: {
+                    ...prev.email,
+                    security: !prev.email?.security
+                  }
+                }))}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div className="notification-option">
+            <div className="notification-option-info">
+              <h4>Weekly Newsletter</h4>
+              <p>Product recommendations and trending items</p>
+            </div>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications.email?.newsletter ?? false}
+                onChange={() => setNotifications(prev => ({
+                  ...prev,
+                  email: {
+                    ...prev.email,
+                    newsletter: !prev.email?.newsletter
+                  }
+                }))}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Push Notifications */}
+      <div className="notification-category">
+        <div className="notification-category-header">
+          <div className="notification-category-icon">
+            <Bell size={24} />
+          </div>
+          <div className="notification-category-info">
+            <h3>Push Notifications</h3>
+            <p>Get instant notifications on your device</p>
+          </div>
+          <button className="notification-enable-btn">
+            Enable Push Notifications
+          </button>
+        </div>
+
+        <div className="notification-options">
+          <div className="notification-option">
+            <div className="notification-option-info">
+              <h4>Order Status</h4>
+              <p>Real-time updates on your orders</p>
+            </div>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications.push?.orderStatus ?? true}
+                onChange={() => setNotifications(prev => ({
+                  ...prev,
+                  push: {
+                    ...prev.push,
+                    orderStatus: !prev.push?.orderStatus
+                  }
+                }))}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div className="notification-option">
+            <div className="notification-option-info">
+              <h4>Flash Sales</h4>
+              <p>Limited-time offers and flash sales</p>
+            </div>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications.push?.flashSales ?? false}
+                onChange={() => setNotifications(prev => ({
+                  ...prev,
+                  push: {
+                    ...prev.push,
+                    flashSales: !prev.push?.flashSales
+                  }
+                }))}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div className="notification-option">
+            <div className="notification-option-info">
+              <h4>Back in Stock</h4>
+              <p>When out-of-stock items become available</p>
+            </div>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications.push?.backInStock ?? true}
+                onChange={() => setNotifications(prev => ({
+                  ...prev,
+                  push: {
+                    ...prev.push,
+                    backInStock: !prev.push?.backInStock
+                  }
+                }))}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* SMS Notifications */}
+      <div className="notification-category">
+        <div className="notification-category-header">
+          <div className="notification-category-icon">
+            <Bell size={24} />
+          </div>
+          <div className="notification-category-info">
+            <h3>SMS Notifications</h3>
+            <p>Text messages to your phone</p>
+          </div>
+        </div>
+
+        <div className="notification-options">
+          <div className="phone-number-section">
+            <div className="form-group">
+              <label>Phone Number</label>
+              <input
+                type="tel"
+                value={formData.phone || ''}
+                onChange={handleInputChange}
+                name="phone"
+                placeholder="(555) 123-4567"
+                className="phone-input"
+              />
+            </div>
+          </div>
+
+          <div className="notification-option">
+            <div className="notification-option-info">
+              <h4>Delivery Notifications</h4>
+              <p>SMS updates when your package is out for delivery</p>
+            </div>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications.sms?.delivery ?? false}
+                onChange={() => setNotifications(prev => ({
+                  ...prev,
+                  sms: {
+                    ...prev.sms,
+                    delivery: !prev.sms?.delivery
+                  }
+                }))}
+                disabled={!formData.phone}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div className="notification-option">
+            <div className="notification-option-info">
+              <h4>Security Codes</h4>
+              <p>Two-factor authentication codes</p>
+            </div>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications.sms?.securityCodes ?? true}
+                onChange={() => setNotifications(prev => ({
+                  ...prev,
+                  sms: {
+                    ...prev.sms,
+                    securityCodes: !prev.sms?.securityCodes
+                  }
+                }))}
+                disabled={!formData.phone}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Notification Frequency */}
+      <div className="notification-category">
+        <div className="notification-category-header">
+          <div className="notification-category-icon">
+            <Bell size={24} />
+          </div>
+          <div className="notification-category-info">
+            <h3>Notification Frequency</h3>
+            <p>Control how often you receive notifications</p>
+          </div>
+        </div>
+
+        <div className="notification-options">
+          <div className="frequency-option">
+            <div className="frequency-option-info">
+              <h4>Email Frequency</h4>
+              <p>How often should we send you promotional emails?</p>
+            </div>
+            <select 
+              className="frequency-select"
+              value={notifications.frequency?.email || 'weekly'}
+              onChange={(e) => setNotifications(prev => ({
+                ...prev,
+                frequency: {
+                  ...prev.frequency,
+                  email: e.target.value
+                }
+              }))}
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="never">Never</option>
+            </select>
+          </div>
+
+          <div className="frequency-option">
+            <div className="frequency-option-info">
+              <h4>Push Notification Quiet Hours</h4>
+              <p>Don't send push notifications during these hours</p>
+            </div>
+            <div className="time-range">
+              <input 
+                type="time" 
+                value={notifications.quietHours?.start || '22:00'}
+                onChange={(e) => setNotifications(prev => ({
+                  ...prev,
+                  quietHours: {
+                    ...prev.quietHours,
+                    start: e.target.value
+                  }
+                }))}
+              />
+              <span>to</span>
+              <input 
+                type="time" 
+                value={notifications.quietHours?.end || '08:00'}
+                onChange={(e) => setNotifications(prev => ({
+                  ...prev,
+                  quietHours: {
+                    ...prev.quietHours,
+                    end: e.target.value
+                  }
+                }))}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Notifications */}
+      <div className="notification-category">
+        <div className="notification-category-header">
+          <div className="notification-category-icon">
+            <Bell size={24} />
+          </div>
+          <div className="notification-category-info">
+            <h3>Recent Notifications</h3>
+            <p>Your last 5 notifications</p>
+          </div>
+          <button className="notification-clear-btn">
+            Clear All
+          </button>
+        </div>
+
+        <div className="recent-notifications">
+          <div className="notification-item unread">
+            <div className="notification-icon order">📦</div>
+            <div className="notification-content">
+              <h4>Order Shipped</h4>
+              <p>Your order #1750636623877 has been shipped and is on its way!</p>
+              <span className="notification-time">2 hours ago</span>
+            </div>
+            <button className="notification-mark-read">Mark as Read</button>
+          </div>
+
+          <div className="notification-item">
+            <div className="notification-icon promotion">🏷️</div>
+            <div className="notification-content">
+              <h4>Special Offer</h4>
+              <p>Get 20% off on electronics this weekend only!</p>
+              <span className="notification-time">1 day ago</span>
+            </div>
+          </div>
+
+          <div className="notification-item">
+            <div className="notification-icon wishlist">❤️</div>
+            <div className="notification-content">
+              <h4>Price Drop Alert</h4>
+              <p>iPhone 15 Pro in your wishlist is now $50 off!</p>
+              <span className="notification-time">2 days ago</span>
+            </div>
+          </div>
+
+          <div className="notification-item">
+            <div className="notification-icon security">🔒</div>
+            <div className="notification-content">
+              <h4>New Login Detected</h4>
+              <p>We detected a new login from Chrome on Windows</p>
+              <span className="notification-time">3 days ago</span>
+            </div>
+          </div>
+
+          <div className="notification-item">
+            <div className="notification-icon order">📦</div>
+            <div className="notification-content">
+              <h4>Order Delivered</h4>
+              <p>Your order #1750625123456 has been delivered successfully</p>
+              <span className="notification-time">1 week ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Save Settings */}
+      <div className="notification-actions">
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            // Save notification settings logic here
+            showToast('Notification settings updated successfully!', 'success');
+          }}
+          disabled={saving}
+        >
+          <Save size={14} />
+          {saving ? 'Saving...' : 'Save Notification Settings'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+          {/* notifications tab stops here */}
 
        
 

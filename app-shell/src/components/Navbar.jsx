@@ -2,7 +2,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import navlogo from '../img/gulime.png'
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, CircleUserRound, Heart, Settings, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { Bell, ChevronDown, CircleUserRound, Heart, Settings, Shield, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { auth } from '../db/firebase';
 // Add these imports for Firestore
 import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
@@ -270,12 +270,27 @@ Your Account
 Your Orders
 </Link>
 </div>
+
+<div style={{display:'flex',alignItems:'center'}}>  
+
+<Link style={{color:'#000'}} to="/profile?tab=notifications" className="dropdown-link">  
+<Bell style={{padding: '0 5px 0px 0'}}/>
+Notifications
+</Link>
+</div>
    
 <div style={{display:'flex',alignItems:'center'}}>  
   
 <Link style={{color:'#000'}} to="/profile?tab=wishlist" className="dropdown-link">  
 <Heart style={{padding: '0 5px 0px 0'}}/>
 Wishlist</Link>
+</div>
+
+<div style={{display:'flex',alignItems:'center'}}>  
+
+<Link style={{color:'#000'}} to="/profile?tab=security" className="dropdown-link">  
+<Shield style={{padding: '0 5px 0px 0'}}/>
+Security</Link>
 </div>
 
 <div style={{display:'flex',alignItems:'center'}}>  

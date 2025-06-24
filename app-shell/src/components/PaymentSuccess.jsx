@@ -227,107 +227,114 @@ cardBrand: paymentMethod?.card?.brand || paymentIntent?.payment_method?.card?.br
     );
   }
 
-  return (
-    <>
-      <Navbar />
-      <SecNav />
-      
-      <div className="payment-success-container">
-        <div className="success-content">
-          <div className="success-header">
-            <div className="success-icon">✅</div>
-            <h1>Payment Successful!</h1>
-            <p className="success-subtitle">
-              Thank you for your order. We've received your payment and will process your order shortly.
-            </p>
-          </div>
+return (
+<>
+<Navbar />
+<SecNav />
+<div className="payment-success-container">
+<div className="success-content">
+<div className="success-header">
+<div className="success-icon">✅</div>
+<h1>Payment Successful!</h1>
+<p className="success-subtitle">
+Thank you for your order. We've received your payment and will process your order shortly.
+</p>
+</div>
 
-          <div className="order-confirmation">
-            <h2>Order Confirmation</h2>
-            <div className="confirmation-details">
-              <div className="detail-row">
-                <span className="label">Order Number:</span>
-                <span className="value">{orderData?.id || 'N/A'}</span>
-              </div>
-              <div className="detail-row">
-                <span className="label">Payment ID:</span>
-                <span className="value">
-                  {mockPayment ? 'MOCK_PAYMENT' : (paymentIntent?.id || 'N/A')}
-                </span>
-              </div>
-              <div className="detail-row">
-                <span className="label">Amount Paid:</span>
-                <span className="value">
-                  ${mockPayment ? amount?.toFixed(2) : ((paymentIntent?.amount / 100)?.toFixed(2) || '0.00')}
-                </span>
-              </div>
-              <div className="detail-row">
-                <span className="label">Payment Method:</span>
-                <span className="value">
-                  {mockPayment ? 'Development Mode' : 
-                   `****${paymentIntent?.payment_method?.card?.last4 || paymentMethod?.card?.last4 || 'XXXX'}`}
-                </span>
-              </div>
-              <div className="detail-row">
-                <span className="label">Status:</span>
-                <span className="value success-status">Confirmed</span>
-              </div>
-            </div>
-          </div>
+<div className="order-confirmation">
+<h2>Order Confirmation</h2>
+<div className="confirmation-details">
+<div className="detail-row">
+<span className="label">Order Number:</span>
+<span className="value">{orderData?.id || 'N/A'}</span>
+</div>
 
-          {orderData?.items && (
-            <div className="order-summary">
-              <h3>Order Items ({orderData.summary?.totalItems || orderData.items.length})</h3>
-              <div className="items-list">
-                {orderData.items.map((item, index) => (
-                  <div key={item.productId || index} className="success-item">
-                    <div className="item-image">
-                      <img
-                        src={`/assets/images/${item.imgUrl}`}
-                        alt={item.productName}
-                        onError={(e) => {e.target.src = '/assets/images/placeholder.jpg';}}
-                      />
-                    </div>
-                    <div className="item-details">
-                      <h4>{item.productName}</h4>
-                      {item.quantity && <p>Quantity: {item.quantity}</p>}
-                      {item.price && <p>Price: ${item.price}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+<div className="detail-row">
+<span className="label">Payment ID:</span>
+<span className="value">
+{mockPayment ? 'MOCK_PAYMENT' : (paymentIntent?.id || 'N/A')}
+</span>
+</div>
 
-          <div className="next-steps">
-            <h3>What's Next?</h3>
-            <ul>
-              <li>📧 You'll receive an order confirmation email shortly</li>
-              <li>📦 We'll send you tracking information when your order ships</li>
-              <li>🚚 Estimated delivery: 3-5 business days</li>
-            </ul>
-          </div>
+<div className="detail-row">
+<span className="label">Amount Paid:</span>
+<span className="value">
+${mockPayment ? amount?.toFixed(2) : ((paymentIntent?.amount / 100)?.toFixed(2) || '0.00')}
+</span>
+</div>
 
-          {mockPayment && (
-            <div className="dev-notice">
-              <p><strong>Development Notice:</strong> This was a mock payment since the payment API is not available. In production, this would be a real transaction.</p>
-            </div>
-          )}
+<div className="detail-row">
+<span className="label">Payment Method:</span>
+<span className="value">
+{mockPayment ? 'Development Mode' :
+`${(paymentIntent?.charges?.data?.[0]?.payment_method_details?.card?.brand ||
+paymentMethod?.card?.brand || 'Card')} ****${(paymentIntent?.charges?.data?.[0]?.payment_method_details?.card?.last4 ||
+paymentMethod?.card?.last4 || 'XXXX')}`}
+</span>
+</div>
 
-          <div className="action-buttons">
-            <button onClick={handleContinueShopping} className="btn-secondary">
-              Continue Shopping
-            </button>
-            <button onClick={handleViewOrders} className="btn-primary">
-              View My Orders
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <Footer />
+
+<div className="detail-row">
+<span className="label">Status:</span>
+<span className="value success-status">Confirmed</span>
+</div>
+</div>
+</div>
+
+{orderData?.items && (
+<div className="order-summary">
+<h3>Order Items ({orderData.summary?.totalItems || orderData.items.length})</h3>
+<div className="items-list">
+{orderData.items.map((item, index) => (
+<div key={item.productId || index} className="success-item">
+<div className="item-image">
+<img
+src={`/assets/images/${item.imgUrl}`}
+alt={item.productName}
+onError={(e) => {e.target.src = '/assets/images/placeholder.jpg';}}/>
+</div>
+
+<div className="item-details">
+<h4>{item.productName}</h4>
+{item.quantity && <p>Quantity: {item.quantity}</p>}
+{item.price && <p>Price: ${item.price}</p>}
+</div>
+</div>
+))}
+</div>
+</div>
+)}
+
+<div className="next-steps">
+<h3>What's Next?</h3>
+<ul>
+<li>📧 You'll receive an order confirmation email shortly</li>
+<li>📦 We'll send you tracking information when your order ships</li>
+</ul>
+</div>
+
+{mockPayment && (
+<div className="dev-notice">
+<p><strong>Development Notice:</strong> This was a mock payment since the payment API is not available. In production, this would be a real transaction.</p>
+</div>
+)}
+
+<div className="action-buttons">
+<button onClick={handleContinueShopping} className="btn-secondary">
+Continue Shopping
+</button>
+
+<button onClick={handleViewOrders} className="btn-primary">
+View My Orders
+</button>
+</div>
+</div>
+</div>
+
+<Footer />
 
   
-    </>
-  );
+</>
+);
 }

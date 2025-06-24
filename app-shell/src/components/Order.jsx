@@ -461,9 +461,7 @@ const clearCart = async () => {
     
  
     
-    console.log('Cart cleared successfully');
   } catch (error) {
-    console.error('Error clearing cart:', error);
     // Don't throw error here as payment was successful
   }
 };
@@ -516,332 +514,330 @@ const clearCart = async () => {
   }
 
   return (
-    <>
-      <Navbar />
-      <SecNav />
-  
-      <div className="order-container">
-        <div className="order-content">
-          {/* Main Order Section */}
-          <div className="order-main">
-            <div className="order-header">
-              <h1>Review Your Order</h1>
-              <p className="order-id">Order#: {orderData.id}</p>
-            </div>
+<>
+<Navbar />
+<SecNav />
+<div className="order-container">
+<div className="order-content">
+{/* Main Order Section */}
+<div className="order-main">
+<div className="order-header">
+<h1>Review Your Order</h1>
+<p className="order-id">Order#: {orderData.id}</p>
+</div>
             
-            <div className="order-items-section">
-              <h2> Items <span className="items-count">({orderData.summary.totalItems})</span></h2>
+<div className="order-items-section">
+<h2> Items <span className="items-count">({orderData.summary.totalItems})</span></h2>
               
-              {orderData.items.map((item, index) => (
-                <div key={item.productId || index} className="order-item">
-                  <div className="order-item-image">
-                    <img
-                      src={`/assets/images/${item.imgUrl}`}
-                      alt={item.productName}
-                      onError={(e) => {e.target.src = '/assets/images/placeholder.jpg';}}
-                    />
-                  </div>
+{orderData.items.map((item, index) => (
+<div key={item.productId || index} className="order-item">
+<div className="order-item-image">
+<img
+src={`/assets/images/${item.imgUrl}`}
+alt={item.productName}
+onError={(e) => {e.target.src = '/assets/images/placeholder.jpg';}}/>
+</div>
                   
-                  <div className="order-item-details">
-                    <h3>{item.productName} {/\d+$/.test(item.productName) ? 'GB' : ''}</h3>
-                    
-                    {item.brand && (
-                      <p><span className="detail-label">Brand:</span> {item.brand}</p>
-                    )}
-                    {item.seller && (
-                      <p><span className="detail-label">Seller:</span> {item.seller}</p>
-                    )}
-                    {item.condition && (
-                      <p><span className="detail-label">Condition:</span> {item.condition}</p>
-                    )}
-                    {item.category && (
-                      <p><span className="detail-label">Category:</span> {item.category}</p>
-                    )}
-                    {item.quantity && (
-                      <p><span className="detail-label">Quantity:</span> {item.quantity}</p>
-                    )}
+<div className="order-item-details">
+{item.productName && (
+<h3>{item.productName} {/\d+$/.test(item.productName) ? 'GB' : ''}</h3>
+)} 
 
-                    {item.automotiveConfig && (
-                      <div className="automotive-config">
-                        <p><strong>Configuration:</strong></p>
-                        <ul>
-                          <li>Color: {item.automotiveConfig.configurationSummary.colorName}</li>
-                          <li>Wheels: {item.automotiveConfig.configurationSummary.wheelsName}</li>
-                          <li>Interior: {item.automotiveConfig.configurationSummary.interiorName}</li>
-                          <li>Autopilot: {item.automotiveConfig.configurationSummary.autopilotName}</li>
-                          {item.automotiveConfig.configurationSummary.extrasNames !== 'None' && (
-                            <li>Extras: {item.automotiveConfig.configurationSummary.extrasNames}</li>
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+{item.brand && (
+<p><span className="detail-label">Brand:</span> {item.brand}</p>
+)}
 
-          {/* Order Summary Sidebar */}
-          <div className="order-summary">
-            <h2>Order Summary</h2>
+{item.model && (
+<p><span className="detail-label">Model:</span> {item.model}</p>
+)}
+
+{item.price && (
+<p><span className="detail-label">Price:</span> ${Number(item.price).toLocaleString()}</p>
+)}
+
+{item.seller && (
+<p><span className="detail-label">Seller:</span> {item.seller}</p>
+)}
+
+{item.condition && (
+<p><span className="detail-label">Condition:</span> {item.condition}</p>
+)}
+
+{item.category && (
+<p><span className="detail-label">Category:</span> {item.category}</p>
+)}
+
+{item.quantity && (
+<p><span className="detail-label">Quantity:</span> {item.quantity}</p>
+)}
+
+{item.automotiveConfig && (
+<div className="automotive-config">
+<p><strong>Configuration:</strong></p>
+<ul>
+<li>Color: {item.automotiveConfig.configurationSummary.colorName}</li>
+<li>Wheels: {item.automotiveConfig.configurationSummary.wheelsName}</li>
+<li>Interior: {item.automotiveConfig.configurationSummary.interiorName}</li>
+<li>Autopilot: {item.automotiveConfig.configurationSummary.autopilotName}</li>
+{item.automotiveConfig.configurationSummary.extrasNames !== 'None' && (
+<li>Extras: {item.automotiveConfig.configurationSummary.extrasNames}</li>
+)}
+</ul>
+</div>
+)}
+</div>
+</div>
+))}
+</div>
+</div>
+
+{/* Order Summary Sidebar */}
+<div className="order-summary">
+<h2>Order Summary</h2>
             
-            <div className="summary-row">
-              <span>Subtotal ({orderData.summary.totalItems} items):</span>
-              <span>${orderData.summary.totalValue.toLocaleString()}</span>
-            </div>
+<div className="summary-row">
+<span>Subtotal ({orderData.summary.totalItems} items):</span>
+<span>${orderData.summary.totalValue.toLocaleString()}</span>
+</div>
             
-            <div className="summary-row">
-              <span>Shipping:</span>
-              {orderData.items.some(item => item.hasPrime) ? (
-                <div className="prime-shipping">
-                  <div className="prime-badge">
-                    <img
-                      className="prime-logo"
-                      src={`/assets/images/${orderData.items.find(item => item.hasPrime)?.hasPrime}`}
-                      alt="Prime"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <span>3-5 Day Shipping</span>
-              )}
-            </div>
+<div className="summary-row">
+<span>Shipping:</span>
+{orderData.items.some(item => item.hasPrime) ? (
+<div className="prime-shipping">
+<div className="prime-badge">
+<img
+className="prime-logo"
+src={`/assets/images/${orderData.items.find(item => item.hasPrime)?.hasPrime}`}
+alt="Gulime Premium"/>
+</div>
+</div>
+) : (
+<span>3-5 Day Shipping</span>
+)}
+</div>
 
-            {/* Fixed delivery selector */}
-            {orderData.items.some(item => item.hasPrime) ? (
-              <div className="summary-row">
-                <span>Estimated Delivery:</span>
-                <select 
-                  className="delivery-select"
-                  value={selectedDeliveryOption}
-                  onChange={handleDeliveryChange}
-                >
-                  <option value="same-day">Same-Day Delivery (+$9.99)</option>
-                  <option value="one-day">FREE One-Day</option>
-                  <option value="two-day">FREE Two-Day</option>
-                  <option value="standard">Standard Delivery</option>
-                </select>
-              </div>
-            ) : (
-              <div className="summary-row">
-                <span>Estimated Delivery:</span>
-                <select 
-                  className="delivery-select"
-                  value={selectedDeliveryOption}
-                  onChange={handleDeliveryChange}
-                >
-                  <option value="standard">Standard (3-5 Business Days)</option>
-                  <option value="same-day">Same-Day Delivery (+$9.99)</option>
-                </select>
-              </div>
-            )}
+{/* Fixed delivery selector */}
+{orderData.items.some(item => item.hasPrime) ? (
+<div className="summary-row">
+<span>Estimated Delivery:</span>
+<select 
+className="delivery-select"
+value={selectedDeliveryOption}
+onChange={handleDeliveryChange}>
+<option value="same-day">Same-Day Delivery (+$9.99)</option>
+<option value="one-day">FREE One-Day</option>
+<option value="two-day">FREE Two-Day</option>
+<option value="standard">Standard Delivery</option>
+</select>
+</div>
+) : (
+<div className="summary-row">
+<span>Estimated Delivery:</span>
+<select 
+className="delivery-select"
+value={selectedDeliveryOption}
+onChange={handleDeliveryChange}>
+<option value="standard">Standard (3-5 Business Days)</option>
+<option value="same-day">Same-Day Delivery (+$9.99)</option>
+</select>
+</div>
+)}
 
-            <div className="summary-row">
-              <span>Delivery Fee:</span>
-              <span>${deliveryFee > 0 ? deliveryFee.toFixed(2) : 'FREE'}</span>
-            </div>
+<div className="summary-row">
+<span>Delivery Fee:</span>
+<span>${deliveryFee > 0 ? deliveryFee.toFixed(2) : 'FREE'}</span>
+</div>
 
-            {/* Updated total calculation */}
-            <div className="summary-row total-row">
-              <span><strong>Total:</strong></span>
-              <span><strong>${calculateTotal().toLocaleString()}</strong></span>
-            </div>
+{/* Updated total calculation */}
+<div className="summary-row total-row">
+<span><strong>Total:</strong></span>
+<span><strong>${calculateTotal().toLocaleString()}</strong></span>
+</div>
             
-           <div className="order-actions">
+<div className="order-actions">
   <form onSubmit={handleSubmit} className="payment-form">
     {/* User Information Section */}
     <div className="user-info-section">
       <h3>Shipping Information</h3>
       
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="firstName" className="form-label">
-            First Name *
-          </label>
-          <input
-            type="text"
-            id="firstName"
-            name="firstName"
-            value={userInfo.firstName}
-            onChange={handleUserInfoChange}
-            className="form-input"
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="lastName" className="form-label">
-            Last Name *
-          </label>
-          <input
-            type="text"
-            id="lastName"
-            name="lastName"
-            value={userInfo.lastName}
-            onChange={handleUserInfoChange}
-            className="form-input"
-            required
-          />
-        </div>
-      </div>
-
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="email" className="form-label">
-            Email Address *
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={userInfo.email}
-            onChange={handleUserInfoChange}
-            className="form-input"
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="phone" className="form-label">
-            Phone Number
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            value={userInfo.phone}
-            onChange={handleUserInfoChange}
-            className="form-input"
-            placeholder="(555) 123-4567"
-          />
-        </div>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="address" className="form-label">
-          Street Address *
-        </label>
-        <input
-          type="text"
-          id="address"
-          name="address"
-          value={userInfo.address}
-          onChange={handleUserInfoChange}
-          className="form-input"
-          required
-        />
-      </div>
-
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="city" className="form-label">
-            City *
-          </label>
-          <input
-            type="text"
-            id="city"
-            name="city"
-            value={userInfo.city}
-            onChange={handleUserInfoChange}
-            className="form-input"
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="state" className="form-label">
-            State *
-          </label>
-          <input
-            type="text"
-            id="state"
-            name="state"
-            value={userInfo.state}
-            onChange={handleUserInfoChange}
-            className="form-input"
-            placeholder="CA"
-            maxLength="2"
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="zip" className="form-label">
-            ZIP Code *
-          </label>
-          <input
-            type="text"
-            id="zip"
-            name="zip"
-            value={userInfo.zip}
-            onChange={handleUserInfoChange}
-            className="form-input"
-            placeholder="12345"
-            maxLength="10"
-            required
-          />
-        </div>
-      </div>
-    </div>
-
-    {/* Payment Information Section */}
-    <div className="payment-section">
-      <h3>Payment Information</h3>
-      
-      <div className="card-element-container">
-        <label htmlFor="card-element" className="card-label">
-          Credit or Debit Card *
-        </label>
-        <div id="card-element" className="card-input">
-          {/* Stripe Elements will mount here */}
-        </div>
-        {cardErrors && (
-          <div className="card-errors" role="alert">
-            {cardErrors}
-          </div>
-        )}
-      </div>
-    </div>
-
-    <button 
-      type='submit'                
-      className="proceed-payment-btn" 
-      disabled={loading || !isSignedIn || !orderData || !stripe || !elements || !stripeLoaded}
-    >
-      {loading ? 'Processing...' : `Place Your Order - $${calculateTotal().toLocaleString()}`}
-    </button>
-  </form>
-  
-  <button 
-    onClick={handleCancelOrder} 
-    className="cancel-order-btn" 
-    disabled={loading}
-  >
-    Cancel Order
-  </button>
+<div className="form-row">
+<div className="form-group">
+<label htmlFor="firstName" className="form-label">
+First Name *
+</label>
+<input
+type="text"
+id="firstName"
+name="firstName"
+value={userInfo.firstName}
+onChange={handleUserInfoChange}
+className="form-input"
+required/>
 </div>
-          </div>
-        </div>
-      </div>
-      
-      <Footer />
+        
+<div className="form-group">
+<label htmlFor="lastName" className="form-label">
+Last Name *
+</label>
+<input
+type="text"
+id="lastName"
+name="lastName"
+value={userInfo.lastName}
+onChange={handleUserInfoChange}
+className="form-input"
+required/>
+</div>
+</div>
 
-      {toast.show && (
-        <div className={`toast ${toast.type}`}>
-          <div className="toast-content">
-            <span className="toast-icon">
-              {toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : 'ℹ'}
-            </span>
-            <span className="toast-message">{toast.message}</span>
-            <button
-              className="toast-close"
-              onClick={() => setToast({ show: false, message: '', type: '' })}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
-    </>
-  );
+<div className="form-row">
+<div className="form-group">
+<label htmlFor="email" className="form-label">
+Email Address *
+</label>
+<input
+type="email"
+id="email"
+name="email"
+value={userInfo.email}
+onChange={handleUserInfoChange}
+className="form-input"
+required/>
+</div>
+        
+<div className="form-group">
+<label htmlFor="phone" className="form-label">
+Phone Number
+</label>
+<input
+type="tel"
+id="phone"
+name="phone"
+value={userInfo.phone}
+onChange={handleUserInfoChange}
+className="form-input"
+placeholder="(555) 123-4567"/>
+</div>
+</div>
+
+<div className="form-group">
+<label htmlFor="address" className="form-label">
+Street Address *
+</label>
+<input
+type="text"
+id="address"
+name="address"
+value={userInfo.address}
+onChange={handleUserInfoChange}
+className="form-input"
+required/>
+</div>
+
+<div className="form-row">
+<div className="form-group">
+<label htmlFor="city" className="form-label">
+City *
+</label>
+<input
+type="text"
+id="city"
+name="city"
+value={userInfo.city}
+onChange={handleUserInfoChange}
+className="form-input"
+required/>
+</div>
+        
+<div className="form-group">
+<label htmlFor="state" className="form-label">
+State *
+</label>
+<input
+type="text"
+id="state"
+name="state"
+value={userInfo.state}
+onChange={handleUserInfoChange}
+className="form-input"
+placeholder="CA"
+maxLength="2"
+required/>
+</div>
+        
+<div className="form-group">
+<label htmlFor="zip" className="form-label">
+ZIP Code *
+</label>
+<input
+type="text"
+id="zip"
+name="zip"
+value={userInfo.zip}
+onChange={handleUserInfoChange}
+className="form-input"
+placeholder="12345"
+maxLength="10"
+required/>
+</div>
+</div>
+</div>
+
+{/* Payment Information Section */}
+<div className="payment-section">
+<h3>Payment Information</h3>
+      
+<div className="card-element-container">
+<label htmlFor="card-element" className="card-label">
+Credit or Debit Card *
+</label>
+<div id="card-element" className="card-input">
+{/* Stripe Elements will mount here */}
+</div>
+
+{cardErrors && (
+<div className="card-errors" role="alert">
+{cardErrors}
+</div>
+)}
+</div>
+</div>
+
+<button 
+type='submit'                
+className="proceed-payment-btn" 
+disabled={loading || !isSignedIn || !orderData || !stripe || !elements || !stripeLoaded}>
+{loading ? 'Processing...' : `Place Your Order - $${calculateTotal().toLocaleString()}`}
+</button>
+</form>
+  
+<button 
+onClick={handleCancelOrder} 
+className="cancel-order-btn" 
+disabled={loading}>
+Cancel Order
+</button>
+</div>
+</div>
+</div>
+</div>
+      
+<Footer />
+
+{toast.show && (
+<div className={`toast ${toast.type}`}>
+<div className="toast-content">
+<span className="toast-icon">
+{toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : 'ℹ'}
+</span>
+<span className="toast-message">{toast.message}</span>
+<button
+className="toast-close"
+onClick={() => setToast({ show: false, message: '', type: '' })}>×
+</button>
+</div>
+</div>
+)}
+</>
+);
 }
