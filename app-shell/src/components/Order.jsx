@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { deleteDoc, doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -29,7 +31,16 @@ export default function Order() {
   const [names, setNames] = useState('');
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
   const [stripeLoaded, setStripeLoaded] = useState(false);
-
+const [userInfo, setUserInfo] = useState({
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  address: '',
+  city: '',
+  state: '',
+  zip: ''
+});
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -63,6 +74,48 @@ export default function Order() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Add this useEffect to populate user info when authentication state changes
+useEffect(() => {
+  if (isSignedIn && auth.currentUser) {
+    const getUserInfo = async () => {
+      try {
+        const userDocRef = doc(db, 'users', auth.currentUser.uid);
+        const userDocSnapshot = await getDoc(userDocRef);
+        if (userDocSnapshot.exists()) {
+          const userData = userDocSnapshot.data();
+          setUserInfo(prev => ({
+            firstName: userData.fname || prev.firstName,
+            lastName: userData.lname || prev.lastName,
+            email: userData.email || auth.currentUser.email || prev.email,
+            phone: userData.phone || prev.phone,
+            address: userData.address || prev.address,
+            city: userData.city || prev.city,
+            state: userData.state || prev.state,
+            zip: userData.zip || prev.zip
+          }));
+        } else {
+          setUserInfo(prev => ({
+            ...prev,
+            email: auth.currentUser.email || prev.email
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+      }
+    };
+    getUserInfo();
+  }
+}, [isSignedIn]);
+
+const handleUserInfoChange = (e) => {
+  const { name, value } = e.target;
+  setUserInfo(prev => ({
+    ...prev,
+    [name]: value
+  }));
+};
+
 
   useEffect(() => {
     if (location.state?.orderData) {
@@ -201,7 +254,8 @@ export default function Order() {
     }
   }, [orderData, stripeLoaded]);
 
-  const handleSubmit = async (event) => {
+// Payment submission handler
+const handleSubmit = async (event) => {
   event.preventDefault();
   
   if (!stripe || !elements || !cardElement) {
@@ -214,6 +268,15 @@ export default function Order() {
     return;
   }
 
+  // Validate required fields
+  const requiredFields = ['firstName', 'lastName', 'email', 'address', 'city', 'state', 'zip'];
+  const missingFields = requiredFields.filter(field => !userInfo[field].trim());
+  
+  if (missingFields.length > 0) {
+    showToast(`Please fill in all required fields: ${missingFields.join(', ')}`, 'error');
+    return;
+  }
+
   setLoading(true);
   setCardErrors(null);
 
@@ -223,7 +286,16 @@ export default function Order() {
       type: 'card',
       card: cardElement,
       billing_details: {
-        name: names || 'Customer',
+        name: `${userInfo.firstName} ${userInfo.lastName}`,
+        email: userInfo.email,
+        phone: userInfo.phone,
+        address: {
+          line1: userInfo.address,
+          city: userInfo.city,
+          state: userInfo.state,
+          postal_code: userInfo.zip,
+          country: 'US',
+        },
       },
     });
 
@@ -251,27 +323,31 @@ export default function Order() {
           orderData: {
             ...orderData,
             deliveryOption: selectedDeliveryOption,
-            deliveryFee: deliveryFee
+            deliveryFee: deliveryFee,
+            userInfo: userInfo // Include user info in order data
           },
           deliveryOption: selectedDeliveryOption,
           deliveryFee: deliveryFee,
-          zip: orderData.zip || '',
-          state: orderData.state || '',
-          city: orderData.city || '',
-          address: orderData.address || '',
+          zip: userInfo.zip,
+          state: userInfo.state,
+          city: userInfo.city,
+          address: userInfo.address,
           payment_method: paymentMethod.id,
-          customer_name: names || 'Customer',
-          customer_email: auth.currentUser?.email || '',
+          customer_name: `${userInfo.firstName} ${userInfo.lastName}`,
+          customer_email: userInfo.email,
+          customer_phone: userInfo.phone,
           customer_id: auth.currentUser?.uid || '',
           order_id: orderData.id || '',
           total_items: orderData.summary?.totalItems || orderData.items?.length || 0,
           description: `Order #${orderData.id} - ${orderData.summary?.totalItems || orderData.items?.length || 0} items`,
-          receipt_email: auth.currentUser?.email || '',
+          receipt_email: userInfo.email,
           metadata: {
             orderId: orderData.id || '',
             deliveryOption: selectedDeliveryOption,
             deliveryFee: deliveryFee.toString(),
             totalItems: (orderData.summary?.totalItems || orderData.items?.length || 0).toString(),
+            customerName: `${userInfo.firstName} ${userInfo.lastName}`,
+            customerEmail: userInfo.email,
           },
         }),
       });
@@ -314,7 +390,8 @@ export default function Order() {
             orderData: {
               ...orderData,
               deliveryOption: selectedDeliveryOption,
-              deliveryFee: deliveryFee
+              deliveryFee: deliveryFee,
+              userInfo: userInfo
             },
             amount: totalAmount / 100,
             paymentMethod: paymentMethod
@@ -347,7 +424,8 @@ export default function Order() {
           orderData: {
             ...orderData,
             deliveryOption: selectedDeliveryOption,
-            deliveryFee: deliveryFee
+            deliveryFee: deliveryFee,
+            userInfo: userInfo
           }
         }
       });
@@ -364,7 +442,7 @@ export default function Order() {
   } finally {
     setLoading(false);
   }
-}
+};
 
 // Add this helper function to clear the cart
 const clearCart = async () => {
@@ -569,43 +647,179 @@ const clearCart = async () => {
               <span><strong>${calculateTotal().toLocaleString()}</strong></span>
             </div>
             
-            <div className="order-actions">
-              <form onSubmit={handleSubmit} className="payment-form">
-                <div className="payment-section">
-                  <h3>Payment Information</h3>
-                  
-                  <div className="card-element-container">
-                    <label htmlFor="card-element" className="card-label">
-                      Credit or Debit Card
-                    </label>
-                    <div id="card-element" className="card-input">
-                      {/* Stripe Elements will mount here */}
-                    </div>
-                    {cardErrors && (
-                      <div className="card-errors" role="alert">
-                        {cardErrors}
-                      </div>
-                    )}
-                  </div>
-                </div>
+           <div className="order-actions">
+  <form onSubmit={handleSubmit} className="payment-form">
+    {/* User Information Section */}
+    <div className="user-info-section">
+      <h3>Shipping Information</h3>
+      
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="firstName" className="form-label">
+            First Name *
+          </label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            value={userInfo.firstName}
+            onChange={handleUserInfoChange}
+            className="form-input"
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="lastName" className="form-label">
+            Last Name *
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            value={userInfo.lastName}
+            onChange={handleUserInfoChange}
+            className="form-input"
+            required
+          />
+        </div>
+      </div>
 
-                <button 
-                  type='submit'                
-                  className="proceed-payment-btn" 
-                  disabled={loading || !isSignedIn || !orderData || !stripe || !elements || !stripeLoaded}
-                >
-                  {loading ? 'Processing...' : `Place Your Order - $${calculateTotal().toLocaleString()}`}
-                </button>
-              </form>
-              
-              <button 
-                onClick={handleCancelOrder} 
-                className="cancel-order-btn" 
-                disabled={loading}
-              >
-                Cancel Order
-              </button>
-            </div>
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="email" className="form-label">
+            Email Address *
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={userInfo.email}
+            onChange={handleUserInfoChange}
+            className="form-input"
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="phone" className="form-label">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={userInfo.phone}
+            onChange={handleUserInfoChange}
+            className="form-input"
+            placeholder="(555) 123-4567"
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="address" className="form-label">
+          Street Address *
+        </label>
+        <input
+          type="text"
+          id="address"
+          name="address"
+          value={userInfo.address}
+          onChange={handleUserInfoChange}
+          className="form-input"
+          required
+        />
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="city" className="form-label">
+            City *
+          </label>
+          <input
+            type="text"
+            id="city"
+            name="city"
+            value={userInfo.city}
+            onChange={handleUserInfoChange}
+            className="form-input"
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="state" className="form-label">
+            State *
+          </label>
+          <input
+            type="text"
+            id="state"
+            name="state"
+            value={userInfo.state}
+            onChange={handleUserInfoChange}
+            className="form-input"
+            placeholder="CA"
+            maxLength="2"
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="zip" className="form-label">
+            ZIP Code *
+          </label>
+          <input
+            type="text"
+            id="zip"
+            name="zip"
+            value={userInfo.zip}
+            onChange={handleUserInfoChange}
+            className="form-input"
+            placeholder="12345"
+            maxLength="10"
+            required
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Payment Information Section */}
+    <div className="payment-section">
+      <h3>Payment Information</h3>
+      
+      <div className="card-element-container">
+        <label htmlFor="card-element" className="card-label">
+          Credit or Debit Card *
+        </label>
+        <div id="card-element" className="card-input">
+          {/* Stripe Elements will mount here */}
+        </div>
+        {cardErrors && (
+          <div className="card-errors" role="alert">
+            {cardErrors}
+          </div>
+        )}
+      </div>
+    </div>
+
+    <button 
+      type='submit'                
+      className="proceed-payment-btn" 
+      disabled={loading || !isSignedIn || !orderData || !stripe || !elements || !stripeLoaded}
+    >
+      {loading ? 'Processing...' : `Place Your Order - $${calculateTotal().toLocaleString()}`}
+    </button>
+  </form>
+  
+  <button 
+    onClick={handleCancelOrder} 
+    className="cancel-order-btn" 
+    disabled={loading}
+  >
+    Cancel Order
+  </button>
+</div>
           </div>
         </div>
       </div>

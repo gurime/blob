@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/no-unknown-property */
 import Navbar from './Navbar';
 import SecNav from './SecNav';
 import Footer from './Footer';
@@ -86,8 +88,7 @@ setSavedItems(savedData.items || []);
 } else {
 setSavedItems([]);
 }
-} catch (error) {
-}
+} catch (error) { /* empty */ }
 };
 
 // Update item quantity
@@ -576,8 +577,7 @@ Delete
 <div className="summary-row">
 <span>Seller:</span>
 <span className="summary-price">           
-{cartItems.map(item => item.seller)}
-</span>
+{[...new Set(cartItems.map(item => item.seller))].join(', ')}</span>
 </div>
 
 <div className="summary-row total-row">

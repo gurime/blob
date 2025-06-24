@@ -50,7 +50,7 @@ const [names, setNames] = useState('');
   <div className="cookie-hero">
     <h1 className="cookie-title">Cookie Policy</h1>
     <p className="cookie-subtitle">Understanding How We Use Cookies</p>
-    <p className="cookie-date">Last updated: June 2025</p>
+    <p className="cookie-date">Last updated: June 2030</p>
   </div>
 
   <div className="cookie-container">

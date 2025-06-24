@@ -1,5 +1,6 @@
+/* eslint-disable no-unused-vars */
 import  { useState, useEffect } from 'react';
-import { collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { auth, db } from '../db/firebase';
 import { User, Edit3, Save, X, Package, MapPin, CreditCard, Bell, Shield, Heart, Trash2, ShoppingCart, ExternalLink,Settings  } from 'lucide-react';
@@ -61,7 +62,6 @@ const implementedTabs = ['account', 'wishlist', 'orders', 'cookies'];  const [co
         showToast('Error loading wishlist', 'error');
       }
     } catch (error) {
-      console.error('Error loading wishlist:', error);
       showToast('Error loading wishlist', 'error');
     } finally {
       setWishlistLoading(false);
@@ -82,7 +82,6 @@ const handleClearWishlist = async () => {
         showToast('Error clearing wishlist', 'error');
       }
     } catch (error) {
-      console.error('Error clearing wishlist:', error);
       showToast('Error clearing wishlist', 'error');
     } finally {
       setWishlistLoading(false);
@@ -105,7 +104,6 @@ const handleClearWishlist = async () => {
         showToast('Error removing item from wishlist', 'error');
       }
     } catch (error) {
-      console.error('Error removing item:', error);
       showToast('Error removing item from wishlist', 'error');
     } finally {
       setRemovingItem(null);
@@ -154,7 +152,7 @@ const handleClearWishlist = async () => {
 
           setIsSignedIn(true);
         } catch (error) {
-          console.error("Error loading user data:", error);
+showToast("Error loading profile data. Please try again.", "error");
           setOrderHistory([]);
           setIsSignedIn(true); // still signed in
         }
@@ -168,7 +166,7 @@ const handleClearWishlist = async () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [ ]);
 
   
 
@@ -207,7 +205,6 @@ const handleClearWishlist = async () => {
         showToast('Profile updated successfully!', 'success');
       }
     } catch (error) {
-      console.error("Error updating user data:", error);
       showToast('Error updating profile. Please try again.', 'error');
     } finally {
       setSaving(false);
@@ -227,7 +224,7 @@ const handleClearWishlist = async () => {
       setCookieSettings(userDoc.data().cookieSettings);
     }
   } catch (error) {
-    console.error("Error loading cookie settings:", error);
+    showToast('Error loading cookie settings. Please try again.', 'error');
   }
 };
 
@@ -247,7 +244,6 @@ const saveCookieSettings = async () => {
     
     showToast('Cookie preferences updated successfully!', 'success');
   } catch (error) {
-    console.error("Error saving cookie settings:", error);
     showToast('Error updating cookie preferences. Please try again.', 'error');
   } finally {
     setSaving(false);
@@ -327,15 +323,136 @@ const loadUserOrders = async (userId) => {
       });
       
       setOrderHistory(orders);
-      console.log('Loaded orders:', orders); // Debug log
       
     } catch (error) {
-      console.error("Error loading orders:", error);
       setOrderHistory([]);
     }
   };
 
+const handleAddToCart = async (productId, quantity = 1, productData = {}) => {
+  try {
+    // Check if user is authenticated
+    const user = auth.currentUser;
+    if (!user) {
+      showToast && showToast('Please log in to add items to cart');
+      return { success: false, message: 'User not authenticated' };
+    }
 
+    // Validate required parameters
+    if (!productId || !productData) {
+      showToast && showToast('Invalid product data', 'error');
+      return { success: false, message: 'Invalid product data' };
+    }
+
+    // Use the current price
+    const currentPrice = productData.price;
+    if (!currentPrice || currentPrice <= 0) {
+      showToast && showToast('Invalid product price', 'error');
+      return { success: false, message: 'Invalid product price' };
+    }
+
+    const totalPrice = currentPrice * quantity;
+
+    // Create cart item object
+    const cartItem = {
+      productId: productId,
+      productName: productData.product_name || productData.name,
+      price: currentPrice,
+      quantity: quantity,
+      totalPrice: totalPrice,
+      description: productData.description || 'No description available',
+      brandName: productData.brand_name || productData.brand || 'Unknown',
+      category: productData.category || 'General',
+      imgUrl: productData.imgUrl || 'default-product.jpg',
+      brand: productData.brand || 'Unknown',
+      stock: productData.stock || 'In Stock',
+      hasPrime: productData.gpremium || false,
+      seller: productData.seller || 'Gulime',
+      inStock: productData.inStock !== undefined ? productData.inStock : true,
+      warranty: productData.warranty || '1 Year',
+      addedAt: new Date().toISOString()
+    };
+
+    // Remove any undefined values to prevent Firestore errors
+    Object.keys(cartItem).forEach(key => {
+      if (cartItem[key] === undefined) {
+        delete cartItem[key];
+      }
+    });
+
+    // Reference to user's cart document
+    const cartRef = doc(db, 'carts', user.uid);
+
+    // Get existing cart
+    const cartDoc = await getDoc(cartRef);
+
+    if (cartDoc.exists()) {
+      // Cart exists, update it
+      const existingCart = cartDoc.data();
+      const existingItems = existingCart.items || [];
+
+      // Check if product already exists in cart
+      const existingItemIndex = existingItems.findIndex(item => item.productId === cartItem.productId);
+
+      if (existingItemIndex >= 0) {
+        // Update quantity of existing item
+        existingItems[existingItemIndex].quantity += quantity;
+        existingItems[existingItemIndex].totalPrice =
+          existingItems[existingItemIndex].price * existingItems[existingItemIndex].quantity;
+      } else {
+        // Add new item to cart
+        existingItems.push(cartItem);
+      }
+
+      // Calculate totals
+      const totalItems = existingItems.reduce((sum, item) => sum + item.quantity, 0);
+      const totalValue = existingItems.reduce((sum, item) => sum + item.totalPrice, 0);
+
+      // Update cart document
+      await updateDoc(cartRef, {
+        items: existingItems,
+        updatedAt: new Date().toISOString(),
+        totalItems: totalItems,
+        totalValue: totalValue
+      });
+    } else {
+      // Create new cart
+      await setDoc(cartRef, {
+        userId: user.uid,
+        items: [cartItem],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        totalItems: quantity,
+        totalValue: totalPrice
+      });
+    }
+
+    // Show success toast if function is provided
+    if (showToast) {
+      const displayName = productData.product_name || productData.name;
+      showToast(`Added ${quantity} ${displayName} to cart!`, 'success');
+    }
+
+    return {
+      success: true,
+      message: `Added ${quantity} item(s) to cart!`,
+      shouldNavigate: true
+    };
+
+  } catch (error) {
+
+    // Show error toast if function is provided
+    if (showToast) {
+      showToast('Failed to add item to cart. Please try again.', 'error');
+    }
+
+    return {
+      success: false,
+      message: 'Failed to add item to cart. Please try again.',
+      error: error.message
+    };
+  }
+};
   if (loading) {
     return (
       <>
@@ -812,7 +929,7 @@ const loadUserOrders = async (userId) => {
       <div className="empty-wishlist">
         <Heart size={64} className="empty-icon" />
         <h3>Your wishlist is empty</h3>
-        <p>Save items you love to your wishlist and they'll appear here.</p>
+        <p>Save items you love to your wishlist and they&apos;ll appear here.</p>
         <Link to="/" className="btn btn-primary">
           Start Shopping
         </Link>
@@ -960,7 +1077,7 @@ const loadUserOrders = async (userId) => {
                   </span>
                   {item.productData?.seller && (
                     <span className="seller-info">
-                      by {item.productData.seller}
+                      Seller {item.productData.seller}
                     </span>
                   )}
                 </div>
@@ -968,15 +1085,15 @@ const loadUserOrders = async (userId) => {
                 <div className="item-actions">
                   <Link 
                     to={`/product/${item.productId}`}
-                    className="btn btn-primary btn-sm"
+                    className="cart-link"
                   >
                     <ExternalLink size={14} />
                     View Details
                   </Link>
                   
                   <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => handleAddToCart(item)}
+                    className="no-page-button"
+                    onClick={() => handleAddToCart(item.productId, 1, item.productData)}
                     disabled={item.productData?.stock === 'Out of Stock'}
                   >
                     <ShoppingCart size={14} />
@@ -984,7 +1101,7 @@ const loadUserOrders = async (userId) => {
                   </button>
                   
                   <button
-                    className="btn btn-danger btn-sm"
+                    className="footer-newsletterbtn"
                     onClick={() => handleRemoveFromWishlist(item.productId)}
                     disabled={removingItem === item.productId}
                   >
@@ -1018,12 +1135,12 @@ const loadUserOrders = async (userId) => {
     {wishlistItems.length > 0 && (
       <div className="wishlist-actions">
         <button 
-          className="btn btn-secondary"
+          className="footer-newsletterbtn "
           onClick={() => handleClearWishlist()}
         >
           Clear All Items
         </button>
-        <Link to="/" className="btn btn-primary">
+        <Link to="/" className="no-page-button">
           Continue Shopping
         </Link>
       </div>
@@ -1031,7 +1148,7 @@ const loadUserOrders = async (userId) => {
   </div>
 )}
 
-          {/* wishlist tab */}
+          {/* wishlist tab stops */}
 
        
 
