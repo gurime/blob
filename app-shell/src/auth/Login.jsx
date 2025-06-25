@@ -1,6 +1,6 @@
+/* eslint-disable no-unused-vars */
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import { db } from "../db/firebase";
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -42,14 +42,28 @@ auth,
 formData.email, 
 formData.password
 );
-      
 // Show success message and redirect
 showToast('Login successful', 'success');
 setTimeout(() => {
-  navigate('/');
+navigate('/');
 }, 1000);
 } catch (error) {
 setError(error.message);
+      
+// Handle different Firebase auth errors
+let errorMessage = 'Login failed';
+      
+if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+errorMessage = 'Wrong password. Please try again.';
+} else if (error.code === 'auth/user-not-found') {
+errorMessage = 'No account found with this email.';
+} else if (error.code === 'auth/invalid-email') {
+errorMessage = 'Invalid email address.';
+} else if (error.code === 'auth/too-many-requests') {
+errorMessage = 'Too many failed attempts. Please try again later.';
+}
+// Show error toast
+showToast(errorMessage, 'error');
 } finally {
 setLoading(false);
 }
@@ -63,10 +77,7 @@ return (
 <div className="login-container">
 <div className="login-card">
 <h1 className="login-title">Welcome Back</h1>
-<p className="login-subtitle">Sign in to your Gulime account</p>
-            
-{error && <div className="error-message">{error}</div>}
-            
+<p className="login-subtitle">Sign in to your Gulime account</p>            
 <form onSubmit={handleSubmit} className="login-form">
 
 <div className="form-group">
@@ -108,7 +119,7 @@ disabled={loading}>
 </form>
             
 <div className="login-footer">
-<p>Don't have an account? <a href="/signup" className="signup-link">Create Account</a></p>
+<p>Don&apos;t have an account? <a href="/signup" className="signup-link">Create Account</a></p>
 </div>
 </div>
 </div>

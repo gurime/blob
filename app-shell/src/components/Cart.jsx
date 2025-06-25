@@ -430,18 +430,20 @@ Continue Shopping
 {cartItems.map((item) => (
 <div key={item.productId} className="cart-item">
 <div className="cart-item-image-container">
+<Link to={`/product/${item.productId}`}>
 <img 
 src={`/assets/images/${item.imgUrl}`} 
 alt={item.productName} 
 className="cart-item-image"/>
+</Link>
 </div>
                                         
 <div className="cart-item-details">
 <Link to={`/product/${item.productId}`} >
 <h3 className="cart-item-title">
-  {item.productName 
-    ? `${item.productName} - ${item.model ? ` ${item.model}` : ''}`
-    : `${item.storage}GB`
+{item.productName 
+? `${item.productName} - ${item.model ? ` ${item.model}` : ''}`
+: `${item.storage}GB`
   }
 </h3>
 </Link>
@@ -501,6 +503,8 @@ Subtotal ({cartSummary.totalItems} items):
 )}
 
 {/* Saved for Later Section */}
+
+
 <div className="saved-items-section">
 <h2>Saved for later ({savedItems.length})</h2>
 {savedItems.length === 0 ? (
@@ -512,11 +516,12 @@ Subtotal ({cartSummary.totalItems} items):
 {savedItems.map((item) => (
 <div key={item.productId} className="saved-item">
 <div className="saved-item-image-container">
+<Link to={`/product/${item.productId}`}>
 <img 
 src={`/assets/images/${item.imgUrl}`} 
 alt={item.productName} 
-className="saved-item-image"
-/>
+className="saved-item-image"/>
+</Link>
 </div>
                                             
 <div className="saved-item-details">
@@ -526,7 +531,8 @@ className="saved-item-image"
 {item.stock 
 ? <span style={{ color: 'green' }}>✅ {item.stock}</span>
 : <span style={{ color: 'red' }}>❌ Out Of Stock</span>}
-</p>                                                
+</p>
+
 <div className="saved-item-actions">
 <button 
 onClick={() => moveToCart(item.productId)}

@@ -39,7 +39,21 @@ const navigate = useNavigate();
     return () => unsubscribe();
   }, []);
 
+  const isLightColor = (hex) => {
+  // Remove # if present
+  const color = hex.replace('#', '');
   
+  // Convert to RGB
+  const r = parseInt(color.substr(0, 2), 16);
+  const g = parseInt(color.substr(2, 2), 16);
+  const b = parseInt(color.substr(4, 2), 16);
+  
+  // Calculate luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  // Return true if color is light (threshold of 0.7)
+  return luminance > 0.7;
+};
 
   
 const {
@@ -306,137 +320,59 @@ generateOriginalPrice(configPrice || product?.price || 0)
 {/* Car Configuration Section - FIXED VERSION */}
 {product.category?.toLowerCase() === 'automotive' && product.colors && (
   <div className="config-section">
-<div style={{
-display: 'flex',
-alignItems: 'center',
-justifyContent: 'space-between',
-padding: '32px 24px',
-gap: '48px',
-fontFamily: "'Gotham', 'Helvetica Neue', Arial, sans-serif",
-maxWidth: '700px',
-margin: '0 auto',
-background: '#ffffff',
-borderRadius: '8px',
-boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-border: '1px solid #f4f4f4'}}>
+<div className="car-model-range">
 {/* Range */}
 
-<div style={{
-textAlign: 'center',
-flex: 1,
-display: 'flex',
-flexDirection: 'column',
-alignItems: 'center',
-gap: '12px'}}>
+<div>
 
 <Battery 
 size={32} 
 color="#171a20" 
-strokeWidth={1.5}
-style={{
-marginBottom: '4px'
-}}/>
+strokeWidth={1.5}/>
 
-<div style={{
-fontSize: '28px',
-fontWeight: '300',
-color: '#171a20',
-lineHeight: '1',
-marginBottom: '2px',
-letterSpacing: '-0.5px'}}>
+<div>
 {product.range}
 </div>
 
-<div style={{
-fontSize: '12px',
-color: '#393c41',
-fontWeight: '500',
-textTransform: 'uppercase',
-letterSpacing: '1px'}}>
+<div>
 Range
 </div>
 </div>
       
 {/* Separator */}
-<div style={{
-width: '1px',
-height: '80px',
-background: 'linear-gradient(to bottom, transparent, #e8e8e8, transparent)',
-opacity: 0.6
-}}>
+<div className="car-seperator">
 </div>
       
 {/* 0-60 mph */}
-<div style={{
-textAlign: 'center',
-flex: 1,
-display: 'flex',
-flexDirection: 'column',
-alignItems: 'center',
-gap: '12px'}}>
+<div>
 
 <Timer 
 size={32} 
 color="#171a20" 
-strokeWidth={1.5}
-style={{
-marginBottom: '4px'
-}}/>
+strokeWidth={1.5}/>
 
-<div style={{
-fontSize: '28px',
-fontWeight: '300',
-color: '#171a20',
-lineHeight: '1',
-marginBottom: '2px',
-letterSpacing: '-0.5px'}}>
+<div>
 {product.acceleration}
 </div>
 
-<div style={{
-fontSize: '12px',
-color: '#393c41',
-fontWeight: '500',
-textTransform: 'uppercase',
-letterSpacing: '1px'}}>
+<div>
 0-60 mph
 </div>
 </div>
       
 {/* Separator */}
-<div style={{
-width: '1px',
-height: '80px',
-background: 'linear-gradient(to bottom, transparent, #e8e8e8, transparent)',
-opacity: 0.6
-}}>
+<div className="car-seperator">
 </div>
       
 {/* Top Speed */}
-<div style={{
-textAlign: 'center',
-flex: 1,
-display: 'flex',
-flexDirection: 'column',
-alignItems: 'center',
-gap: '12px'}}>
+<div>
 
 <Gauge 
 size={32} 
 color="#171a20" 
 strokeWidth={1.5}
-style={{
-marginBottom: '4px'
-}}
 />
-<div style={{
-fontSize: '28px',
-fontWeight: '300',
-color: '#171a20',
-lineHeight: '1',
-marginBottom: '2px',
-letterSpacing: '-0.5px'
-}}>
+<div>
 {product.topSpeed}
 </div>
 
@@ -450,68 +386,71 @@ letterSpacing: '1px'
 Top Speed
 </div>
 </div>
+ffgf
 </div>
 
     {/* Color Selector */}
-    <div className="section">
-      <h2>Color</h2>
-      <div className="color-options">
-        {product.colors.map((color) => (
-          <div key={color.code} className="color-option">
-            <div
-              className={`color-circle ${
-                selectedColor === color.code ? 'selected' : ''
-              }`}
-              style={{ backgroundColor: color.hex }}
-              onClick={() => handleColorChange(color.code)}
-              title={color.name}
-            />
-            <span style={{display:'flex',justifyContent:'center'}} className="option-price">${color.price}</span>
-          </div>
-        ))}
-      </div>
-      <p className="selected-color-name">
-        {product.colors.find(c => c.code === selectedColor)?.name || 'Select a color'}
-      </p>
-    </div>
+<div className="section">
+<h2>Color</h2>
+<div className="color-options">
+{product.colors.map((color) => (
+<div key={color.code} className="color-option">
+<div
+className={`color-circle ${selectedColor === color.code ? 'selected' : ''}`}
+style={{ backgroundColor: color.hex,'--checkmark-color': isLightColor(color.hex) ? '#000000' : '#ffffff'}}
+data-hex={color.hex}
+onClick={() => handleColorChange(color.code)}
+title={color.name}
+/>
+<span style={{display:'flex', justifyContent:'center'}} className="option-price">
+{typeof color.price === 'string' && color.price === 'Included' ? 'Included' : `$${color.price}`}
+</span>
+</div>
+))}
+</div>
+<p className="selected-color-name">
+{product.colors.find(c => c.code === selectedColor)?.name || 'Select a color'}
+</p>
+</div>
 
-    {/* Wheels Selector */}
-    {product.wheels && product.wheels.length > 0 && (
-      <div className="section">
-        <h2>Wheels</h2>
-        {product.wheels.map((wheel) => (
-          <label key={wheel.code} className="option-card">
-            <input 
-              type="radio" 
-              name="wheels" 
-              checked={selectedWheels === wheel.code}
-              onChange={() => handleWheelsChange(wheel.code)}
-            />
-            <span className="option-name">{wheel.name}</span>
-            <span className="option-price">${wheel.price.toLocaleString()}</span>
-          </label>
-        ))}
-      </div>
-    )}
+{/* Wheels Selector */}
+{product.wheels && product.wheels.length > 0 && (
+<div className="section">
+<h2>Wheels</h2>
+{product.wheels.map((wheel) => (
+<label key={wheel.code} className="option-card">
+<input 
+type="radio" 
+name="wheels" 
+checked={selectedWheels === wheel.code}
+onChange={() => handleWheelsChange(wheel.code)}/>
+<span className="option-name">{wheel.name}</span>
+<span className="option-price">
+{typeof wheel.price === 'string' && wheel.price === 'Included' ? 'Included' : `$${wheel.price.toLocaleString()}`}
+</span>
+</label>
+))}
+</div>
+)}
 
     {/* Interior Selector */}
-    {product.interiors && product.interiors.length > 0 && (
-      <div className="section">
-        <h2>Interior</h2>
-        {product.interiors.map((interior) => (
-          <label key={interior.code} className="option-card">
-            <input 
-              type="radio" 
-              name="interior" 
-              checked={selectedInterior === interior.code}
-              onChange={() => handleInteriorChange(interior.code)}
-            />
-            <span className="option-name">{interior.name}</span>
-            <span className="option-price">${interior.price.toLocaleString()}</span>
-          </label>
-        ))}
-      </div>
-    )}
+{product.interiors && product.interiors.length > 0 && (
+<div className="section">
+<h2>Interior</h2>
+{product.interiors.map((interior) => (
+<label key={interior.code} className="option-card">
+<input 
+type="radio" 
+name="interior" 
+checked={selectedInterior === interior.code}
+onChange={() => handleInteriorChange(interior.code)}/>
+<span className="option-name">{interior.name}</span>
+<span className="option-price">
+{typeof interior.price === 'string' && interior.price === 'Included' ? 'Included' : `$${interior.price.toLocaleString()}`}</span>
+</label>
+))}
+</div>
+)}
 
     {/* Autopilot */}
     {product.autopilot && product.autopilot.length > 0 && (

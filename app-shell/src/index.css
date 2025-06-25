@@ -2346,7 +2346,6 @@ text-decoration:none;
   border-radius: 8px;
   padding: 20px;
   text-align: center;
-  background: #FFFFFF;
   margin-bottom: 16px;
 }
 
@@ -2356,13 +2355,18 @@ text-decoration:none;
   width: auto;
   height: auto;
   object-fit: contain;
+  display: flex;
+  align-items: center;
 }
+
+
 
 .thumbnail-images {
   display: flex;
   gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .thumbnail {
@@ -2918,16 +2922,14 @@ height: 16px;
 
 .color-circle.selected::after {
   content: '✓';
+  color: var(--checkmark-color, #ffffff);
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #ffffff;
   font-weight: bold;
   font-size: 16px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
-
 .selected-color-name {
   font-size: 16px;
   font-weight: 400;
@@ -3203,6 +3205,42 @@ height: 16px;
   background: #155093;
 }
 
+.car-model-range{
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 24px;
+gap: 48px;
+max-width: 700px;
+margin: 0 auto;
+background: #ffffff;
+border-radius: 8px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+border: 1px solid #f4f4f4;
+}
+
+.car-model-range div{
+text-align: center;
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 12px;
+margin-bottom: 4px;
+font-size: 28px;
+font-weight: 300;
+color: #171a20;
+line-height: 1;
+margin-bottom: 2px;
+letter-spacing: -0.5px;
+}
+
+.car-seperator{
+border-left: 1px solid #e3e3e3;
+height: 100%;
+  margin: 0 24px;
+  
+}
 /* Tesla-specific color palette */
 .tesla-red { background-color: #cc0000; }
 .tesla-white { background-color: #ffffff; border: 1px solid #d3d3d3; }
@@ -3771,6 +3809,34 @@ height: 16px;
 }
 
 /* security css */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
 /* Security Settings Styles */
 .security-section {
   max-width: 800px;
