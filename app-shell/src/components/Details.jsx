@@ -182,8 +182,8 @@ return (
   
   {/* Main category (automotive) */}
   <Link to={`/category/${product.category}`}>
-    {product.category}
-  </Link>
+{product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+</Link>
   <span className="breadcrumb-separator">›</span>
   
   {/* Subcategory (electric) */}
@@ -255,7 +255,6 @@ showLink={true} // Show link to reviews
 </div>
 
 {/* Delivery Info Section */}
-<DeliveryInfo hasPremium={!!product?.gpremium} />
 
 {/* Show base price if upgraded config is selected */}
 {configPrice > basePrice && (
@@ -376,19 +375,14 @@ strokeWidth={1.5}
 {product.topSpeed}
 </div>
 
-<div style={{
-fontSize: '12px',
-color: '#393c41',
-fontWeight: '500',
-textTransform: 'uppercase',
-letterSpacing: '1px'
-}}>
+<div >
 Top Speed
 </div>
 </div>
-ffgf
-</div>
 
+
+</div>
+<div className="cash-selection">ffgf</div>
     {/* Color Selector */}
 <div className="section">
 <h2>Color</h2>
@@ -818,7 +812,8 @@ onClick={() => storage.available && handleStorageChange(storage)}>
       {product.category && (
         <tr>
           <td className="spec-label">Product Category</td>
-          <td className="spec-value">{product.category}</td>
+          <td className="spec-value">{product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+</td>
         </tr>
       )}
       
@@ -1020,10 +1015,25 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 <div className="unit-price-small">${formatPrice(configPrice || product?.price || 0)} each</div>
 </div>
 ) : (
-<div>${formatPrice(configPrice || product?.price || 0)}</div>
+<div className="current-price">${formatPrice(configPrice || product?.price || 0)}</div>
 )}
+<span className="savings">
+Save ${calculateSavings(
+formatPrice(configPrice || product?.price || 0),
+generateOriginalPrice(configPrice || product?.price || 0)).amount}{' '}
+({calculateSavings(
+formatPrice(configPrice || product?.price || 0),
+generateOriginalPrice(configPrice || product?.price || 0)
+).percentage}%)
+</span>
 </div>
-
+{/* Prime Badge, only if gpremium image exists */}
+{product?.gpremium && (
+<div className="prime-badge">
+<img className="prime-logo" src={`/assets/images/${product.gpremium}`} alt="Prime" />
+<span>FREE One-Day Delivery</span>
+</div>
+)}
 <DeliveryInfo hasPremium={!!product?.gpremium} />
 
 <div className="stock-info">{product?.stock || 'In Stock'}</div>
@@ -1043,7 +1053,7 @@ onChange={(e) => handleQuantityChange(parseInt(e.target.value))}>
 
 <button className="add-to-cart-btn"   onClick={() => handleCartButtonClick(product)}
 >
-Add to Cart - ${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}
+Add to Cart 
 </button>
 
 <button style={{ width: '100%' }}

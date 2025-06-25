@@ -138,66 +138,68 @@ const getVirtualCarConfig = useMemo(() => {
     return images.length > 0 ? images : getProductImages();
   }, [isCarProduct, product, selectedModel, selectedColor, selectedWheels, getProductImages]);
 
-  // Calculate configuration price
-  const configPrice = useMemo(() => {
-    if (!product) return basePrice;
-    
-    let totalPrice = basePrice;
-    
-    // Handle regular product storage pricing
-    if (!isCarProduct && product.storageOptions?.storage && selectedStorage) {
-      const storageOption = product.storageOptions.storage.find(s => s.size === selectedStorage);
-      if (storageOption?.price) {
-        totalPrice += storageOption.price;
+ // Replace the configPrice useMemo in your useProductDetails hook with this fixed version:
+
+const configPrice = useMemo(() => {
+  if (!product) return basePrice;
+  
+  let totalPrice = basePrice;
+  
+  // Handle regular product storage pricing
+  if (!isCarProduct && product.storageOptions?.storage && selectedStorage) {
+    const storageOption = product.storageOptions.storage.find(s => s.size === selectedStorage);
+    if (storageOption?.price) {
+      totalPrice += storageOption.price;
+    }
+  }
+  
+  // Handle car configuration pricing
+  if (isCarProduct) {
+    // Handle colors from product.colors array
+    if (selectedColor && product.colors) {
+      const colorOption = product.colors.find(c => c.code === selectedColor);
+      if (colorOption?.price && typeof colorOption.price === 'number') {
+        totalPrice += colorOption.price;
       }
     }
-    
-    // Handle car configuration pricing - FIXED to match UI data structure
-    if (isCarProduct) {
-      // Handle colors from product.colors array (not carConfig.colors)
-      if (selectedColor && product.colors) {
-        const colorOption = product.colors.find(c => c.code === selectedColor);
-        if (colorOption?.price) {
-          totalPrice += colorOption.price;
-        }
-      }
 
-      // Handle wheels from product.wheels array
-      if (selectedWheels && product.wheels) {
-        const wheelOption = product.wheels.find(w => w.code === selectedWheels);
-        if (wheelOption?.price) {
-          totalPrice += wheelOption.price;
-        }
+    // Handle wheels from product.wheels array
+    if (selectedWheels && product.wheels) {
+      const wheelOption = product.wheels.find(w => w.code === selectedWheels);
+      if (wheelOption?.price && typeof wheelOption.price === 'number') {
+        totalPrice += wheelOption.price;
       }
-
-      // Handle interiors from product.interiors array
-      if (selectedInterior && product.interiors) {
-        const interiorOption = product.interiors.find(i => i.code === selectedInterior);
-        if (interiorOption?.price) {
-          totalPrice += interiorOption.price;
-        }
-      }
-
-      // Handle autopilot from product.autopilot array
-      if (selectedAutopilot && product.autopilot) {
-        const autopilotOption = product.autopilot.find(a => a.code === selectedAutopilot);
-        if (autopilotOption?.price) {
-          totalPrice += autopilotOption.price;
-        }
-      }
-
-      // Handle extras from product.extras array
-if (selectedExtras.length > 0 && product.extras) {
-  selectedExtras.forEach(selectedExtra => {
-    if (selectedExtra?.price) {
-      totalPrice += selectedExtra.price;
     }
-  });
-}
+
+    // Handle interiors from product.interiors array
+    if (selectedInterior && product.interiors) {
+      const interiorOption = product.interiors.find(i => i.code === selectedInterior);
+      if (interiorOption?.price && typeof interiorOption.price === 'number') {
+        totalPrice += interiorOption.price;
+      }
     }
-    
-    return totalPrice;
-  }, [basePrice, product, isCarProduct, selectedStorage, selectedColor, selectedWheels, selectedInterior, selectedAutopilot, selectedExtras]);
+
+    // FIXED: Handle autopilot from product.autopilot array
+    if (selectedAutopilot && product.autopilot) {
+      const autopilotOption = product.autopilot.find(a => a.code === selectedAutopilot);
+      if (autopilotOption?.price && typeof autopilotOption.price === 'number') {
+        totalPrice += autopilotOption.price;
+      }
+    }
+
+    // FIXED: Handle extras from product.extras array
+    if (selectedExtras.length > 0 && product.extras) {
+      selectedExtras.forEach(selectedExtra => {
+        // selectedExtra should be the full object, not just a reference
+        if (selectedExtra?.price && typeof selectedExtra.price === 'number') {
+          totalPrice += selectedExtra.price;
+        }
+      });
+    }
+  }
+  
+  return totalPrice;
+}, [basePrice, product, isCarProduct, selectedStorage, selectedColor, selectedWheels, selectedInterior, selectedAutopilot, selectedExtras]);
 
   // Calculate total price with quantity
   const totalPrice = useMemo(() => {

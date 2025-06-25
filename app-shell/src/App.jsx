@@ -22,7 +22,7 @@ import Investor from "./components/Investor"
 import Sustainablility from "./components/Sustainablility"
 import NewsLetter from "./components/NewsLetter"
 import BlogDetails from "./components/BlogDetails"
-import Blogdmin from "./Admin/Blogdmin"
+import BlogAdmin from "./Admin/BlogAdmin"
 import Order from "./components/Order"
 import PaymentSuccess from "./components/PaymentSuccess"
 
@@ -34,7 +34,6 @@ return (
 <Route path="/product/:id" element={<Details />} />
 <Route path="/blog/:id" element={<BlogDetails />} />
 <Route path='/order/:id' element={<Order />} />
-<Route path="/PaymentSuccess" element={<PaymentSuccess />} />
 {/* Specific category routes - these need to come BEFORE generic routes */}
 <Route path="/electronics" element={<CategoryPage />} />
 <Route path="/electronics/:subcategory" element={<CategoryPage />} />
@@ -128,8 +127,9 @@ return (
 <Route path="/signup" element={<Signup />} />
 <Route path="/login" element={<Login />} />
 <Route path="/profile" element={<Profile />} />
-<Route path="/BlogAdmin" element={<Blogdmin/>}/>
+<Route path="/BlogAdmin" element={<BlogAdmin/>}/>
 <Route path="/cart" element={<Cart />} />
+<Route path="/PaymentSuccess" element={<PaymentSuccess />} />
 
 {/* Catch all route */}
 <Route path="*" element={<NoPage />} />

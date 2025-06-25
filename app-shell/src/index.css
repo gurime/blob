@@ -2355,18 +2355,31 @@ text-decoration:none;
   width: auto;
   height: auto;
   object-fit: contain;
-  display: flex;
-  align-items: center;
+
+}
+
+@media (max-width: 768px) {
+  .main-image {
+   display: flex;
+   align-items: center;
+  }
+
+  .left-column {
+    grid-template-columns: 1fr;
+  }
+
+  .image-section {
+    order: -1;
+  }
 }
 
 
 
 .thumbnail-images {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  overflow-x: auto;
+justify-content: center;
 }
 
 .thumbnail {
@@ -2374,7 +2387,6 @@ text-decoration:none;
   height: 60px;
   border: 1px solid #D5D9D9;
   border-radius: 4px;
-  padding: 4px;
   cursor: pointer;
   transition: border-color 0.2s;
 }
@@ -2395,6 +2407,10 @@ text-decoration:none;
 }
 
 .product-info {
+  display: flex;
+
+  flex-direction: column;
+  align-items: center;
   padding-right: 20px;
 }
 
@@ -3219,20 +3235,25 @@ box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 border: 1px solid #f4f4f4;
 }
 
-.car-model-range div{
+.car-model-range > div{
 text-align: center;
 flex: 1;
 display: flex;
 flex-direction: column;
 align-items: center;
-gap: 12px;
+gap: 10px;
 margin-bottom: 4px;
-font-size: 28px;
+font-size: 14px;
 font-weight: 300;
 color: #171a20;
 line-height: 1;
 margin-bottom: 2px;
-letter-spacing: -0.5px;
+}
+
+.cash-selection{
+  display: flex;
+  align-items: center;
+  flex-direction: column;
 }
 
 .car-seperator{
@@ -3647,9 +3668,7 @@ height: 100%;
 }
 
 @media (max-width: 768px) {
-  .product-container {
-    padding: 8px 12px;
-  }
+  
 
   .product-title {
     font-size: 20px;

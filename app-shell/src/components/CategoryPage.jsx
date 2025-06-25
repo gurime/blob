@@ -153,79 +153,66 @@ useEffect(() => {
   }, []);
 
   // Fetch products based on category structure
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      setError(null);
+// Fetch products based on category structure
+useEffect(() => {
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
 
+    try {
+      const { category, subcategory, subsubcategory } = getCategoryInfo();
+      
+      if (!category) {
+        throw new Error("Category not found");
+      }
+
+      let productsData = [];
+
+      // Always fetch from the main category collection
       try {
-        const { category, subcategory, subsubcategory } = getCategoryInfo();
+        const colRef = collection(db, category);
+        const querySnapshot = await getDocs(colRef);
         
-        if (!category) {
-          throw new Error("Category not found");
-        }
-
-        let colRef;
-        let productsData = [];
-
-
-        if (category && subcategory && subsubcategory) {
-          colRef = collection(db, category, subcategory, subsubcategory, 'products');
-        } else if (category && subcategory) {
-          colRef = collection(db, category, subcategory, 'products');
-        } else if (category) {
-          try {
-            colRef = collection(db, category);
-            const querySnapshot = await getDocs(colRef);
-            
-            if (!querySnapshot.empty) {
-              const firstDoc = querySnapshot.docs[0];
-              const data = firstDoc.data();
-              
-              if (data.product_name || data.price || data.description) {
-                productsData = querySnapshot.docs.map((doc) => ({
-                  id: doc.id,
-                  ...doc.data(),
-                }));
-              } else {
-                for (const doc of querySnapshot.docs) {
-                  try {
-                    const subColRef = collection(db, category, doc.id, 'products');
-                    const subSnapshot = await getDocs(subColRef);
-                    const subProducts = subSnapshot.docs.map((subDoc) => ({
-                      id: subDoc.id,
-                      subcategory: doc.id,
-                      ...subDoc.data(),
-                    }));
-                    productsData.push(...subProducts);
-                  } catch (subError) { /* empty */ }
-                }
-              }
-            }
-          } catch (directError) {
-            throw new Error(`Category "${category}" not found`);
-          }
-        }
-
-        if (productsData.length === 0 && colRef) {
-          const querySnapshot = await getDocs(colRef);
-          productsData = querySnapshot.docs.map((doc) => ({
+        if (!querySnapshot.empty) {
+          const allProducts = querySnapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
           }));
+
+          // Filter products based on subcategory and subsubcategory
+          if (subcategory && subsubcategory) {
+            // Filter for products that match both subcategory and subsubcategory
+            productsData = allProducts.filter(product => 
+              product.sourcecategory === subcategory && 
+              product.subsubcategory === subsubcategory
+            );
+          } else if (subcategory) {
+            // Filter for products that match the subcategory (SourceCategory field)
+            // Convert URL subcategory to match database format (capitalize first letter)
+            const formattedSubcategory = subcategory.charAt(0).toUpperCase() + subcategory.slice(1).toLowerCase();
+            productsData = allProducts.filter(product => 
+              product.SourceCategory === formattedSubcategory
+            );
+          } else {
+            // Show all products in the main category
+            productsData = allProducts;
+          }
         }
-
-        setProducts(productsData);
-        setFilteredProducts(productsData);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      } catch (directError) {
+        throw new Error(`Category "${category}" not found`);
       }
-    };
 
-    fetchProducts();
-  }, [location.pathname, getCategoryInfo]);
+      setProducts(productsData);
+      setFilteredProducts(productsData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProducts();
+}, [location.pathname, getCategoryInfo]);
 
   // Filter and sort products
   useEffect(() => {
