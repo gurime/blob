@@ -56,11 +56,13 @@ handleAddToCart: async (product, quantity = 1, showToast, selectedOptions, actua
             const carConfig = selectedOptions.carConfig || {};
             const actualSelectedOptions = {
                 selectedColor: selectedOptions.selectedColor || carConfig.selectedColor,
-                selectedWheels: selectedOptions.selectedWheels || carConfig.selectedWheels,
-                selectedInterior: selectedOptions.selectedInterior || carConfig.selectedInterior,
-                selectedAutopilot: selectedOptions.selectedAutopilot || carConfig.selectedAutopilot,
-                selectedExtras: selectedOptions.selectedExtras || carConfig.selectedExtras || [],
-                selectedTrim: selectedOptions.selectedTrim || carConfig.selectedTrim
+selectedWheels: selectedOptions.selectedWheels || carConfig.selectedWheels,
+selectedInterior: selectedOptions.selectedInterior || carConfig.selectedInterior,
+selectedAutopilot: selectedOptions.selectedAutopilot || carConfig.selectedAutopilot,
+selectedExtras: selectedOptions.selectedExtras || carConfig.selectedExtras || [],
+selectedTrim: selectedOptions.selectedTrim || carConfig.selectedTrim,
+selectedFinancing: selectedOptions.selectedFinancing || carConfig.selectedFinancing,
+
             };
             
        
@@ -78,6 +80,17 @@ handleAddToCart: async (product, quantity = 1, showToast, selectedOptions, actua
                     name: product.colors?.find(c => c.code === actualSelectedOptions.selectedColor)?.name || 'Unknown',
                     hex: product.colors?.find(c => c.code === actualSelectedOptions.selectedColor)?.hex || '#000000'
                 } : null,
+
+trims: actualSelectedOptions.selectedTrim ? {
+code: actualSelectedOptions.selectedTrim,
+name: product.trims?.find(t => t.code === actualSelectedOptions.selectedTrim)?.name || 'Unknown',
+price: product.trims?.find(t => t.code === actualSelectedOptions.selectedTrim)?.price || 0,
+LeasePrice: product.trims?.find(t => t.code === actualSelectedOptions.selectedTrim)?.leasePrice || 0,
+financePrice: product.trims?.find(t => t.code === actualSelectedOptions.selectedTrim)?.financePrice || 0,
+accelration: product.trims?.find(t => t.code === actualSelectedOptions.selectedTrim)?.accelration || 0,
+range: product.trims?.find(t => t.code === actualSelectedOptions.selectedTrim)?.range || 0,
+topSpeed: product.trims?.find(t => t.code === actualSelectedOptions.selectedTrim)?.topSpeed || 0
+} : null,
                 
                 wheels: actualSelectedOptions.selectedWheels ? {
                     code: actualSelectedOptions.selectedWheels,

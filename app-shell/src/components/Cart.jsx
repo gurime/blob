@@ -319,6 +319,7 @@ quantity: item.quantity,
 seller: item.seller || 'Gulime',
 model: item.model || '',
 stock: item.stock || 'In Stock',
+trim: item.trim || '',
 description: item.description || '',
 premium: item.premium || item.hasPrime || false,
 automotive: item.automotive || false,
@@ -442,7 +443,7 @@ className="cart-item-image"/>
 <Link to={`/product/${item.productId}`} >
 <h3 className="cart-item-title">
 {item.productName 
-? `${item.productName} - ${item.model ? ` ${item.model}` : ''}`
+? `${item.productName.charAt(0).toUpperCase() + item.productName} - ${item.model ? ` ${item.model}` : ''}`
 : `${item.storage}GB`
   }
 </h3>

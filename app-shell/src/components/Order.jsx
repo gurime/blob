@@ -337,6 +337,8 @@ const handleSubmit = async (event) => {
           customer_email: userInfo.email,
           customer_phone: userInfo.phone,
           customer_id: auth.currentUser?.uid || '',
+          automotiveConfig: orderData.automotiveConfig || null,
+
           order_id: orderData.id || '',
           total_items: orderData.summary?.totalItems || orderData.items?.length || 0,
           description: `Order #${orderData.id} - ${orderData.summary?.totalItems || orderData.items?.length || 0} items`,
@@ -444,6 +446,9 @@ const handleSubmit = async (event) => {
   }
 };
 
+
+
+
 // Add this helper function to clear the cart
 const clearCart = async () => {
   try {
@@ -491,11 +496,29 @@ const clearCart = async () => {
     navigate('/cart');
   };
 
-  // Calculate total including delivery fee
-  const calculateTotal = () => {
-    return orderData.summary.totalValue + deliveryFee;
-  };
+const calculateTotal = () => {
+  if (!orderData || !orderData.summary) {
+    return 0;
+  }
+  return orderData.summary.totalValue + deliveryFee;
+};
 
+// Fixed lease/finance calculation with null checks
+const leasePrice = orderData?.items?.[0]?.automotiveConfig?.trims?.LeasePrice || 
+orderData?.items?.[0]?.trims?.LeasePrice || 0;
+const financePrice = orderData?.items?.[0]?.automotiveConfig?.trims?.financePrice || 
+orderData?.items?.[0]?.trims?.financePrice || (orderData ? calculateTotal() : 0);
+
+const isLease = leasePrice > 0;
+const buttonLabel = loading 
+  ? 'Processing...'
+  : !orderData
+    ? 'Loading...'
+    : isLease 
+      ? `Lease: $${leasePrice.toLocaleString()}/mo`
+      : `Finance: $${financePrice.toLocaleString()}/mo`;
+
+      
   if (isLoading || !orderData) {
     return (
       <>
@@ -596,10 +619,23 @@ onError={(e) => {e.target.src = '/assets/images/placeholder.jpg';}}/>
 <h2>Order Summary</h2>
             
 <div className="summary-row">
-<span>Subtotal ({orderData.summary.totalItems} items):</span>
-<span>${orderData.summary.totalValue.toLocaleString()}</span>
+  <span>
+    {orderData?.items?.[0]?.automotiveConfig
+      ? (isLease ? 'Base Price:' : 'Finance Price:')
+      : `Subtotal (${orderData.summary.totalItems} items):`
+    }
+  </span>
+  <span>
+    {orderData?.items?.[0]?.automotiveConfig 
+      ? (isLease 
+          ? `$${orderData.summary.totalValue.toLocaleString()}/mo` 
+          : `$${financePrice.toLocaleString()}`
+        )
+      : `$${orderData.summary.totalValue.toLocaleString()}`
+    }
+</span>
 </div>
-            
+
 <div className="summary-row">
 <span>Shipping:</span>
 {orderData.items.some(item => item.hasPrime) ? (
@@ -650,8 +686,14 @@ onChange={handleDeliveryChange}>
 
 {/* Updated total calculation */}
 <div className="summary-row total-row">
-<span><strong>Total:</strong></span>
-<span><strong>${calculateTotal().toLocaleString()}</strong></span>
+  <span><strong>{isLease ? 'Monthly Lease:' : 'Total:'}</strong></span>
+  <span><strong>
+    {isLease 
+      ? `$${leasePrice.toLocaleString()}/mo` 
+      : `$${calculateTotal().toLocaleString()}`
+    }
+  </strong>
+  </span>
 </div>
             
 <div className="order-actions">
@@ -804,11 +846,15 @@ Credit or Debit Card *
 </div>
 
 <button 
-type='submit'                
-className="proceed-payment-btn" 
-disabled={loading || !isSignedIn || !orderData || !stripe || !elements || !stripeLoaded}>
-{loading ? 'Processing...' : `Place Your Order - $${calculateTotal().toLocaleString()}`}
+  type="submit"                
+  className="proceed-payment-btn" 
+  disabled={loading || !isSignedIn || !orderData || !stripe || !elements || !stripeLoaded}
+>
+  {buttonLabel}
 </button>
+
+
+
 </form>
   
 <button 

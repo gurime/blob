@@ -432,7 +432,7 @@ onChange={() => handleInteriorChange(interior.code)}/>
     {/* Extras */}
 {product.extras && product.extras.length > 0 && (
   <div className="section">
-    <h2>Extras</h2>
+    <h2>Warranty</h2>
     {product.extras.map((extra, i) => (
       <label key={i} className="option-card extra-card">
         <input 
