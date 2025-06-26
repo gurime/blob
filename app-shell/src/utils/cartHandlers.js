@@ -33,6 +33,7 @@ handleAddToCart: async (product, quantity = 1, showToast, selectedOptions, actua
             imgUrl: product.imgUrl || 'default-product.jpg',
             brand: product.brand || 'Unknown',
             
+            
             // Standard product options
             color: actualSelectedOptions.selectedColor || product.color || null,
             size: selectedOptions.selectedSize || product.size || null,
@@ -58,7 +59,8 @@ handleAddToCart: async (product, quantity = 1, showToast, selectedOptions, actua
                 selectedWheels: selectedOptions.selectedWheels || carConfig.selectedWheels,
                 selectedInterior: selectedOptions.selectedInterior || carConfig.selectedInterior,
                 selectedAutopilot: selectedOptions.selectedAutopilot || carConfig.selectedAutopilot,
-                selectedExtras: selectedOptions.selectedExtras || carConfig.selectedExtras || []
+                selectedExtras: selectedOptions.selectedExtras || carConfig.selectedExtras || [],
+                selectedTrim: selectedOptions.selectedTrim || carConfig.selectedTrim
             };
             
        
@@ -99,12 +101,19 @@ handleAddToCart: async (product, quantity = 1, showToast, selectedOptions, actua
                 extras: actualSelectedOptions.selectedExtras || [],
                 
                 configurationSummary: {
-                    colorName: product.colors?.find(c => c.code === actualSelectedOptions.selectedColor)?.name || 'Not selected',
-                    wheelsName: product.wheels?.find(w => w.code === actualSelectedOptions.selectedWheels)?.name || 'Not selected',
-                    interiorName: product.interiors?.find(i => i.code === actualSelectedOptions.selectedInterior)?.name || 'Not selected',
-                    autopilotName: product.autopilot?.find(a => a.code === actualSelectedOptions.selectedAutopilot)?.name || 'Not selected',
-                    extrasNames: actualSelectedOptions.selectedExtras?.map(e => e.name).join(', ') || 'None'
-                }
+colorName: product.colors?.find(c => c.code === actualSelectedOptions.selectedColor)?.name || 'Not selected',
+wheelsName: product.wheels?.find(w => w.code === actualSelectedOptions.selectedWheels)?.name || 'Not selected',
+trims: product.trims?.find(t => t.code === actualSelectedOptions.selectedTrim)?.name || 'Not selected',
+selectedTrim: actualSelectedOptions.selectedTrim || 'Not selected',
+financePrice: product.financePrice || 0,
+LeasePrice: product.leasePrice || 0,
+autopilotPrice: product.autopilot?.find(a => a.code === actualSelectedOptions.selectedAutopilot)?.price || 0,
+interiorName: product.interiors?.find(i => i.code === actualSelectedOptions.selectedInterior)?.name || 'Not selected',
+autopilotName: product.autopilot?.find(a => a.code === actualSelectedOptions.selectedAutopilot)?.name || 'Not selected',
+extrasNames: actualSelectedOptions.selectedExtras?.map(e => e.name).join(', ') || 'None'
+                },
+
+          
             };
 
             // Debug: Log the automotive config

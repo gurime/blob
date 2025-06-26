@@ -22,6 +22,7 @@ export const useProductDetails = (id) => {
   const [selectedInterior, setSelectedInterior] = useState('');
   const [selectedAutopilot, setSelectedAutopilot] = useState('');
   const [selectedExtras, setSelectedExtras] = useState([]);
+  const [selectedFinancing, setSelectedFinancing] = useState('cash'); // 'cash', 'lease', 'finance'
 
   // Memoized values for better performance
   const basePrice = useMemo(() => {
@@ -140,10 +141,26 @@ const getVirtualCarConfig = useMemo(() => {
 
  // Replace the configPrice useMemo in your useProductDetails hook with this fixed version:
 
+// Replace the configPrice useMemo in your useProductDetails hook with this:
 const configPrice = useMemo(() => {
   if (!product) return basePrice;
   
   let totalPrice = basePrice;
+  
+  // Handle trim pricing first (for automotive products)
+  if (isCarProduct && selectedTrim && product.trims) {
+    const trimData = product.trims.find(t => t.code === selectedTrim);
+    if (trimData) {
+      // Use different price based on financing option
+      if (selectedFinancing === 'lease' && trimData.leasePrice) {
+        totalPrice = trimData.leasePrice;
+      } else if (selectedFinancing === 'finance' && trimData.financePrice) {
+        totalPrice = trimData.financePrice;
+      } else if (trimData.price) {
+        totalPrice = trimData.price;
+      }
+    }
+  }
   
   // Handle regular product storage pricing
   if (!isCarProduct && product.storageOptions?.storage && selectedStorage) {
@@ -153,7 +170,7 @@ const configPrice = useMemo(() => {
     }
   }
   
-  // Handle car configuration pricing
+  // Handle car configuration pricing (add-ons)
   if (isCarProduct) {
     // Handle colors from product.colors array
     if (selectedColor && product.colors) {
@@ -179,7 +196,7 @@ const configPrice = useMemo(() => {
       }
     }
 
-    // FIXED: Handle autopilot from product.autopilot array
+    // Handle autopilot from product.autopilot array
     if (selectedAutopilot && product.autopilot) {
       const autopilotOption = product.autopilot.find(a => a.code === selectedAutopilot);
       if (autopilotOption?.price && typeof autopilotOption.price === 'number') {
@@ -187,10 +204,9 @@ const configPrice = useMemo(() => {
       }
     }
 
-    // FIXED: Handle extras from product.extras array
+    // Handle extras from product.extras array
     if (selectedExtras.length > 0 && product.extras) {
       selectedExtras.forEach(selectedExtra => {
-        // selectedExtra should be the full object, not just a reference
         if (selectedExtra?.price && typeof selectedExtra.price === 'number') {
           totalPrice += selectedExtra.price;
         }
@@ -199,7 +215,8 @@ const configPrice = useMemo(() => {
   }
   
   return totalPrice;
-}, [basePrice, product, isCarProduct, selectedStorage, selectedColor, selectedWheels, selectedInterior, selectedAutopilot, selectedExtras]);
+}, [basePrice, product, isCarProduct, selectedStorage, selectedColor, selectedWheels, selectedInterior, selectedAutopilot, selectedExtras, selectedTrim, selectedFinancing]);
+
 
   // Calculate total price with quantity
   const totalPrice = useMemo(() => {
@@ -249,6 +266,14 @@ const handleWheelsChange = useCallback((wheelCode) => {
   setSelectedWheels(prev => prev === wheelCode ? null : wheelCode);
 }, []);
 
+const handleFinancingChange = useCallback((financingType) => {
+  setSelectedFinancing(financingType);
+}, []);
+
+const handleTrimChange = useCallback((trimCode) => {
+  setSelectedTrim(trimCode);
+}, []);
+
 const handleInteriorChange = useCallback((interiorCode) => {
   setSelectedInterior(prev => prev === interiorCode ? null : interiorCode);
 }, []);
@@ -269,6 +294,32 @@ const handleExtrasChange = useCallback((extra) => {
     }
   });
 }, []);
+
+const getCurrentSpecs = useMemo(() => {
+  if (!product || !isCarProduct) return null;
+  
+  // Base specs from product
+  let specs = {
+    range: product.range || '363 mi',
+    topSpeed: product.topSpeed || '125 mph', 
+    acceleration: product.acceleration || '4.9 sec'
+  };
+  
+  // Update specs based on selected trim
+  if (selectedTrim && product.trims) {
+    const trimData = product.trims.find(t => t.code === selectedTrim);
+    if (trimData) {
+      specs = {
+        range: trimData.range || specs.range,
+        topSpeed: trimData.topSpeed || specs.topSpeed,
+        acceleration: trimData.acceleration || specs.acceleration
+      };
+    }
+  }
+  
+  return specs;
+}, [product, isCarProduct, selectedTrim]);
+
 
 
   // Get current selections for cart
@@ -291,14 +342,16 @@ const handleExtrasChange = useCallback((extra) => {
         selectedInterior,
         selectedAutopilot,
         selectedExtras,
-        estimatedDelivery
+        estimatedDelivery,
+        selectedFinancing,
+        specs: getCurrentSpecs
       };
     }
 
     return selections;
   }, [selectedColor, selectedStorage, configPrice, displayName, quantity, isCarProduct, 
       selectedModel, selectedTrim, selectedWheels, selectedInterior, selectedAutopilot, 
-      selectedExtras, estimatedDelivery]);
+      selectedExtras, estimatedDelivery, totalPrice, selectedFinancing, getCurrentSpecs]);
 
   // Reset selections when product changes
   const resetSelections = useCallback(() => {
@@ -361,38 +414,44 @@ const handleExtrasChange = useCallback((extra) => {
   }, [id, searchInCollection, resetSelections]);
 
   // Set default selections when product loads - FIXED
-  useEffect(() => {
-    if (!product || basePrice <= 0) return;
+ // In your existing useEffect where you set default selections, add this:
+useEffect(() => {
+  if (!product || basePrice <= 0) return;
 
-    // Set default color for both regular and car products
-    if (!selectedColor) {
-      if (isCarProduct && product.colors?.length > 0) {
-        setSelectedColor(product.colors[0].code);
-      } else if (product.avaibleColors?.colors?.length > 0) {
-        setSelectedColor(product.avaibleColors.colors[0].code);
-      }
+  // Set default color for both regular and car products
+  if (!selectedColor) {
+    if (isCarProduct && product.colors?.length > 0) {
+      setSelectedColor(product.colors[0].code);
+    } else if (product.avaibleColors?.colors?.length > 0) {
+      setSelectedColor(product.avaibleColors.colors[0].code);
+    }
+  }
+  
+  // Set default storage for regular products
+  if (!isCarProduct && product.storageOptions?.storage?.length > 0 && !selectedStorage) {
+    setSelectedStorage(product.storageOptions.storage[0].size);
+  }
+
+  // Set default car configurations
+  if (isCarProduct) {
+    // ADD THIS: Set default trim
+    if (product.trims?.length > 0 && !selectedTrim) {
+      setSelectedTrim(product.trims[0].code);
     }
     
-    // Set default storage for regular products
-    if (!isCarProduct && product.storageOptions?.storage?.length > 0 && !selectedStorage) {
-      setSelectedStorage(product.storageOptions.storage[0].size);
+    if (product.wheels?.length > 0 && !selectedWheels) {
+      setSelectedWheels(product.wheels[0].code);
+    }
+    
+    if (product.interiors?.length > 0 && !selectedInterior) {
+      setSelectedInterior(product.interiors[0].code);
     }
 
-    // Set default car configurations
-    if (isCarProduct) {
-      if (product.wheels?.length > 0 && !selectedWheels) {
-        setSelectedWheels(product.wheels[0].code);
-      }
-      
-      if (product.interiors?.length > 0 && !selectedInterior) {
-        setSelectedInterior(product.interiors[0].code);
-      }
-
-      if (product.autopilot?.length > 0 && !selectedAutopilot) {
-        setSelectedAutopilot(product.autopilot[0].code);
-      }
+    if (product.autopilot?.length > 0 && !selectedAutopilot) {
+      setSelectedAutopilot(product.autopilot[0].code);
     }
-  }, [product, basePrice, isCarProduct, selectedColor, selectedStorage, selectedWheels, selectedInterior, selectedAutopilot]);
+  }
+}, [product, basePrice, isCarProduct, selectedColor, selectedStorage, selectedWheels, selectedInterior, selectedAutopilot, selectedTrim]);
 
   return {
     // State
@@ -418,6 +477,8 @@ const handleExtrasChange = useCallback((extra) => {
     selectedAutopilot,
     selectedExtras,
     estimatedDelivery,
+    selectedFinancing,
+
     
     // Setters
     setSelectedImage,
@@ -433,6 +494,8 @@ const handleExtrasChange = useCallback((extra) => {
     handleInteriorChange,
     handleAutopilotChange,
     handleExtrasChange,
+    handleTrimChange,
+    handleFinancingChange,
     
     // Helpers
     getProductImages,

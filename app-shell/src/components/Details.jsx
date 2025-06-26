@@ -58,7 +58,7 @@ const navigate = useNavigate();
   
 const {
      // State
-    product,
+   product,
     loading,
     error,
     selectedImage,
@@ -69,9 +69,9 @@ const {
     showMore,
     selectedColor,
     selectedStorage,
-          displayStorageName,
     displayName,
     isCarProduct,
+    selectedFinancing,
     
     // Car-specific state
     selectedModel,
@@ -87,23 +87,30 @@ const {
     setShowMore,
     setSelectedColor,
     setSelectedWheels,
+    setSelectedInterior,
+    setSelectedAutopilot,
+    setSelectedExtras,
+    setSelectedStorage,
+    setSelectedFinancing,
+    setSelectedTrim,
+    setQuantity,
     
-    // Handlers
+    // Handlers - FIXED
     handleStorageChange,
     handleQuantityChange,
     handleColorChange,
-    
-    handleModelChange,
-    handleTrimChange,
     handleWheelsChange,
     handleInteriorChange,
     handleAutopilotChange,
     handleExtrasChange,
+    handleTrimChange,
+    handleFinancingChange,
     
     // Helpers
     getProductImages,
     getCarConfigImages,
-   
+    getProductSpecs,
+    getCurrentSpecs,
     getCurrentSelections,
     resetSelections
 } = useProductDetails(id);
@@ -245,66 +252,7 @@ userId={user?.uid || null} // Pass current user ID safely
 showLink={true} // Show link to reviews
 />
 
-<div className="price-section">
-<div className="price-row">
-<span className="price-label">Price:</span>
-<span className="current-price">
-<span className="price-currency">$</span>
-{formatPrice(configPrice || product?.price || 0)}
-</span>
-</div>
 
-{/* Delivery Info Section */}
-
-{/* Show base price if upgraded config is selected */}
-{configPrice > basePrice && (
-<div className="base-price">
-Base price: ${formatPrice(basePrice)}
-</div>
-)}
-
-{/* Show quantity pricing */}
-{quantity > 1 && (
-<div className="quantity-pricing">
-<div className="unit-price">
-Unit price: ${formatPrice(configPrice || product?.price || 0)}
-</div>
-
-<div className="quantity-count">
-Quantity: {quantity}
-</div>
-
-<div className="total-price">
-Total: ${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}
-</div>
-</div>
-)}
-
-{/* Price Comparison */}
-<div className="price-comparison">
-<span className="original-price">
-${generateOriginalPrice(configPrice || product?.price || 0)}
-</span>
-
-<span className="savings">
-Save ${calculateSavings(
-formatPrice(configPrice || product?.price || 0),
-generateOriginalPrice(configPrice || product?.price || 0)).amount}{' '}
-({calculateSavings(
-formatPrice(configPrice || product?.price || 0),
-generateOriginalPrice(configPrice || product?.price || 0)
-).percentage}%)
-</span>
-</div>
-
-{/* Prime Badge, only if gpremium image exists */}
-{product?.gpremium && (
-<div className="prime-badge">
-<img className="prime-logo" src={`/assets/images/${product.gpremium}`} alt="Prime" />
-<span>FREE One-Day Delivery</span>
-</div>
-)}
-</div>
 
 {/* Main Description */}
 <div className="product-description">
@@ -319,70 +267,79 @@ generateOriginalPrice(configPrice || product?.price || 0)
 {/* Car Configuration Section - FIXED VERSION */}
 {product.category?.toLowerCase() === 'automotive' && product.colors && (
   <div className="config-section">
-<div className="car-model-range">
-{/* Range */}
-
-<div>
-
-<Battery 
-size={32} 
-color="#171a20" 
-strokeWidth={1.5}/>
-
-<div>
-{product.range}
-</div>
-
-<div>
-Range
-</div>
-</div>
+    {/* Dynamic specs display */}
+    <div className="car-model-range">
+      <div>
+        <Battery size={32} color="#171a20" strokeWidth={1.5}/>
+        <div>{getCurrentSpecs?.range || product.range}</div>
+        <div>Range (EPA est.)</div>
+      </div>
       
-{/* Separator */}
-<div className="car-seperator">
-</div>
+      <div className="car-seperator"></div>
       
-{/* 0-60 mph */}
-<div>
-
-<Timer 
-size={32} 
-color="#171a20" 
-strokeWidth={1.5}/>
-
-<div>
-{product.acceleration}
-</div>
-
-<div>
-0-60 mph
-</div>
-</div>
+      <div>
+        <Timer size={32} color="#171a20" strokeWidth={1.5}/>
+        <div>{getCurrentSpecs?.acceleration || product.acceleration}</div>
+        <div>0-60 mph</div>
+      </div>
       
-{/* Separator */}
-<div className="car-seperator">
-</div>
+      <div className="car-seperator"></div>
       
-{/* Top Speed */}
-<div>
+      <div>
+        <Gauge size={32} color="#171a20" strokeWidth={1.5}/>
+        <div>{getCurrentSpecs?.topSpeed || product.topSpeed}</div>
+        <div>Top Speed</div>
+      </div>
+    </div>
 
-<Gauge 
-size={32} 
-color="#171a20" 
-strokeWidth={1.5}
-/>
-<div>
-{product.topSpeed}
-</div>
+    {/* Financing Selection Tabs */}
+    <div className="financing-tabs">
+      <button 
+        className={`financing-tab ${selectedFinancing === 'cash' ? 'active' : ''}`}
+        onClick={() => handleFinancingChange('cash')}
+      >
+        Cash
+      </button>
+      <button 
+        className={`financing-tab ${selectedFinancing === 'lease' ? 'active' : ''}`}
+        onClick={() => handleFinancingChange('lease')}
+      >
+        Lease
+      </button>
+      <button 
+        className={`financing-tab ${selectedFinancing === 'finance' ? 'active' : ''}`}
+        onClick={() => handleFinancingChange('finance')}
+      >
+        Finance
+      </button>
+    </div>
 
-<div >
-Top Speed
-</div>
-</div>
+    {/* Trim Options - Updates specs when selected */}
+    {product.trims && product.trims.length > 0 && (
+      <div className="section">
+        <h2>Configuration</h2>
+        {product.trims.map((trim) => (
+          <label key={trim.code} className="option-card">
+            <input 
+              type="radio" 
+              name="trim" 
+              checked={selectedTrim === trim.code}
+              onChange={() => handleTrimChange(trim.code)}
+            />
+            <div className="trim-info">
+              <span className="option-name">{trim.name}</span>
+            
+            </div>
+            <span className="option-price">
+              {selectedFinancing === 'lease' ? `$${trim.leasePrice}/mo` : 
+               selectedFinancing === 'finance' ? `$${trim.financePrice}/mo` : 
+               `$${trim.price?.toLocaleString()}`}
+            </span>
+          </label>
+        ))}
+      </div>
+    )}
 
-
-</div>
-<div className="cash-selection">ffgf</div>
     {/* Color Selector */}
 <div className="section">
 <h2>Color</h2>
@@ -1008,69 +965,129 @@ onClick={() => storage.available && handleStorageChange(storage)}>
 </div>
 {/* Purchase Section */}
 <div className="purchase-section">
-<div className="buy-box-price">
-{quantity > 1 ? (
-<div>
-<div className="total-price-large">${formatPrice(totalPrice || (configPrice || product?.price || 0) * quantity)}</div>
-<div className="unit-price-small">${formatPrice(configPrice || product?.price || 0)} each</div>
-</div>
-) : (
-<div className="current-price">${formatPrice(configPrice || product?.price || 0)}</div>
-)}
-<span className="savings">
-Save ${calculateSavings(
-formatPrice(configPrice || product?.price || 0),
-generateOriginalPrice(configPrice || product?.price || 0)).amount}{' '}
-({calculateSavings(
-formatPrice(configPrice || product?.price || 0),
-generateOriginalPrice(configPrice || product?.price || 0)
-).percentage}%)
-</span>
-</div>
-{/* Prime Badge, only if gpremium image exists */}
-{product?.gpremium && (
-<div className="prime-badge">
-<img className="prime-logo" src={`/assets/images/${product.gpremium}`} alt="Prime" />
-<span>FREE One-Day Delivery</span>
-</div>
-)}
-<DeliveryInfo hasPremium={!!product?.gpremium} />
+  <div className="buy-box-price">
+    {product.category?.toLowerCase() === 'automotive' ? (
+      // Automotive pricing display
+      <div>
+        {selectedFinancing === 'lease' ? (
+          <div>
+            <div className="current-price">${configPrice}/mo</div>
+            <div className="financing-type">Lease Payment</div>
+            {quantity > 1 && (
+              <div className="quantity-note">
+                {quantity} vehicles × ${configPrice}/mo each
+              </div>
+            )}
+          </div>
+        ) : selectedFinancing === 'finance' ? (
+          <div>
+            <div className="current-price">${configPrice}/mo</div>
+            <div className="financing-type">Finance Payment</div>
+            {quantity > 1 && (
+              <div className="quantity-note">
+                {quantity} vehicles × ${configPrice}/mo each
+              </div>
+            )}
+          </div>
+        ) : (
+          // Cash pricing
+          <div>
+            {quantity > 1 ? (
+              <div>
+                <div className="total-price-large">${formatPrice(totalPrice)}</div>
+                <div className="unit-price-small">${formatPrice(configPrice)} each</div>
+              </div>
+            ) : (
+              <div className="current-price">${formatPrice(configPrice)}</div>
+            )}
+            <div className="financing-type">Cash Price</div>
+          </div>
+        )}
+      </div>
+    ) : (
+      // Non-automotive pricing display (existing logic)
+      quantity > 1 ? (
+        <div>
+          <div className="total-price-large">${formatPrice(totalPrice)}</div>
+          <div className="unit-price-small">${formatPrice(configPrice)} each</div>
+        </div>
+      ) : (
+        <div className="current-price">${formatPrice(configPrice)}</div>
+      )
+    )}
+    
+    {/* Price comparison - only show for cash purchases */}
+    {(!product.category?.toLowerCase() === 'automotive' || selectedFinancing === 'cash') && (
+      <div className="price-comparison">
+        <span className="original-price">
+          ${generateOriginalPrice(configPrice)}
+        </span>
+        <span className="savings">
+          Save ${calculateSavings(
+            formatPrice(configPrice),
+            generateOriginalPrice(configPrice)
+          ).amount}{' '}
+          ({calculateSavings(
+            formatPrice(configPrice),
+            generateOriginalPrice(configPrice)
+          ).percentage}%)
+        </span>
+      </div>
+    )}
+  </div>
 
-<div className="stock-info">{product?.stock || 'In Stock'}</div>
+  {/* Rest of purchase section remains the same */}
+  {product?.gpremium && (
+    <div className="prime-badge">
+      <img className="prime-logo" src={`/assets/images/${product.gpremium}`} alt="Prime" />
+      <span>FREE One-Day Delivery</span>
+    </div>
+  )}
+  
+  <DeliveryInfo hasPremium={!!product?.gpremium} />
+  
+  <div className="stock-info">{product?.stock || 'In Stock'}</div>
+  
+  <div className="quantity-selector">
+    <label className="quantity-label" htmlFor="quantity">Qty:</label>
+    <select 
+      className="quantity-dropdown" 
+      id="quantity"
+      value={quantity}
+      onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
+    >
+      {[1,2,3,4,5,6,7,8,9,10].map(num => (
+        <option key={num} value={num}>{num}</option>
+      ))}
+    </select>
+  </div>
+  
+  <button 
+    className="add-to-cart-btn"   
+    onClick={() => handleCartButtonClick(product)}
+  >
+    {selectedFinancing === 'lease' ? 'Request Lease Quote' : 
+     selectedFinancing === 'finance' ? 'Apply for Financing' : 
+     'Add to Cart'}
+  </button>
+  
+  <button 
+    style={{ width: '100%' }}
+    onClick={() => navigate('/')} 
+    className="continue-shopping-btn"
+  >
+    Continue Shopping
+  </button>
+  
+  <div className="secure-transaction">
+    🔒 <Link to="#">Secure transaction</Link>
+  </div>
+  
+  <div className="sold-by">
+    <div><strong>Ships from</strong> {product?.seller || 'Gulime'}</div>
+    <div><strong>Sold by</strong> <Link to="#">{product?.seller || 'Gulime'}</Link></div>
+  </div>
 
-<div className="quantity-selector">
-<label className="quantity-label" htmlFor="quantity">Qty:</label>
-<select 
-className="quantity-dropdown" 
-id="quantity"
-value={quantity}
-onChange={(e) => handleQuantityChange(parseInt(e.target.value))}>
-{[1,2,3,4,5,6,7,8,9,10].map(num => (
-<option key={num} value={num}>{num}</option>
-))}
-</select>
-</div>
-
-<button className="add-to-cart-btn"   onClick={() => handleCartButtonClick(product)}
->
-Add to Cart 
-</button>
-
-<button style={{ width: '100%' }}
-onClick={() => navigate('/')} 
-className="continue-shopping-btn"
->
-Continue Shopping
-</button> 
-
-<div className="secure-transaction">🔒
-<Link to="#">Secure transaction</Link>
-</div>
-
-<div className="sold-by">
-<div><strong>Ships from</strong> {product?.seller || 'Amazon'}</div>
-<div><strong>Sold by</strong> <Link to="#">{product?.seller || 'Amazon'}</Link></div>
-</div>
 
 <div className="additional-options">
 <Link to="#" className="option-link">🛡️ Add a protection plan</Link>
