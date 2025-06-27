@@ -509,154 +509,143 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* Products Grid/List */}
-              <section className={`products-gtrid products-${viewMode}`}>
-                <div className={`products-${viewMode}`}>
-                  {currentProducts.map(product => (
-                   <div key={product.id} className="products-card">
-                <div className="product-image-container">
-                  <img 
-                    src={`/assets/images/${product.imgUrl}`} 
-                    alt={product.product_name}
-                    className="product-image"
-                  />
+{/* Products Grid/List */}
+<section className={`products-gtrid products-${viewMode}`}>
+<div className={`products-${viewMode}`}>
+{currentProducts.map(product => (
+<div key={product.id} className="products-card">
+<div className="product-image-container">
+<img 
+src={`/assets/images/${product.imgUrl}`} 
+alt={product.product_name}
+className="product-image"/>
+
 <button 
 className={`wishlist-btn ${wishlistItems.has(product.id) ? 'wishlisted' : ''}`}
-                    onClick={() => handleWishlistToggle(product)}
-                    disabled={wishlistLoading}
-                    title={wishlistItems.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
-                  >
-                    {wishlistItems.has(product.id) ? '♥' : '♡'}
-                  </button>{product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
-                  {product.deal && <div className="deal-badge">Limited time deal</div>}
-                </div>
+onClick={() => handleWishlistToggle(product)}
+disabled={wishlistLoading}
+title={wishlistItems.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}>
+{wishlistItems.has(product.id) ? '♥' : '♡'}
+</button>{product.bestseller && <div className="bestseller-badge">#1 Best Seller</div>}
+{product.deal && <div className="deal-badge">Limited time deal</div>}
+</div>
                 
-                <div className="product-content">
-                  <h2 className="product-name">{product.product_name}</h2>
+<div className="product-content">
+<h2 className="product-name">{product.product_name}</h2>
                   
-                  <ProductRating
-                    rating={product.rating || 0}
-                    totalReviews={product.totalReviews || 0}
-                    isInteractive={true}  // Enable clicking
-                    productId={product.id} // Pass the product ID
-                    userId={user?.uid || null} // Pass current user ID safely
-                    showLink={true} // Show link to reviews
-                  />
+<ProductRating
+rating={product.rating || 0}
+totalReviews={product.totalReviews || 0}
+isInteractive={true}  // Enable clicking
+productId={product.id} // Pass the product ID
+userId={user?.uid || null} // Pass current user ID safely
+showLink={true} // Show link to reviews
+/>
                   
-                  <Link className="product-category" to={`/category/${encodeURIComponent(product.category)}`}>
+<Link className="product-category" to={`/category/${encodeURIComponent(product.category)}`}>
 {product.category}
 </Link>
-                  <p className="product-description">{product.description}</p>
+<p className="product-description">{product.description}</p>
 
-                  <div className="price-container">
-                    <span className="product-price">${formatPrice(product.price)}</span>
-                    {product.prime && (
-                      <div className="prime-shipping">
-                        <span className="prime-badge-small">Prime</span>
-                        <span className="free-shipping">FREE delivery</span>
-                      </div>
-                    )}
-                  </div>
+<div className="price-container">
+<span className="product-price">${formatPrice(product.price)}</span>
+{product.prime && (
+<div className="prime-shipping">
+<span className="prime-badge-small">Prime</span>
+<span className="free-shipping">FREE delivery</span>
+</div>
+)}
+</div>
                   
-                  {/* Add DeliveryInfo component here, right after price */}
+{/* Add DeliveryInfo component here, right after price */}
 <DeliveryInfo  hasPremium={!!product?.gpremium} />
                   
-                  <div className="product-actions">
-                    {/* <button className="add-to-cart-btn" 
-                     onClick={() => handleCartButtonClick(product)}
->
-                      Add to Cart
-                    </button> */}
+<div className="product-actions">
+                  
 
-                                       <button 
-  className="add-to-cart-btn" 
-  // onClick={() => handleCartButtonClick(product)}
-  onClick={() => navigate(`/product/${product.id}`)}
->
-View Product</button>
+<button 
+className="add-to-cart-btn" 
+onClick={() => navigate(`/product/${product.id}`)}>
+View Product
+</button>
 
 <button style={{ width: '100%' }}
 onClick={() => navigate('/')} 
-className="continue-shopping-btn"
->
+className="continue-shopping-btn">
 Continue Shopping
 </button> 
-                  </div>
-                  
-               
-                </div>
-              </div>
-            ))}
-          </div>
-              </section>
+</div>
+</div>
+</div>
+))}
+</div>
+</section>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <button 
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="pagination-btn"
-                  >
-                    Previous
-                  </button>
+{/* Pagination */}
+{totalPages > 1 && (
+<div className="pagination">
+<button 
+onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+disabled={currentPage === 1}
+className="pagination-btn">
+Previous
+</button>
                   
-                  <div className="page-numbers">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
+<div className="page-numbers">
+{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+let pageNum;
+if (totalPages <= 5) {
+  pageNum = i + 1;
+} else if (currentPage <= 3) {
+  pageNum = i + 1;
+} else if (currentPage >= totalPages - 2) {
+  pageNum = totalPages - 4 + i;
+} else {
+  pageNum = currentPage - 2 + i;
+}
                       
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`page-btn ${currentPage === pageNum ? 'active' : ''}`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
+return (
+<button
+key={pageNum}
+onClick={() => setCurrentPage(pageNum)}
+className={`page-btn ${currentPage === pageNum ? 'active' : ''}`}>
+{pageNum}
+</button>
+);
+})}
+</div>
                   
-                  <button 
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className="pagination-btn"
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </main>
-          </div>
-        )}
-      </div>
-      <Footer />
-                  {/* Toast Notification */}
-      {toast.show && (
-        <div className={`toast ${toast.type}`}>
-          <div className="toast-content">
-            <span className="toast-icon">
-              {toast.type === 'success' ? '✓' : '✕'}
-            </span>
-            <span className="toast-message">{toast.message}</span>
-            <button 
-              className="toast-close"
-              onClick={() => setToast({ show: false, message: '', type: '' })}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
-    </>
-  );
+<button 
+onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+disabled={currentPage === totalPages}
+className="pagination-btn">
+Next
+</button>
+</div>
+)}
+</main>
+</div>
+)}
+</div>
+<Footer />
+
+{/* Toast Notification */}
+{toast.show && (
+<div className={`toast ${toast.type}`}>
+<div className="toast-content">
+<span className="toast-icon">
+{toast.type === 'success' ? '✓' : '✕'}
+</span>
+<span className="toast-message">{toast.message}</span>
+
+<button 
+className="toast-close"
+onClick={() => setToast({ show: false, message: '', type: '' })}
+>×
+</button>
+</div>
+</div>
+)}
+</>
+);
 }

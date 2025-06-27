@@ -116,32 +116,78 @@ const {
 } = useProductDetails(id);
 
 const { formatPrice, generateOriginalPrice, calculateSavings } = priceUtils;
- const handleCartButtonClick = async (product) => {
-  const selections = getCurrentSelections();
-   const cartData = {
-    ...selections,
-    quantity: quantity, // Use the state quantity
-    totalPrice: totalPrice, // Use the calculated total price
-    unitPrice: configPrice || product?.price || 0
-  };
-
-  const result = await cartHandlers.handleAddToCart(
+const handleCartButtonClick = async (product) => {
+  // Check if user is authenticated first
+if (!user) {
+  localStorage.setItem('pendingCartItem', JSON.stringify({
     product,
+    selections: getCurrentSelections(),
     quantity,
-    showToast,
-    selections,
-    cartData
-  );
+    configPrice
+  }));
+  showToast('Redirecting to login...', 'error');
+  navigate('/login');
+  return;
+}
 
-  if (result.success && result.shouldNavigate) {
-    showToast('Item added to cart!', 'success');
+// If user is still loading, prevent action
+if (userLoading) {
+showToast('Please wait...', 'error');
+return;
+}
 
-    setTimeout(() => {
-      navigate('/cart');
-    }, 1000);
-  } else {
-    showToast('Failed to add to cart.', 'error');
-  }
+const selections = getCurrentSelections();
+const cartData = {...selections,
+quantity: quantity,
+totalPrice: totalPrice,
+unitPrice: configPrice || product?.price || 0
+};
+
+try {
+const result = await cartHandlers.handleAddToCart(
+product,
+quantity,
+showToast,
+selections,
+cartData
+);
+
+if (result.success && result.shouldNavigate) {
+showToast('Item added to cart!', 'success');
+setTimeout(() => {
+navigate('/cart');
+}, 1000);
+} else {
+// Handle different error types if your cartHandlers returns specific error codes
+let errorMessage = 'Failed to add to cart. Please try again.';
+      
+if (result.error === 'NOT_AUTHENTICATED' || result.statusCode === 401) {
+errorMessage = 'Your session has expired. Please log in again.';
+// Optional: redirect to login
+setTimeout(() => {
+navigate('/login');
+}, 2000);
+} else if (result.error === 'OUT_OF_STOCK') {
+errorMessage = 'Sorry, this item is currently out of stock.';
+} else if (result.message) {
+errorMessage = result.message; // Use the specific error message if available
+}
+      
+showToast(errorMessage, 'error');
+}
+} catch (error) {
+console.error('Cart error:', error);
+    
+// Handle network errors or authentication errors
+if (error.response?.status === 401 || error.code === 'auth/requires-recent-login') {
+showToast('Please log in to add items to your cart', 'error');
+setTimeout(() => {
+navigate('/login');
+}, 2000);
+} else {
+showToast('Something went wrong. Please try again.', 'error');
+}
+}
 };
 
 const product12 = { category: 'electronics' };
