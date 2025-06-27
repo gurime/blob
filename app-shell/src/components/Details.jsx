@@ -243,15 +243,14 @@ alt={`Product view ${index + 1}`}/>
 <Link href="#" className="brand-link">Visit the {product.brand} Store</Link>
 
 {/* Rating Section - Now using the ProductRating component */}
-  <ProductRating
-rating={product.rating || 0}
-totalReviews={product.totalReviews || 0}
-isInteractive={true}  // Enable clicking
-productId={product.id} // Use _id for featured products
-userId={user?.uid || null} // Pass current user ID safely
-showLink={true} // Show link to reviews
+<ProductRating
+  rating={product.rating || 0}
+  totalReviews={product.totalReviews || 0}
+  isInteractive={true}
+  productId={product.id || product._id} // Try both
+  userId={user?.uid || null}
+  showLink={true}
 />
-
 
 
 {/* Main Description */}

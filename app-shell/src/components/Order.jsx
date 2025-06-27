@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { deleteDoc, doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { auth, db } from '../db/firebase';
 import Footer from './Footer';
 import Navbar from './Navbar';
@@ -506,18 +506,30 @@ const calculateTotal = () => {
 // Fixed lease/finance calculation with null checks
 const leasePrice = orderData?.items?.[0]?.automotiveConfig?.trims?.LeasePrice || 
 orderData?.items?.[0]?.trims?.LeasePrice || 0;
-const financePrice = orderData?.items?.[0]?.automotiveConfig?.trims?.financePrice || 
-orderData?.items?.[0]?.trims?.financePrice || (orderData ? calculateTotal() : 0);
+
+// Only use automotive finance price if it exists, otherwise it's a regular purchase
+const automotiveFinancePrice = orderData?.items?.[0]?.automotiveConfig?.trims?.financePrice || 
+orderData?.items?.[0]?.trims?.financePrice || 0;
 
 const isLease = leasePrice > 0;
-const buttonLabel = loading 
-  ? 'Processing...'
-  : !orderData
-    ? 'Loading...'
-    : isLease 
-      ? `Lease: $${leasePrice.toLocaleString()}/mo`
-      : `Finance: $${financePrice.toLocaleString()}/mo`;
+const isAutomotiveFinance = automotiveFinancePrice > 0;
 
+const buttonLabel = loading 
+? 'Processing...'
+: !orderData
+? 'Loading...'
+: isLease 
+? `Lease: $${leasePrice.toLocaleString()}/mo`
+: isAutomotiveFinance
+? `Finance: $${automotiveFinancePrice.toLocaleString()}/mo`
+: `Place Order: $${calculateTotal().toLocaleString()}`;
+
+const summaryTotalLabel = isLease ? 'Monthly Lease:' : isAutomotiveFinance ? 'Monthly Finance:' : 'Total:';
+const summaryTotalValue = isLease 
+  ? `$${leasePrice.toLocaleString()}/mo`
+  : isAutomotiveFinance 
+    ? `$${automotiveFinancePrice.toLocaleString()}/mo`
+    : `$${calculateTotal().toLocaleString()}`;
       
   if (isLoading || !orderData) {
     return (
@@ -555,10 +567,13 @@ const buttonLabel = loading
 {orderData.items.map((item, index) => (
 <div key={item.productId || index} className="order-item">
 <div className="order-item-image">
+<Link to={`/product/${item.productId}`}>
 <img
 src={`/assets/images/${item.imgUrl}`}
 alt={item.productName}
-onError={(e) => {e.target.src = '/assets/images/placeholder.jpg';}}/>
+onError={(e) => {e.target.src = '/assets/images/placeholder.jpg';}}/></Link>
+
+
 </div>
                   
 <div className="order-item-details">
@@ -625,14 +640,14 @@ onError={(e) => {e.target.src = '/assets/images/placeholder.jpg';}}/>
       : `Subtotal (${orderData.summary.totalItems} items):`
     }
   </span>
-  <span>
-    {orderData?.items?.[0]?.automotiveConfig 
-      ? (isLease 
-          ? `$${orderData.summary.totalValue.toLocaleString()}/mo` 
-          : `$${financePrice.toLocaleString()}`
-        )
-      : `$${orderData.summary.totalValue.toLocaleString()}`
-    }
+<span>
+{orderData?.items?.[0]?.automotiveConfig 
+? (isLease 
+? `$${orderData.summary.totalValue.toLocaleString()}/mo` 
+: `$${automotiveFinancePrice.toLocaleString()}`
+)
+: `$${orderData.summary.totalValue.toLocaleString()}`
+}
 </span>
 </div>
 
@@ -681,26 +696,20 @@ onChange={handleDeliveryChange}>
 
 <div className="summary-row">
 <span>Delivery Fee:</span>
-<span>${deliveryFee > 0 ? deliveryFee.toFixed(2) : 'FREE'}</span>
+<span>{deliveryFee > 0 ? deliveryFee.toFixed(2) : 'FREE'}</span>
 </div>
 
 {/* Updated total calculation */}
 <div className="summary-row total-row">
-  <span><strong>{isLease ? 'Monthly Lease:' : 'Total:'}</strong></span>
-  <span><strong>
-    {isLease 
-      ? `$${leasePrice.toLocaleString()}/mo` 
-      : `$${calculateTotal().toLocaleString()}`
-    }
-  </strong>
-  </span>
+<span><strong>{summaryTotalLabel}</strong></span>
+<span><strong>{summaryTotalValue}</strong></span>
 </div>
             
 <div className="order-actions">
-  <form onSubmit={handleSubmit} className="payment-form">
-    {/* User Information Section */}
-    <div className="user-info-section">
-      <h3>Shipping Information</h3>
+<form onSubmit={handleSubmit} className="payment-form">
+{/* User Information Section */}
+<div className="user-info-section">
+<h3>Shipping Information</h3>
       
 <div className="form-row">
 <div className="form-group">

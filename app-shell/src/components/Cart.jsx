@@ -19,6 +19,9 @@ const [cartItems, setCartItems] = useState([]);
 const [savedItems, setSavedItems] = useState([]);
 const [user, setUser] = useState(null);
 const [userLoading, setUserLoading] = useState(true);
+  const [orderData, setOrderData] = useState(null);
+const deliveryFee = 0; // Set your delivery fee here
+const leasePrice = 0; // Set your lease price here, if applicable
 const [cartSummary, setCartSummary] = useState({
 totalItems: 0,
 totalValue: 0
@@ -345,9 +348,97 @@ orderData: orderData
 });
 };
 
+const calculateTotal = () => {
+  if (!orderData || !orderData.summary) {
+    return 0;
+  }
+  return orderData.summary.totalValue + deliveryFee;
+};
+
+const LeasePrice = orderData?.items?.[0]?.automotiveConfig?.trims?.leasePrice || 
+orderData?.items?.[0]?.trims?.leasePrice || 0;
+
+// Only use automotive finance price if it exists, otherwise it's a regular purchase
+const automotiveFinancePrice = orderData?.items?.[0]?.automotiveConfig?.trims?.financePrice || 
+orderData?.items?.[0]?.trims?.financePrice || 0;
+
+const isLease = leasePrice > 0;
+const isAutomotiveFinance = automotiveFinancePrice > 0;
+
+const summaryTotalLabel = isLease ? 'Monthly Lease:' : isAutomotiveFinance ? 'Monthly Finance:' : 'Total:';
+const summaryTotalValue = isLease 
+? `$${leasePrice.toLocaleString()}/mo`
+: isAutomotiveFinance 
+? `$${automotiveFinancePrice.toLocaleString()}/mo`
+: `$${calculateTotal().toLocaleString()}`;
+
+// Debug version to see what's happening
+const getStorageTitle = (item) => {
+  console.log('Item data:', item); // Debug log
+  
+  if (item.productName) {
+    console.log('Using productName:', item.productName);
+    return item.productName;
+  }
+  
+  // Check if item has storage options
+  console.log('StorageOptions:', item.storageOptions);
+  console.log('Storage value:', item.storage);
+  
+  if (item.storageOptions?.storage) {
+    const selectedStorage = item.storageOptions.storage.find(
+      storage => {
+        console.log('Comparing:', storage.size, 'with', item.storage);
+        return storage.size === item.storage || 
+               storage.size === parseInt(item.storage) ||
+               storage.size.toString() === item.storage.toString();
+      }
+    );
+    
+    console.log('Selected storage:', selectedStorage);
+    
+    if (selectedStorage?.displayStorageName) {
+      return selectedStorage.displayStorageName;
+    }
+    
+    // Fallback to storage size with GB
+    return item.storage ? `${item.storage}GB` : '';
+  }
+  
+  // For non-storage items, don't add GB
+  return item.storage || '';
+};
 
 
 
+// Fixed version - adds GB to productName if it's a storage product
+const getItemTitle = (item) => {
+  if (item.productName) {
+    // Check if this is a storage product (has storageOptions or category is Tablets)
+    const isStorageProduct = item.storageOptions || item.category === 'Tablets';
+    
+    if (isStorageProduct) {
+      // Check if productName ends with a number (storage size) but not "GB"
+      const endsWithNumber = /\d+$/.test(item.productName);
+      const alreadyHasGB = item.productName.endsWith('GB');
+      
+      if (endsWithNumber && !alreadyHasGB) {
+        return `${item.productName}GB`;
+      }
+    }
+    
+    return item.productName;
+  }
+  
+  // Fallback for items without productName
+  if (item.storage && item.storageOptions) {
+    return `${item.storage}GB`;
+  }
+  
+  return item.storage || '';
+};
+
+// Usage:
 // Loading state
 if (loading || userLoading) {
 return (
@@ -442,14 +533,14 @@ className="cart-item-image"/>
 <div className="cart-item-details">
 <Link to={`/product/${item.productId}`} >
 <h3 className="cart-item-title">
-{item.productName 
-? `${item.productName.charAt(0).toUpperCase() + item.productName} - ${item.model ? ` ${item.model}` : ''}`
-: `${item.storage}GB`
+  {item.productName
+    ? `${item.productName.charAt(0).toUpperCase() + item.productName.toLowerCase().slice(1)}${item.storage ? ` - ${item.storage}GB` : ''}`
+    : getStorageTitle(item)
   }
 </h3>
 </Link>
 
-<p className="cart-item-category">Category: {item.category}</p>
+<p className="cart-item-category">Category: {item.category.charAt(0).toUpperCase() + item.category.slice(1)}</p>
 <p className="cart-item-stock">✅ {item.stock}</p>
 {(item.premium || item.hasPrime) && (
     <p className="cart-item-shipping">🚚 FREE shipping with Gulime Premium</p>
@@ -484,22 +575,23 @@ Save for later
 </div>
                                         
 <div className="cart-item-price-section">
-<span className="cart-item-price">${item.price.toLocaleString(2)}</span>
 {item.quantity > 1 && (
 <p className="cart-item-subtotal">
-Subtotal: ${item.totalPrice.toLocaleString(2)}
+Subtotal: <strong>
+
+  {item[0]?.automotiveConfig?.trims?.leasePrice > 0
+? `$${item[0].automotiveConfig.trims.leasePrice.toLocaleString()}/mo`
+: item[0]?.automotiveConfig?.trims?.financePrice > 0
+? `$${item[0].automotiveConfig.trims.financePrice.toLocaleString()}/mo`
+: `$${item.totalPrice.toLocaleString(2)}`}
+</strong>
 </p>
 )}
 </div>
 </div>
 ))}
                                 
-<div className="cart-subtotal-bar">
-<span className="cart-subtotal-text">
-Subtotal ({cartSummary.totalItems} items): 
-<strong> ${cartSummary.totalValue.toLocaleString(2)}</strong>
-</span>
-</div>
+
 </div>
 )}
 
@@ -526,8 +618,17 @@ className="saved-item-image"/>
 </div>
                                             
 <div className="saved-item-details">
-<h4 className="saved-item-title">{item.productName || item.storage}GB</h4>
-<p className="saved-item-price">${item.price.toLocaleString(2)}</p>
+<h4 className="saved-item-title">{getItemTitle(item)}</h4>
+<p className="saved-item-price">
+{item?.automotiveConfig?.trims?.leasePrice > 0 
+? `$${item.automotiveConfig.trims.leasePrice.toLocaleString()}/mo`
+: item?.automotiveConfig?.trims?.financePrice > 0
+? `$${item.automotiveConfig.trims.financePrice.toLocaleString()}/mo`
+: `$${item.price.toLocaleString()}`}
+</p>
+<p className="saved-item-condition">Condition: {item.condition || 'New'}</p>
+<p className="saved-item-seller">Seller: {item.seller || 'Gulime'}</p>
+
 <p className="saved-item-stock">
 {item.stock 
 ? <span style={{ color: 'green' }}>✅ {item.stock}</span>
@@ -571,7 +672,12 @@ Delete
 
 <div className="summary-row">
 <span>Subtotal ({cartSummary.totalItems} items):</span>
-<span className="summary-price">${cartSummary.totalValue.toLocaleString(2)}</span>
+<span className="summary-price">  
+  {cartItems[0]?.automotiveConfig?.trims?.leasePrice > 0
+? `$${cartItems[0].automotiveConfig.trims.leasePrice.toLocaleString()}/mo`
+: cartItems[0]?.automotiveConfig?.trims?.financePrice > 0
+? `$${cartItems[0].automotiveConfig.trims.financePrice.toLocaleString()}/mo`
+: `$${cartSummary.totalPrice.toLocaleString(2)}`}</span>
 </div>
 
 <div className="summary-row">
@@ -589,7 +695,11 @@ Delete
 
 <div className="summary-row total-row">
 <span>Total:</span>
-<span className="summary-total">${cartSummary.totalValue.toLocaleString(2)}</span>
+<span className="summary-total">  {cartItems[0]?.automotiveConfig?.trims?.leasePrice > 0
+? `$${cartItems[0].automotiveConfig.trims.leasePrice.toLocaleString()}/mo`
+: cartItems[0]?.automotiveConfig?.trims?.financePrice > 0
+? `$${cartItems[0].automotiveConfig.trims.financePrice.toLocaleString()}/mo`
+: `$${cartSummary.totalPrice.toLocaleString(2)}`}</span>
 </div>
 </div>
                                 

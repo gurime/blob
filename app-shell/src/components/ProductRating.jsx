@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -13,6 +14,7 @@ import {
   serverTimestamp 
 } from "firebase/firestore";
 import { db } from "../db/firebase"; // Adjust the import path as necessary
+import PropTypes from "prop-types";
 
 const ProductRating = ({
   rating = 0,
@@ -222,6 +224,7 @@ const ProductRating = ({
           const productRef = doc(db, collectionName, productId);
           await updateDoc(productRef, updateData);
         } catch (error) {
+          console.error(`Error updating product in ${collectionName}:`, error);
         }
       });
 
@@ -229,6 +232,7 @@ const ProductRating = ({
 
 
     } catch (error) {
+      console.error("Error updating product rating:", error);
     }
   };
 
@@ -250,6 +254,7 @@ const ProductRating = ({
         setCurrentTotalReviews(ratingsSnapshot.size);
       }
     } catch (error) {
+      console.error("Error fetching updated rating:", error);
     }
   };
 
@@ -314,6 +319,8 @@ const ProductRating = ({
   const displayRating = currentRating || 0;
   const displayReviews = currentTotalReviews || 0;
 
+
+
   return (
     <div className="rating-section">
       {isInteractive ? (
@@ -361,6 +368,15 @@ const ProductRating = ({
       )}
     </div>
   );
+};
+ProductRating.propTypes = {
+  rating: PropTypes.number,
+  totalReviews: PropTypes.number,
+  showLink: PropTypes.bool,
+  isInteractive: PropTypes.bool,
+  onRatingChange: PropTypes.func,
+  productId: PropTypes.string,
+  userId: PropTypes.string
 };
 
 export default ProductRating;
